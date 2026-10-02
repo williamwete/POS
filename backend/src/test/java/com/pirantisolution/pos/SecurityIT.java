@@ -31,7 +31,10 @@ class SecurityIT extends IntegrationTestBase {
     void supervisorAndManagerScopes() throws Exception {
         assertThat(body(getAs("supervisor.jkt", "/api/outlets")).get("data")).hasSize(1);
         assertThat(body(getAs("manager", "/api/outlets")).get("data")).hasSize(2);
-        assertThat(body(getAs("auditor", "/api/outlets")).get("data")).hasSize(2);
+        // auditor org-wide: melihat semua outlet, termasuk yang dibuat test lain di DB yang sama
+        java.util.List<String> codes = new java.util.ArrayList<>();
+        body(getAs("auditor", "/api/outlets")).get("data").forEach(o -> codes.add(o.get("code").asText()));
+        assertThat(codes).contains("JKT01", "BDG01");
     }
 
     @Test

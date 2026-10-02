@@ -57,6 +57,24 @@ jobs:
           POS_TEST_DB_OWNER: postgres
           POS_TEST_DB_OWNER_PASSWORD: postgres
         run: ./gradlew --no-daemon test bootJar
+      - name: Report failed tests as annotations
+        if: failure()
+        working-directory: backend
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          n = 0
+          for f in glob.glob('build/test-results/test/*.xml'):
+              for case in ET.parse(f).getroot().iter('testcase'):
+                  for bad in list(case.findall('failure')) + list(case.findall('error')):
+                      msg = (bad.get('message') or '').replace('\n', ' ').replace('%', '%25')[:600]
+                      text = (bad.text or '')
+                      cause = [l.strip() for l in text.splitlines() if 'Caused by' in l or 'ERROR:' in l][:3]
+                      detail = ' | '.join(cause).replace('%', '%25')[:600]
+                      print(f"::error title={case.get('classname').split('.')[-1]}.{case.get('name')}::{msg} {detail}")
+                      n += 1
+          print(f"{n} failing test(s)")
+          PY
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
