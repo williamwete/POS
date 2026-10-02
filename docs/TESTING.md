@@ -2,9 +2,9 @@
 
 | Lapisan | Perintah | Isi |
 |---|---|---|
-| SQL (RLS & otorisasi) | `./db/tests/run.sh` | 126 asersi: fail-closed, outlet scope (§88), proteksi tulis, anti-eskalasi, audit append-only, idempotency per user, setting & business date |
+| SQL (RLS & otorisasi) | `./db/tests/run.sh` | 209 asersi: fail-closed, outlet scope (§88), proteksi tulis, anti-eskalasi, audit append-only, idempotency per user, setting & business date, attendance, cashier session (modal awal, kunci terminal, clock out diblokir) |
 | SQL statis backend | `python3 backend/scripts/check_sql.py "<conninfo>"` | `PREPARE` setiap SQL di kode Java terhadap DB yang sudah dimigrasi (typo kolom, sintaks) |
-| Backend integrasi | `cd backend && ./gradlew test` | Spring Boot penuh + PostgreSQL: login, `/me`, scope, §87 security test, idempotency (termasuk paralel), RLS backstop dari Java, lifecycle user, optimistic lock |
+| Backend integrasi | `cd backend && ./gradlew test` | Spring Boot penuh + PostgreSQL: login, `/me`, scope, §87 security test, idempotency (termasuk paralel), RLS backstop dari Java, lifecycle user, optimistic lock, attendance, cashier session (§76) |
 | Frontend | `npm run type-check && npm test` | API client, permission store, validasi |
 
 ## Database test backend

@@ -10,7 +10,7 @@ otorisasi, dan integrasi.
 | Backend | Spring Boot 3.5, Java 21, Spring JDBC, Spring Security (JWT Supabase), Flyway | `backend/` |
 | Database | PostgreSQL 16 / Supabase, RLS | `db/` |
 
-**Status:** Phase 1 (Foundation) selesai. Lihat [docs/PHASE-1.md](docs/PHASE-1.md).
+**Status:** Phase 1 (Foundation), Phase 2 (Attendance) dan Phase 3 (Cashier session) selesai. Lihat [PHASE-1](docs/PHASE-1.md), [PHASE-2](docs/PHASE-2.md), [PHASE-3](docs/PHASE-3.md).
 
 ## Menjalankan secara lokal
 
@@ -54,5 +54,5 @@ Detail: [docs/TESTING.md](docs/TESTING.md).
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): arsitektur & alur keamanan
 - [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md): keputusan arsitektur yang disetujui & asumsi
 - [docs/DATABASE.md](docs/DATABASE.md): role database, RLS, migration, backup
-- [docs/API.md](docs/API.md): endpoint Phase 1
+- [docs/API.md](docs/API.md): daftar endpoint
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): deploy ke Supabase + server

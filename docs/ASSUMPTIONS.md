@@ -63,7 +63,7 @@ asumsi yang dibuat selama implementasi. Setiap perubahan keputusan harus dicatat
     milik sendiri" ditolak karena membuat ADMIN tidak bisa membuat akun kasir
     (ADMIN sengaja tidak punya permission transaksi).
 
-## B. Asumsi Phase 1
+## B. Asumsi
 
 | # | Asumsi | Alasan / konsekuensi |
 |---|--------|----------------------|
@@ -80,8 +80,15 @@ asumsi yang dibuat selama implementasi. Setiap perubahan keputusan harus dicatat
 | B11 | Rate limiting Phase 1 bersifat in-memory per instance backend. | **TEMPORARY IMPLEMENTATION**: jika backend di-scale lebih dari satu instance, limit efektif dikalikan jumlah instance. Ganti dengan Redis/gateway sebelum scale-out. |
 | B12 | Payment method dan product seed (§90) dibuat di phase yang memiliki tabelnya (Phase 4–5). | Phase 1 tidak membuat tabel di luar scope. |
 | B13 | Login memakai **email** (bukan username). Spec menyebut "username/email"; mendukung username memerlukan endpoint publik pemetaan username→email yang membuka celah enumerasi akun. | Username tetap ada sebagai identitas tampilan & audit. Dapat ditambahkan nanti lewat Supabase custom claim / edge function. |
-| B14 | Pilihan outlet & terminal di frontend disimpan di sessionStorage dan dikirim sebagai header untuk jejak audit saja. Validasi "terminal ini dipakai oleh kasir ini" ditegakkan server mulai Phase 3 (cashier session). | Sebelum Phase 3, header terminal di audit log adalah klaim client. |
-| B15 | Aturan §55 "tidak boleh clock out selama cashier session OPEN" ditegakkan mulai Phase 3 di trigger `pos.tg_attendance_guard`, karena tabel cashier session belum ada di Phase 2. | Sampai Phase 3 selesai, clock out tidak memeriksa cashier session. |
+| B14 | Pilihan outlet & terminal di frontend disimpan di sessionStorage dan dikirim sebagai header untuk jejak audit saja. Mulai Phase 3 terminal kerja seorang kasir ditentukan oleh cashier session-nya (server); transaksi Phase 4 memakai terminal session, bukan header. | Header terminal di audit log tetap klaim client. |
+| B15 | Aturan §55 "tidak boleh clock out selama cashier session OPEN" ditegakkan di trigger `pos.tg_attendance_guard` (V010) untuk semua status aktif (OPEN, ON_BREAK, CLOSING). Force clock out supervisor tetap diizinkan dan otomatis mengunci session kasir (`FORCED_CLOCK_OUT`). | Session yang terkunci karena force clock out ditutup lewat closing (Phase 7) atau dibuka lagi oleh kasir setelah clock in ulang. |
 | B16 | Kehadiran tidak bisa diedit atau dihapus. Kesalahan ditangani dengan force clock out (beralasan, tercatat audit). Fitur koreksi jam kehadiran dengan approval belum termasuk scope. | Butuh fitur koreksi bila HR memerlukan penyesuaian jam. |
 | B17 | Clock out normal ditolak selama istirahat berjalan (kasir harus "Selesai istirahat" dulu); force clock out supervisor menutup istirahat otomatis. | |
+| B18 | Status `ON_BREAK` pada cashier session dipakai sebagai **session lock** (terminal terkunci), dengan `lock_reason` MANUAL, IDLE, BREAK, atau FORCED_CLOCK_OUT. Mulai istirahat otomatis mengunci session yang terbuka. | Spec mendaftar status ON_BREAK tanpa membedakan istirahat dan kunci layar; alasan kunci disimpan terpisah. |
+| B19 | Satu karyawan hanya boleh memegang satu session aktif (selain aturan satu session per terminal). Pindah terminal = tutup/batal session lama. | Mencegah satu orang bertanggung jawab atas dua laci kas. |
+| B20 | Membuka kunci terminal wajib login ulang dengan password. Backend meneruskan waktu autentikasi terakhir (klaim `amr` Supabase, tanpa `token_refresh`) sebagai `auth_time`; database menolak unlock bila `auth_time` < waktu kunci (presisi detik). | Refresh token tidak cukup untuk membuka kunci. Jika metode login lain dipakai (SSO), metode tersebut harus muncul di `amr`. |
+| B21 | Hitung kas tengah shift bersifat **blind count**: kasir tidak melihat expected cash maupun selisih; hanya pemegang `cashier.view` yang melihatnya. | Mencegah kasir "menyesuaikan" hitungan. Penyesuaian kas & approval selisih: Phase 6. |
+| B22 | Modal awal boleh Rp 0 (dengan konfirmasi di UI). Hitungan memakai master `cash_denominations` (default IDR 100.000 s.d. 100 rupiah, dibuat otomatis untuk setiap organisasi); nilai item disalin dari master oleh trigger, client hanya mengirim jumlah lembar. | Pengelolaan master denominasi di UI belum tersedia (ubah lewat migration/SQL). |
+| B23 | Batal buka kasir (`CANCELLED`) hanya oleh pemilik dan hanya selama belum ada movement kas selain OPENING_CASH (Phase 4 menambah syarat belum ada transaksi). Penutupan normal (CLOSING → CLOSED, X/Z report) adalah Phase 7. | |
+| B24 | Kunci otomatis karena tidak ada aktivitas memakai setting outlet `terminal_idle_lock_minutes` (default 10, 0 = nonaktif). Pendeteksian idle dilakukan browser; penguncian tetap dicatat server. | Jika browser ditutup, session tetap OPEN sampai kasir kembali (login ulang menampilkan tawaran melanjutkan session). |
 

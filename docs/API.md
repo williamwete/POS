@@ -56,6 +56,27 @@ Response replay idempotency membawa header `Idempotent-Replayed: true`.
 | POST | `/api/attendance/{id}/force-clock-out` | `attendance.force_clock_out` @outlet, bukan diri sendiri | `{reason}` min 5 karakter; menutup break yang berjalan |
 | GET | `/api/attendance/history?from=&to=` | login (karyawan) | riwayat sendiri, maks 1 tahun |
 | GET | `/api/attendance?outletId=&businessDate=&status=` | `attendance.view` @outlet | default business date hari ini |
+
+### Cashier session (Phase 3)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/cashier/denominations` | login | pecahan uang aktif organisasi |
+| GET | `/api/cashier/sessions/current` | login | session aktif milik sendiri (null jika belum buka kasir) |
+| POST | `/api/cashier/sessions/open` | `cashier.open` @outlet terminal | `{terminalId, counts:[{denominationId, quantity}], note?}`; wajib WORKING di outlet yang sama; modal awal = jumlah hitungan (dihitung server); idempotent |
+| POST | `/api/cashier/sessions/{id}/cash-count` | pemilik, session OPEN | hitung kas tengah shift (blind count); idempotent |
+| POST | `/api/cashier/sessions/{id}/lock` | pemilik | `{reason: MANUAL\|IDLE}`; status `ON_BREAK` |
+| POST | `/api/cashier/sessions/{id}/unlock` | pemilik | wajib token hasil **login ulang** setelah waktu kunci (`REAUTH_REQUIRED`), dan sedang WORKING |
+| POST | `/api/cashier/sessions/{id}/cancel` | pemilik | `{reason}` min 5 karakter; hanya bila belum ada aktivitas kas |
+| GET | `/api/cashier/sessions/{id}` | pemilik atau `cashier.view` @outlet | detail + hitungan + rincian pecahan |
+| GET | `/api/cashier/sessions?outletId=&businessDate=&status=` | `cashier.view` @outlet | session business date tsb + yang masih aktif |
+
+Expected cash dan selisih hitungan hanya dikirim kepada pemegang `cashier.view` (kasir: `null`).
+
+Error baru: `ATTENDANCE_REQUIRED`, `TERMINAL_ALREADY_OPEN`, `TERMINAL_MISMATCH`, `TERMINAL_INACTIVE`,
+`CASHIER_SESSION_ALREADY_OPEN`, `CASHIER_SESSION_OPEN` (clock out ditolak), `CASHIER_SESSION_LOCKED`,
+`CASHIER_SESSION_NOT_LOCKED`, `CASHIER_SESSION_CLOSED`, `CASHIER_SESSION_HAS_ACTIVITY`, `REAUTH_REQUIRED`,
+`DENOMINATION_INVALID`, `OPENING_CASH_MISMATCH`.
 | GET | `/api/settings/effective?outletId=` | login / akses outlet | konfigurasi efektif §73 |
 | GET | `/actuator/health/liveness`, `/readiness` | publik | probe |
 

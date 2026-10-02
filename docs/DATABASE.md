@@ -32,6 +32,7 @@ Password ini **tidak** ada di migration. Seed demo (`db/seed`) hanya untuk lokal
 | V007 | grant & RLS policy |
 | V008 | perbaikan policy SELECT outlets/users agar `INSERT ... RETURNING` oleh admin tidak ditolak (bug ditemukan CI) |
 | V009 | attendance & attendance_breaks: waktu dari server, trigger transisi status, satu kehadiran terbuka per karyawan, RLS |
+| V010 | cash_denominations, cashier_sessions, cash_counts, cash_count_items, cash_movements: satu session aktif per terminal & karyawan, modal awal = hitungan OPENING = movement OPENING_CASH (constraint trigger saat commit), session lock dengan syarat login ulang, clock out ditolak selama session aktif, RLS; setting `terminal_idle_lock_minutes` |
 
 Aturan: tidak ada perubahan schema manual; tidak ada `DROP TABLE` di production; Flyway `clean`
 dinonaktifkan. Data master dinonaktifkan (`active=false`), tidak dihapus (trigger menolak DELETE
