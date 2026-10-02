@@ -1,0 +1,22 @@
+# Testing
+
+| Lapisan | Perintah | Isi |
+|---|---|---|
+| SQL (RLS & otorisasi) | `./db/tests/run.sh` | 126 asersi: fail-closed, outlet scope (§88), proteksi tulis, anti-eskalasi, audit append-only, idempotency per user, setting & business date |
+| SQL statis backend | `python3 backend/scripts/check_sql.py "<conninfo>"` | `PREPARE` setiap SQL di kode Java terhadap DB yang sudah dimigrasi (typo kolom, sintaks) |
+| Backend integrasi | `cd backend && ./gradlew test` | Spring Boot penuh + PostgreSQL: login, `/me`, scope, §87 security test, idempotency (termasuk paralel), RLS backstop dari Java, lifecycle user, optimistic lock |
+| Frontend | `npm run type-check && npm test` | API client, permission store, validasi |
+
+## Database test backend
+Test integrasi memakai database `pos_it` (dibuat kosong; Flyway mengisi schema + seed):
+```bash
+createdb pos_it
+POS_TEST_DB_URL=jdbc:postgresql://localhost:5432/pos_it \
+POS_TEST_DB_OWNER=postgres POS_TEST_DB_OWNER_PASSWORD=... ./gradlew test
+```
+`db/tests/run.sh` menolak berjalan pada database bernama `*prod*` / `*staging*` karena
+melakukan `DROP DATABASE`.
+
+## CI
+`.github/workflows/ci.yml` menjalankan ketiga job (database, backend, frontend) pada setiap push
+dan pull request.

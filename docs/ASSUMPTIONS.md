@@ -79,3 +79,6 @@ asumsi yang dibuat selama implementasi. Setiap perubahan keputusan harus dicatat
 | B10 | Uang disimpan sebagai `numeric(18,2)`, bukan float. | Berlaku mulai Phase 3. |
 | B11 | Rate limiting Phase 1 bersifat in-memory per instance backend. | **TEMPORARY IMPLEMENTATION**: jika backend di-scale lebih dari satu instance, limit efektif dikalikan jumlah instance. Ganti dengan Redis/gateway sebelum scale-out. |
 | B12 | Payment method dan product seed (§90) dibuat di phase yang memiliki tabelnya (Phase 4–5). | Phase 1 tidak membuat tabel di luar scope. |
+| B13 | Login memakai **email** (bukan username). Spec menyebut "username/email"; mendukung username memerlukan endpoint publik pemetaan username→email yang membuka celah enumerasi akun. | Username tetap ada sebagai identitas tampilan & audit. Dapat ditambahkan nanti lewat Supabase custom claim / edge function. |
+| B14 | Pilihan outlet & terminal di frontend disimpan di sessionStorage dan dikirim sebagai header untuk jejak audit saja. Validasi "terminal ini dipakai oleh kasir ini" ditegakkan server mulai Phase 3 (cashier session). | Sebelum Phase 3, header terminal di audit log adalah klaim client. |
+
