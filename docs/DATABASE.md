@@ -30,6 +30,7 @@ Password ini **tidak** ada di migration. Seed demo (`db/seed`) hanya untuk lokal
 | V005 | katalog permission & 7 role sistem |
 | V006 | fungsi keamanan (single source of truth otorisasi), get_setting, business_date |
 | V007 | grant & RLS policy |
+| V008 | perbaikan policy SELECT outlets/users agar `INSERT ... RETURNING` oleh admin tidak ditolak (bug ditemukan CI) |
 
 Aturan: tidak ada perubahan schema manual; tidak ada `DROP TABLE` di production; Flyway `clean`
 dinonaktifkan. Data master dinonaktifkan (`active=false`), tidak dihapus (trigger menolak DELETE

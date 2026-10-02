@@ -50,6 +50,7 @@ class RlsBackstopIT extends IntegrationTestBase {
     void withoutUserContextDatabaseDeniesEverything() {
         assertThatThrownBy(() -> inTx(() -> jdbc.sql("SELECT count(*) FROM pos.outlets").query(Long.class).single()))
                 .isInstanceOf(DataAccessException.class)
+                .rootCause()
                 .hasMessageContaining("permission denied");
     }
 
@@ -60,6 +61,7 @@ class RlsBackstopIT extends IntegrationTestBase {
                 INSERT INTO pos.terminals (outlet_id, code, name) VALUES (:o, :c, 'bypass')
                 """).param("o", OUTLET_JKT).param("c", unique("POS-RLS")).update()))
                 .isInstanceOf(DataAccessException.class)
+                .rootCause()
                 .hasMessageContaining("row-level security");
     }
 

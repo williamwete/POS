@@ -61,17 +61,15 @@ Lihat [API.md](API.md) (32 endpoint + 2 probe health).
 ## 7. Test cases
 | Suite | Jumlah | Status di workspace ini |
 |---|---|---|
-| SQL RLS & otorisasi (`db/tests`) | 126 asersi / 5 file | ✅ lulus di PostgreSQL 16 |
+| SQL RLS & otorisasi (`db/tests`) | 136 asersi / 6 file | ✅ lulus di PostgreSQL 16 |
 | PREPARE-check SQL backend | 70 statement (+2 dinamis dicek manual) | ✅ lulus |
 | Frontend unit (Vitest) | 15 test | ✅ lulus; type-check & build ✅ |
-| Backend integrasi (JUnit) | 30 test / 6 kelas | ⚠️ **belum dijalankan**, lihat batasan #1 |
+| Backend integrasi (JUnit) | 31 test / 6 kelas | CI run #1: compile ✅, 27/30 lulus → diperbaiki (lihat catatan CI) |
 | Review visual UI | 13 layar desktop & mobile | ✅ diperiksa dengan mock API |
 
 ## 8. Known limitations
-1. **Backend belum dikompilasi & dijalankan.** Workspace pengembangan tidak dapat mengakses
-   Maven Central (kebijakan jaringan). SQL-nya terverifikasi terhadap database sungguhan, tetapi
-   compile Java dan 30 test integrasi baru berjalan di CI GitHub Actions atau dengan
-   `./gradlew test` di mesin developer. **Jalankan CI dan perbaiki bila ada error sebelum Phase 2.**
+1. Workspace pengembangan tidak dapat mengakses Maven Central, sehingga backend hanya
+   dikompilasi & dites di CI GitHub Actions (atau `./gradlew test` di mesin developer).
 2. Rate limiting in-memory per instance (**TEMPORARY IMPLEMENTATION**, ASSUMPTIONS B11).
 3. Login memakai email, belum username (B13).
 4. Header terminal di audit masih klaim client sampai Phase 3 (B14).
@@ -89,3 +87,15 @@ Lihat [README.md](../README.md#menjalankan-secara-lokal) dan [DEPLOYMENT.md](DEP
 - Aplikasi: deploy ulang image versi sebelumnya.
 - Database: forward-fix dengan migration baru. Pada lingkungan tanpa data produksi, rollback penuh
   Phase 1 dijelaskan di [DATABASE.md](DATABASE.md#rollback).
+
+## Catatan CI run #1 (2026-10-02)
+Backend berhasil dikompilasi; 27/30 test lulus. Tiga kegagalan:
+- `RlsBackstopIT` (2 test): **keamanan berfungsi benar** (database menolak dengan
+  "permission denied" / "row-level security"), tetapi test memeriksa pesan exception luar,
+  bukan root cause. Diperbaiki di test.
+- `UserManagementIT.createLoginDeactivate` (403): **bug nyata**. Policy SELECT `users` dan
+  `outlets` memakai fungsi STABLE yang membaca ulang tabel yang sama, sehingga baris baru pada
+  `INSERT ... RETURNING` ditolak RLS. Akibatnya admin tidak bisa membuat user maupun outlet.
+  Diperbaiki di migration V008, dengan test regresi SQL (`test_06_insert_returning.sql`, terbukti
+  gagal tanpa V008) dan test API `SecurityIT.adminCanCreateOutletAndSeeIt`.
+

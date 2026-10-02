@@ -40,7 +40,7 @@ AS $$
 DECLARE
     n bigint;
 BEGIN
-    EXECUTE format('SELECT count(*) FROM (%s) q', p_sql) INTO n;
+    EXECUTE format('WITH q AS (%s) SELECT count(*) FROM q', p_sql) INTO n;
     RETURN n;
 END
 $$;
@@ -79,3 +79,14 @@ END
 $$;
 
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pos_test TO PUBLIC;
+
+-- Buat akun di shim auth.users (pos_api tidak punya akses ke schema auth).
+CREATE OR REPLACE FUNCTION pos_test.make_auth_user(p_email text)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, auth
+AS $$
+    INSERT INTO auth.users (email) VALUES (p_email) RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.make_auth_user(text) TO PUBLIC;

@@ -98,6 +98,18 @@ class SecurityIT extends IntegrationTestBase {
         assertThat(deactivate.getResponse().getStatus()).isEqualTo(403);
     }
 
+    /** Regresi V008: INSERT ... RETURNING oleh admin sempat ditolak RLS. */
+    @Test
+    void adminCanCreateOutletAndSeeIt() throws Exception {
+        String code = unique("SB").replace("-", "").substring(0, 10);
+        MvcResult created = postAs("admin", "/api/outlets", Map.of("code", code, "name", "Outlet Baru"));
+        assertThat(created.getResponse().getStatus()).isEqualTo(201);
+        String id = body(created).at("/data/id").asText();
+        assertThat(getAs("admin", "/api/outlets/" + id).getResponse().getStatus()).isEqualTo(200);
+        // kasir JKT tidak bisa melihat outlet baru
+        assertThat(getAs("cashier.jkt", "/api/outlets/" + id).getResponse().getStatus()).isEqualTo(403);
+    }
+
     @Test
     void unknownJsonFieldsAreRejected() throws Exception {
         MvcResult r = postAs("admin", "/api/outlets",
