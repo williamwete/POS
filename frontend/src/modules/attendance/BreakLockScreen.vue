@@ -3,12 +3,14 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import Button from 'primevue/button'
 import { formatDuration, useAttendanceStore } from '@/stores/attendance'
 import { useApiAction } from '@/composables/useApiAction'
+import { useCashierStore } from '@/stores/cashier'
 
 /**
  * Layar kunci saat istirahat (§12: "POS dapat dikunci, kasir tidak boleh bertransaksi").
  * Ini hanya UX; backend menolak transaksi saat status ON_BREAK mulai Phase 4.
  */
 const attendance = useAttendanceStore()
+const cashier = useCashierStore()
 const { busy, run } = useApiAction()
 const now = ref(new Date())
 let timer: number | undefined
@@ -25,8 +27,10 @@ const since = computed(() => {
   return b ? new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(b.breakStart)) : ''
 })
 
-function endBreak() {
-  void run((key) => attendance.endBreak(key), 'Selamat bekerja kembali')
+async function endBreak() {
+  const ok = await run((key) => attendance.endBreak(key), 'Selamat bekerja kembali')
+  // Kasir yang terkunci karena istirahat tetap terkunci sampai password dimasukkan lagi.
+  if (ok !== null && cashier.current) await cashier.load().catch(() => undefined)
 }
 </script>
 
@@ -47,6 +51,7 @@ function endBreak() {
       </p>
       <p class="tabular mt-6 text-5xl font-bold tracking-tight">{{ elapsed }}</p>
       <p class="mt-6 text-sm text-jade-100">POS terkunci selama istirahat. Transaksi tidak dapat dibuat.</p>
+      <p v-if="cashier.current" class="mt-1 text-sm text-jade-100">Setelah istirahat, masukkan password untuk membuka terminal.</p>
       <Button class="mt-6" label="Selesai istirahat" icon="pi pi-play" size="large" :loading="busy" @click="endBreak" />
     </div>
   </div>

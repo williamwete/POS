@@ -30,6 +30,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'attendance/outlet', name: 'outlet-attendance', component: () => import('@/modules/attendance/OutletAttendancePage.vue'),
         meta: { title: 'Kehadiran outlet', anyOf: [{ permission: 'attendance.view', scope: 'any' }] },
       },
+      {
+        path: 'cashier/open', name: 'cashier-open', component: () => import('@/modules/cashier/OpenCashierPage.vue'),
+        meta: { requiresContext: true, title: 'Buka kasir', anyOf: [{ permission: 'cashier.open', scope: 'current' }] },
+      },
+      {
+        path: 'cashier/sessions', name: 'cashier-sessions', component: () => import('@/modules/cashier/OutletCashierPage.vue'),
+        meta: { title: 'Sesi kasir', anyOf: [{ permission: 'cashier.view', scope: 'any' }] },
+      },
       { path: 'context', name: 'context', component: () => import('@/modules/auth/SelectContextPage.vue'), meta: { title: 'Pilih outlet & terminal' } },
       {
         path: 'admin/outlets', name: 'outlets', component: () => import('@/modules/admin/OutletsPage.vue'),

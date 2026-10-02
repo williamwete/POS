@@ -128,7 +128,8 @@ async function submitForce() {
       <form class="space-y-4" @submit.prevent="submitForce">
         <p class="text-sm text-ink-soft">
           Dipakai bila karyawan lupa clock out. Jam pulang dicatat sekarang, istirahat yang masih berjalan ditutup,
-          dan tindakan ini tercatat atas nama Anda di audit log.
+          dan tindakan ini tercatat atas nama Anda di audit log. Jika karyawan masih memegang kasir, terminalnya
+          otomatis dikunci.
         </p>
         <div>
           <label for="force-reason" class="mb-1 block text-sm font-medium">Alasan <span class="text-alert-600">*</span></label>

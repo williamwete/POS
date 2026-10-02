@@ -209,3 +209,64 @@ export interface Attendance {
   version: number
   breaks: AttendanceBreak[]
 }
+
+export type CashierSessionStatus = 'OPEN' | 'ON_BREAK' | 'CLOSING' | 'CLOSED' | 'CANCELLED'
+export type LockReason = 'MANUAL' | 'IDLE' | 'BREAK' | 'FORCED_CLOCK_OUT'
+
+export interface Denomination {
+  id: string
+  currency: string
+  value: number
+  kind: 'NOTE' | 'COIN'
+  sortOrder: number
+}
+
+export interface CashCountItem {
+  value: number
+  kind: 'NOTE' | 'COIN'
+  quantity: number
+  subtotal: number
+}
+
+export interface CashCount {
+  id: string
+  countType: 'OPENING' | 'MID' | 'CLOSING' | 'HANDOVER'
+  totalAmount: number
+  /** null untuk kasir (blind count); terisi untuk pemegang cashier.view */
+  expectedAmount?: number | null
+  difference?: number | null
+  note?: string
+  countedAt: string
+  countedByUsername?: string
+  items: CashCountItem[]
+}
+
+export interface CashierSession {
+  id: string
+  employeeId: string
+  employeeCode: string
+  employeeName: string
+  outletId: string
+  outletCode: string
+  terminalId: string
+  terminalCode: string
+  terminalName: string
+  businessDate: string
+  openedAt: string
+  closedAt?: string
+  openingCash: number
+  expectedCash?: number | null
+  status: CashierSessionStatus
+  lockedAt?: string
+  lockReason?: LockReason
+  cancelReason?: string
+  version: number
+  idleLockMinutes: number
+  counts: CashCount[]
+}
+
+/** Baris hitungan yang dikirim ke server: nilai uang selalu dihitung ulang server. */
+export interface CountLine {
+  denominationId: string
+  quantity: number
+}

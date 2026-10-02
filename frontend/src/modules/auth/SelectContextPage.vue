@@ -9,9 +9,12 @@ import { api } from '@/services'
 import { ApiError } from '@/services/apiClient'
 import type { Terminal } from '@/types/api'
 import { formatBusinessDate } from '@/utils/format'
+import { formatRupiah } from '@/utils/money'
+import { useCashierStore } from '@/stores/cashier'
 
 const session = useSessionStore()
 const router = useRouter()
+const cashier = useCashierStore()
 
 const selectedOutlet = ref<string | null>(session.outletId ?? (session.outlets.length === 1 ? session.outlets[0]!.id : null))
 const selectedTerminal = ref<string | null>(session.terminal?.id ?? null)
@@ -49,7 +52,35 @@ async function loadTerminals() {
 }
 
 watch(selectedOutlet, loadTerminals)
-onMounted(loadTerminals)
+
+// §6: user yang masih memegang cashier session ditawari melanjutkan session tersebut.
+const openSession = computed(() => cashier.current)
+const sessionSince = computed(() =>
+  openSession.value
+    ? new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(openSession.value.openedAt))
+    : '',
+)
+const leavingSession = computed(() => !!openSession.value && !!terminal.value && terminal.value.id !== openSession.value.terminalId)
+
+onMounted(async () => {
+  const terminalsLoaded = loadTerminals()
+  if (session.me?.employee) {
+    await cashier.load().catch(() => undefined)
+    const s = cashier.current
+    if (s && session.outlets.some((o) => o.id === s.outletId)) {
+      await terminalsLoaded
+      selectedTerminal.value = s.terminalId
+      selectedOutlet.value = s.outletId // memicu muat ulang terminal bila outlet berbeda
+    }
+  }
+})
+
+async function resume() {
+  const s = openSession.value
+  if (!s) return
+  session.selectContext(s.outletId, { id: s.terminalId, code: s.terminalCode, name: s.terminalName })
+  await router.push({ name: 'home' })
+}
 
 async function confirm() {
   if (!outlet.value || !terminal.value) return
@@ -75,6 +106,21 @@ async function confirm() {
     <p class="mt-1 text-ink-soft">Semua transaksi akan tercatat di outlet dan terminal yang Anda pilih.</p>
 
     <Message v-if="error" severity="error" class="mt-4" :closable="false">{{ error }}</Message>
+
+    <div
+      v-if="openSession"
+      class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border-2 border-amber-500 bg-amber-100 p-4"
+      role="status"
+    >
+      <div>
+        <p class="font-semibold">Anda masih memegang kasir di {{ openSession.terminalCode }} ({{ openSession.outletCode }}).</p>
+        <p class="text-sm text-ink-soft">
+          Dibuka pukul <span class="tabular">{{ sessionSince }}</span> dengan modal awal
+          <span class="tabular">{{ formatRupiah(openSession.openingCash) }}</span>. Lanjutkan session ini?
+        </p>
+      </div>
+      <Button :label="`Lanjutkan di ${openSession.terminalCode}`" icon="pi pi-arrow-right" icon-pos="right" @click="resume" />
+    </div>
 
     <div v-if="activeOutlets.length === 0" class="mt-8 rounded-lg border border-line bg-surface p-6">
       <p class="font-semibold">Akun Anda belum memiliki akses ke outlet mana pun.</p>
@@ -138,6 +184,10 @@ async function confirm() {
         </div>
       </fieldset>
 
+      <p v-if="leavingSession" class="mt-6 text-sm text-amber-700">
+        Session kasir Anda tetap terbuka di {{ openSession?.terminalCode }}. Di terminal lain Anda belum bisa bertransaksi
+        sampai session tersebut ditutup.
+      </p>
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <Button
           :label="terminal ? `Mulai di ${terminal.code}` : 'Pilih terminal'"

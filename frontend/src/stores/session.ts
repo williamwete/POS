@@ -111,6 +111,16 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  /**
+   * Login ulang dengan password user yang sama (dipakai membuka kunci terminal). Token baru
+   * membawa waktu autentikasi baru; backend/database menolak unlock dengan token lama.
+   */
+  async function reauthenticate(password: string) {
+    const email = me.value?.user.email
+    if (!email) throw new Error('Belum login')
+    await auth().signIn(email, password)
+  }
+
   async function refresh() {
     const res = await api().get<MeResponse>('/api/auth/me')
     me.value = res.data
@@ -136,6 +146,6 @@ export const useSessionStore = defineStore('session', () => {
 
   return {
     me, outletId, terminal, isAuthenticated, outlets, currentOutlet, roleSummary,
-    can, selectContext, clearContext, login, restore, refresh, logout, expire,
+    can, selectContext, clearContext, login, restore, reauthenticate, refresh, logout, expire,
   }
 })

@@ -5,6 +5,7 @@ import { api } from '@/services'
 import type { Permission } from '@/types/api'
 import { formatBusinessDate } from '@/utils/format'
 import AttendanceCard from '@/modules/attendance/AttendanceCard.vue'
+import CashierCard from '@/modules/cashier/CashierCard.vue'
 
 const session = useSessionStore()
 const now = ref(new Date())
@@ -82,7 +83,10 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </div>
     </dl>
 
-    <AttendanceCard class="mt-6" />
+    <div class="mt-6 grid gap-4 lg:grid-cols-2">
+      <AttendanceCard />
+      <CashierCard />
+    </div>
 
     <section class="mt-10">
       <h2 class="text-lg font-semibold">Yang dapat Anda lakukan di outlet ini</h2>

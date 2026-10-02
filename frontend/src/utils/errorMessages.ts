@@ -12,6 +12,10 @@ const MESSAGES: Record<string, string> = {
   RATE_LIMITED: 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.',
   NETWORK_ERROR: 'Server tidak dapat dihubungi. Periksa koneksi jaringan.',
   INTERNAL_ERROR: 'Terjadi kesalahan pada server. Coba lagi; jika berulang, laporkan kode request.',
+  TERMINAL_ALREADY_OPEN: 'Terminal ini sedang dipakai kasir lain. Pilih terminal lain.',
+  TERMINAL_MISMATCH: 'Cashier session Anda masih terbuka di terminal lain. Lanjutkan di terminal tersebut.',
+  CASHIER_SESSION_OPEN: 'Tutup atau batalkan kasir terlebih dahulu sebelum clock out.',
+  REAUTH_REQUIRED: 'Masukkan password Anda untuk membuka kunci terminal.',
   IDEMPOTENCY_KEY_REUSED: 'Permintaan ganda dengan isi berbeda terdeteksi. Muat ulang halaman.',
 }
 

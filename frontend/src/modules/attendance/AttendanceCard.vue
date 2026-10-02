@@ -4,13 +4,17 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
 import { useSessionStore } from '@/stores/session'
 import { formatDuration, useAttendanceStore, workedSeconds } from '@/stores/attendance'
 import { useApiAction } from '@/composables/useApiAction'
+import { useCashierStore } from '@/stores/cashier'
 
 const session = useSessionStore()
 const attendance = useAttendanceStore()
 const confirm = useConfirm()
+const cashier = useCashierStore()
+const toast = useToast()
 const { busy, run } = useApiAction()
 
 const now = ref(new Date())
@@ -41,12 +45,23 @@ async function clockIn() {
 async function startBreak() {
   const ok = await run((key) => attendance.startBreak(breakReason.value.trim() || null, key), 'Istirahat dimulai')
   if (ok !== null) {
+    // istirahat mengunci kasir yang sedang terbuka (dilakukan server)
+    if (cashier.current) void cashier.load().catch(() => undefined)
     breakOpen.value = false
     breakReason.value = ''
   }
 }
 
 function clockOut() {
+  if (cashier.current) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Kasir masih terbuka',
+      detail: `Anda masih memegang kasir ${cashier.current.terminalCode}. Tutup kasir (atau batalkan bila salah buka) sebelum clock out.`,
+      life: 6000,
+    })
+    return
+  }
   confirm.require({
     header: 'Clock out sekarang?',
     message: `Jam kerja hari ini ${worked.value}. Setelah clock out Anda perlu clock in lagi untuk mulai bekerja.`,
