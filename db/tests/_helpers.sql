@@ -159,3 +159,29 @@ AS $$
     RETURNING id
 $$;
 GRANT EXECUTE ON FUNCTION pos_test.clock_in(uuid) TO PUBLIC;
+
+-- Penjualan baru (DRAFT) di session aktif user saat ini.
+CREATE OR REPLACE FUNCTION pos_test.new_sale()
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.sales (organization_id, outlet_id, terminal_id, cashier_session_id, employee_id, created_by,
+                           business_date, client_transaction_id)
+    SELECT s.organization_id, s.outlet_id, s.terminal_id, s.id, s.employee_id, pos.current_app_user_id(),
+           '1900-01-01', 'TEST-' || replace(gen_random_uuid()::text, '-', '')
+    FROM pos.cashier_sessions s
+    WHERE s.employee_id = pos.current_employee_id() AND s.status IN ('OPEN', 'ON_BREAK')
+    RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.new_sale() TO PUBLIC;
+
+CREATE OR REPLACE FUNCTION pos_test.add_item(p_sale uuid, p_sku text, p_qty numeric)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.sale_items (sale_id, product_id, sku, product_name, uom, quantity, list_price, unit_price, created_by)
+    SELECT p_sale, p.id, 'x', 'x', 'x', p_qty, 1, 1, pos.current_app_user_id()
+    FROM pos.products p WHERE p.sku = p_sku
+    RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.add_item(uuid, text, numeric) TO PUBLIC;
