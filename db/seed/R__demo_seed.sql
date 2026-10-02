@@ -1,0 +1,118 @@
+-- LOCAL/DEMO SEED (repeatable, idempotent). Tidak dijalankan di staging/production.
+-- Password semua akun demo: Demo#12345
+
+GRANT pos_local_auth TO pos_api;
+
+-- Organization
+INSERT INTO pos.organizations (id, code, name, timezone, currency)
+VALUES ('00000000-0000-4000-8000-000000000001', 'DEMO', 'PT Demo Retail Indonesia', 'Asia/Jakarta', 'IDR')
+ON CONFLICT (id) DO NOTHING;
+
+-- Outlets
+INSERT INTO pos.outlets (id, organization_id, code, name, address, phone) VALUES
+    ('00000000-0000-4000-8000-000000000101', '00000000-0000-4000-8000-000000000001',
+     'JKT01', 'Outlet Jakarta Pusat', 'Jl. M.H. Thamrin No. 1, Jakarta Pusat', '021-5550101'),
+    ('00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-000000000001',
+     'BDG01', 'Outlet Bandung Dago', 'Jl. Ir. H. Juanda No. 10, Bandung', '022-5550102')
+ON CONFLICT (id) DO NOTHING;
+
+-- Warehouses
+INSERT INTO pos.warehouses (id, organization_id, outlet_id, code, name) VALUES
+    ('00000000-0000-4000-8000-000000000201', '00000000-0000-4000-8000-000000000001',
+     '00000000-0000-4000-8000-000000000101', 'WH-JKT01', 'Gudang Jakarta Pusat'),
+    ('00000000-0000-4000-8000-000000000202', '00000000-0000-4000-8000-000000000001',
+     '00000000-0000-4000-8000-000000000102', 'WH-BDG01', 'Gudang Bandung Dago')
+ON CONFLICT (id) DO NOTHING;
+
+UPDATE pos.outlets SET default_warehouse_id = '00000000-0000-4000-8000-000000000201'
+WHERE id = '00000000-0000-4000-8000-000000000101' AND default_warehouse_id IS NULL;
+UPDATE pos.outlets SET default_warehouse_id = '00000000-0000-4000-8000-000000000202'
+WHERE id = '00000000-0000-4000-8000-000000000102' AND default_warehouse_id IS NULL;
+
+-- Devices
+INSERT INTO pos.devices (id, outlet_id, device_type, code, name, identifier) VALUES
+    ('00000000-0000-4000-8000-000000000301', '00000000-0000-4000-8000-000000000101', 'PRINTER',     'PRN-JKT-01', 'Printer Thermal Kasir 1', 'tcp://192.168.10.21:9100'),
+    ('00000000-0000-4000-8000-000000000302', '00000000-0000-4000-8000-000000000101', 'CASH_DRAWER', 'DRW-JKT-01', 'Laci Kas Kasir 1',        'via PRN-JKT-01'),
+    ('00000000-0000-4000-8000-000000000303', '00000000-0000-4000-8000-000000000101', 'PRINTER',     'PRN-JKT-02', 'Printer Thermal Kasir 2', 'tcp://192.168.10.22:9100'),
+    ('00000000-0000-4000-8000-000000000304', '00000000-0000-4000-8000-000000000102', 'PRINTER',     'PRN-BDG-01', 'Printer Thermal Kasir 1', 'tcp://192.168.20.21:9100')
+ON CONFLICT (id) DO NOTHING;
+
+-- Terminals
+INSERT INTO pos.terminals (id, outlet_id, code, name, printer_id, cash_drawer_id) VALUES
+    ('00000000-0000-4000-8000-000000000401', '00000000-0000-4000-8000-000000000101', 'POS-JKT-01', 'Kasir 1',
+     '00000000-0000-4000-8000-000000000301', '00000000-0000-4000-8000-000000000302'),
+    ('00000000-0000-4000-8000-000000000402', '00000000-0000-4000-8000-000000000101', 'POS-JKT-02', 'Kasir 2',
+     '00000000-0000-4000-8000-000000000303', NULL),
+    ('00000000-0000-4000-8000-000000000403', '00000000-0000-4000-8000-000000000102', 'POS-BDG-01', 'Kasir 1',
+     '00000000-0000-4000-8000-000000000304', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- Employees
+INSERT INTO pos.employees (id, organization_id, employee_code, full_name, position, home_outlet_id, email) VALUES
+    ('00000000-0000-4000-8000-000000000501', '00000000-0000-4000-8000-000000000001', 'EMP001', 'Sari Wulandari',  'IT Administrator', NULL, 'superadmin@demo.local'),
+    ('00000000-0000-4000-8000-000000000502', '00000000-0000-4000-8000-000000000001', 'EMP002', 'Budi Santoso',    'System Admin',     NULL, 'admin@demo.local'),
+    ('00000000-0000-4000-8000-000000000503', '00000000-0000-4000-8000-000000000001', 'EMP003', 'Rina Kartika',    'Area Manager',     '00000000-0000-4000-8000-000000000101', 'manager@demo.local'),
+    ('00000000-0000-4000-8000-000000000504', '00000000-0000-4000-8000-000000000001', 'EMP004', 'Agus Prasetyo',   'Supervisor',       '00000000-0000-4000-8000-000000000101', 'supervisor.jkt@demo.local'),
+    ('00000000-0000-4000-8000-000000000505', '00000000-0000-4000-8000-000000000001', 'EMP005', 'Dewi Lestari',    'Kasir',            '00000000-0000-4000-8000-000000000101', 'cashier.jkt@demo.local'),
+    ('00000000-0000-4000-8000-000000000506', '00000000-0000-4000-8000-000000000001', 'EMP006', 'Yusuf Hidayat',   'Kasir',            '00000000-0000-4000-8000-000000000102', 'cashier.bdg@demo.local'),
+    ('00000000-0000-4000-8000-000000000507', '00000000-0000-4000-8000-000000000001', 'EMP007', 'Maya Anggraini',  'Internal Auditor', NULL, 'auditor@demo.local')
+ON CONFLICT (id) DO NOTHING;
+
+-- Auth users (shim lokal) & profil aplikasi
+INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
+SELECT v.id::uuid, v.email, crypt('Demo#12345', gen_salt('bf', 10)), now()
+FROM (VALUES
+    ('00000000-0000-4000-8000-000000000601', 'superadmin@demo.local'),
+    ('00000000-0000-4000-8000-000000000602', 'admin@demo.local'),
+    ('00000000-0000-4000-8000-000000000603', 'manager@demo.local'),
+    ('00000000-0000-4000-8000-000000000604', 'supervisor.jkt@demo.local'),
+    ('00000000-0000-4000-8000-000000000605', 'cashier.jkt@demo.local'),
+    ('00000000-0000-4000-8000-000000000606', 'cashier.bdg@demo.local'),
+    ('00000000-0000-4000-8000-000000000607', 'auditor@demo.local')
+) AS v(id, email)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO pos.users (id, auth_user_id, organization_id, employee_id, username, email, display_name) VALUES
+    ('00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000601', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000501', 'superadmin',     'superadmin@demo.local',     'Sari Wulandari'),
+    ('00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000602', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000502', 'admin',          'admin@demo.local',          'Budi Santoso'),
+    ('00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000603', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000503', 'manager',        'manager@demo.local',        'Rina Kartika'),
+    ('00000000-0000-4000-8000-000000000704', '00000000-0000-4000-8000-000000000604', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000504', 'supervisor.jkt', 'supervisor.jkt@demo.local', 'Agus Prasetyo'),
+    ('00000000-0000-4000-8000-000000000705', '00000000-0000-4000-8000-000000000605', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000505', 'cashier.jkt',    'cashier.jkt@demo.local',    'Dewi Lestari'),
+    ('00000000-0000-4000-8000-000000000706', '00000000-0000-4000-8000-000000000606', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000506', 'cashier.bdg',    'cashier.bdg@demo.local',    'Yusuf Hidayat'),
+    ('00000000-0000-4000-8000-000000000707', '00000000-0000-4000-8000-000000000607', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000507', 'auditor',        'auditor@demo.local',        'Maya Anggraini')
+ON CONFLICT (id) DO NOTHING;
+
+-- Role assignment
+INSERT INTO pos.user_roles (user_id, role_id, outlet_id)
+SELECT v.user_id::uuid, r.id, v.outlet_id::uuid
+FROM (VALUES
+    ('00000000-0000-4000-8000-000000000701', 'SUPER_ADMIN',   NULL),
+    ('00000000-0000-4000-8000-000000000702', 'ADMIN',         NULL),
+    ('00000000-0000-4000-8000-000000000703', 'STORE_MANAGER', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000703', 'STORE_MANAGER', '00000000-0000-4000-8000-000000000102'),
+    ('00000000-0000-4000-8000-000000000704', 'SUPERVISOR',    '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000705', 'CASHIER',       '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000706', 'CASHIER',       '00000000-0000-4000-8000-000000000102'),
+    ('00000000-0000-4000-8000-000000000707', 'AUDITOR',       NULL)
+) AS v(user_id, role_code, outlet_id)
+JOIN pos.roles r ON r.code = v.role_code
+ON CONFLICT DO NOTHING;
+
+INSERT INTO pos.user_outlets (user_id, outlet_id) VALUES
+    ('00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000102'),
+    ('00000000-0000-4000-8000-000000000704', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000705', '00000000-0000-4000-8000-000000000101'),
+    ('00000000-0000-4000-8000-000000000706', '00000000-0000-4000-8000-000000000102')
+ON CONFLICT DO NOTHING;
+
+-- Konfigurasi demo
+INSERT INTO pos.settings (organization_id, outlet_id, key, value)
+SELECT '00000000-0000-4000-8000-000000000001'::uuid, NULL, v.key, v.value::jsonb
+FROM (VALUES
+    ('max_cashier_discount', '5'),
+    ('max_supervisor_discount', '15'),
+    ('max_manager_discount', '30'),
+    ('cash_difference_approval_threshold', '20000')
+) AS v(key, value)
+ON CONFLICT DO NOTHING;

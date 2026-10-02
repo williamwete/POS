@@ -1,0 +1,15 @@
+# secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+# build
+backend/build/
+backend/.gradle/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+*.log
+.DS_Store
+.idea/
+.vscode/
