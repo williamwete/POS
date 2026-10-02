@@ -11,7 +11,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DB="${POS_TEST_DB:-pos_rls_test}"
-API_PASSWORD="${POS_API_TEST_PASSWORD:-pos_api_test_only}"
+API_PASSWORD="${POS_API_TEST_PASSWORD:-pos_api_local_only}"
 PSQL_ADMIN=(psql -X -q -v ON_ERROR_STOP=1 -d "$DB")
 
 case "$DB" in

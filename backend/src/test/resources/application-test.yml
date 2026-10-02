@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${POS_TEST_DB_URL:jdbc:postgresql://localhost:5432/pos_it}
+    username: pos_api
+    password: ${POS_TEST_API_PASSWORD:pos_api_local_only}
+  flyway:
+    url: ${POS_TEST_DB_URL:jdbc:postgresql://localhost:5432/pos_it}
+    user: ${POS_TEST_DB_OWNER:postgres}
+    password: ${POS_TEST_DB_OWNER_PASSWORD:postgres}
+    locations: classpath:db/local,classpath:db/migration,classpath:db/seed
+
+pos:
+  jwt:
+    hs256-secret: test-secret-0123456789abcdef0123456789abcdef
+    issuer: pos-test
+    audience: authenticated
+  auth:
+    provider: LOCAL
+  cors:
+    allowed-origins: http://localhost:5173
+  rate-limit:
+    enabled: false

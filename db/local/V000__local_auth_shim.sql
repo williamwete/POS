@@ -53,8 +53,44 @@ AS $$
     RETURNING id
 $$;
 
+CREATE OR REPLACE FUNCTION auth.local_set_password(p_id uuid, p_password text)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, auth, public
+AS $$
+    UPDATE auth.users SET encrypted_password = crypt(p_password, gen_salt('bf', 10)), updated_at = now()
+    WHERE id = p_id
+$$;
+
+CREATE OR REPLACE FUNCTION auth.local_set_banned(p_id uuid, p_banned boolean)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, auth, public
+AS $$
+    UPDATE auth.users
+    SET banned_until = CASE WHEN p_banned THEN 'infinity'::timestamptz ELSE NULL END, updated_at = now()
+    WHERE id = p_id
+$$;
+
+CREATE OR REPLACE FUNCTION auth.local_delete_user(p_id uuid)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, auth, public
+AS $$
+    DELETE FROM auth.users WHERE id = p_id
+$$;
+
 REVOKE ALL ON FUNCTION auth.local_verify_password(text, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION auth.local_create_user(text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION auth.local_set_password(uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION auth.local_set_banned(uuid, boolean) FROM PUBLIC;
+REVOKE ALL ON FUNCTION auth.local_delete_user(uuid) FROM PUBLIC;
 GRANT USAGE ON SCHEMA auth TO pos_local_auth;
 GRANT EXECUTE ON FUNCTION auth.local_verify_password(text, text) TO pos_local_auth;
 GRANT EXECUTE ON FUNCTION auth.local_create_user(text, text) TO pos_local_auth;
+GRANT EXECUTE ON FUNCTION auth.local_set_password(uuid, text) TO pos_local_auth;
+GRANT EXECUTE ON FUNCTION auth.local_set_banned(uuid, boolean) TO pos_local_auth;
+GRANT EXECUTE ON FUNCTION auth.local_delete_user(uuid) TO pos_local_auth;

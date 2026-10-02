@@ -3,6 +3,10 @@
 
 GRANT pos_local_auth TO pos_api;
 
+-- Password role pos_api KHUSUS lokal/test. Di staging/production password diset oleh
+-- operator (lihat docs/DATABASE.md) dan seed ini tidak pernah dijalankan.
+ALTER ROLE pos_api WITH LOGIN PASSWORD 'pos_api_local_only';
+
 -- Organization
 INSERT INTO pos.organizations (id, code, name, timezone, currency)
 VALUES ('00000000-0000-4000-8000-000000000001', 'DEMO', 'PT Demo Retail Indonesia', 'Asia/Jakarta', 'IDR')

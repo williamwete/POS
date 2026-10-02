@@ -1,0 +1,106 @@
+spring:
+  application:
+    name: pos-backend
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    # Backend login sebagai pos_api (tanpa privilege tabel; lihat docs/ASSUMPTIONS.md A2)
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/pos}
+    username: ${DATABASE_USERNAME:pos_api}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+      connection-timeout: 5000
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    # Migration dijalankan dengan user pemilik schema, BUKAN pos_api.
+    url: ${MIGRATION_DATABASE_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/pos}}
+    user: ${MIGRATION_DATABASE_USERNAME:postgres}
+    password: ${MIGRATION_DATABASE_PASSWORD:}
+    locations: classpath:db/migration
+    # Supabase sudah punya objek lain di database; jangan pernah clean.
+    clean-disabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: true
+  mvc:
+    problemdetails:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+  error:
+    include-stacktrace: never
+    include-message: never
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+pos:
+  jwt:
+    jwk-set-uri: ${SUPABASE_JWKS_URL:}
+    hs256-secret: ${SUPABASE_JWT_SECRET:}
+    issuer: ${SUPABASE_JWT_ISSUER:}
+    audience: authenticated
+  auth:
+    provider: ${POS_AUTH_PROVIDER:SUPABASE}
+    supabase-url: ${SUPABASE_URL:}
+    supabase-service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+  cors:
+    allowed-origins: ${POS_CORS_ALLOWED_ORIGINS:}
+  rate-limit:
+    enabled: true
+    requests-per-minute: ${POS_RATE_LIMIT_PER_MINUTE:300}
+    auth-requests-per-minute: 10
+
+logging:
+  level:
+    root: INFO
+    pos.access: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  structured:
+    format:
+      console: ecs
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  flyway:
+    locations: classpath:db/local,classpath:db/migration,classpath:db/seed
+pos:
+  jwt:
+    hs256-secret: ${SUPABASE_JWT_SECRET:local-dev-secret-change-me-0123456789abcdef}
+    issuer: pos-local
+  auth:
+    provider: LOCAL
+  cors:
+    allowed-origins: ${POS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
