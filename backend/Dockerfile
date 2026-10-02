@@ -5,7 +5,8 @@ WORKDIR /src
 COPY db ./db
 COPY backend ./backend
 WORKDIR /src/backend
-RUN ./gradlew --no-daemon bootJar -x test
+# Normalisasi CRLF jika build context berasal dari checkout Windows
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:21-jre
 RUN useradd --system --uid 10001 pos

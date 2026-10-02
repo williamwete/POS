@@ -1,0 +1,8 @@
+# Skrip shell & wrapper Gradle harus LF agar jalan di container Linux,
+# walaupun repo di-clone di Windows (core.autocrlf=true).
+* text=auto
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
