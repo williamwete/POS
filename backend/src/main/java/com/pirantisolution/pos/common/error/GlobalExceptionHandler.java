@@ -50,7 +50,15 @@ public class GlobalExceptionHandler {
             Map.entry("users_employee_uk", "Karyawan sudah terhubung ke akun lain"),
             Map.entry("users_auth_user_uk", "Akun login sudah terhubung ke user lain"),
             Map.entry("roles_code_uk", "Kode role sudah dipakai"),
-            Map.entry("user_roles_scope_uk", "Role sudah diberikan pada scope ini"));
+            Map.entry("user_roles_scope_uk", "Role sudah diberikan pada scope ini"),
+            Map.entry("attendance_open_per_employee_uk", "Anda sudah clock in dan belum clock out"),
+            Map.entry("attendance_breaks_open_uk", "Anda sedang istirahat"));
+
+    /** Constraint unik yang punya kode error bisnis sendiri. */
+    private static final Map<String, ErrorCode> UNIQUE_CODES = Map.of(
+            "users_employee_uk", ErrorCode.EMPLOYEE_ALREADY_LINKED,
+            "attendance_open_per_employee_uk", ErrorCode.ATTENDANCE_ALREADY_OPEN,
+            "attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK);
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiResponse<Void>> handleApi(ApiException ex) {
@@ -117,8 +125,8 @@ public class GlobalExceptionHandler {
             String msg = constraint != null
                     ? UNIQUE_MESSAGES.getOrDefault(constraint, ErrorCode.DUPLICATE_VALUE.defaultMessage())
                     : ErrorCode.DUPLICATE_VALUE.defaultMessage();
-            ErrorCode code = "users_employee_uk".equals(constraint)
-                    ? ErrorCode.EMPLOYEE_ALREADY_LINKED : ErrorCode.DUPLICATE_VALUE;
+            ErrorCode code = constraint != null
+                    ? UNIQUE_CODES.getOrDefault(constraint, ErrorCode.DUPLICATE_VALUE) : ErrorCode.DUPLICATE_VALUE;
             return build(code, msg, null);
         }
         if ("23503".equals(state)) {
@@ -156,6 +164,11 @@ public class GlobalExceptionHandler {
             case "SETTING_VALUE_INVALID", "SETTING_SCOPE_INVALID", "SETTING_UNKNOWN" -> ErrorCode.SETTING_INVALID;
             case "OUTLET_NOT_FOUND" -> ErrorCode.NOT_FOUND;
             case "APPEND_ONLY_VIOLATION" -> ErrorCode.USER_NOT_AUTHORIZED;
+            case "BREAK_IN_PROGRESS" -> ErrorCode.BREAK_IN_PROGRESS;
+            case "ATTENDANCE_CLOSED", "BREAK_CLOSED" -> ErrorCode.ATTENDANCE_CLOSED;
+            case "ATTENDANCE_NOT_WORKING" -> ErrorCode.ALREADY_ON_BREAK;
+            case "ATTENDANCE_INVALID_TRANSITION", "ATTENDANCE_IMMUTABLE_FIELD", "BREAK_IMMUTABLE_FIELD",
+                    "BREAK_INVALID_UPDATE" -> ErrorCode.CONCURRENT_MODIFICATION;
             default -> null;
         };
     }

@@ -38,6 +38,17 @@ public enum ErrorCode {
     INVALID_DEVICE(HttpStatus.UNPROCESSABLE_ENTITY, "Device tidak valid untuk terminal ini"),
     SETTING_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Nilai konfigurasi tidak valid"),
 
+    // attendance (Phase 2)
+    EMPLOYEE_NOT_LINKED(HttpStatus.UNPROCESSABLE_ENTITY, "Akun Anda belum terhubung ke data karyawan"),
+    EMPLOYEE_INACTIVE(HttpStatus.UNPROCESSABLE_ENTITY, "Data karyawan Anda tidak aktif"),
+    ATTENDANCE_ALREADY_OPEN(HttpStatus.CONFLICT, "Anda sudah clock in dan belum clock out"),
+    NO_ACTIVE_ATTENDANCE(HttpStatus.CONFLICT, "Anda belum clock in"),
+    ALREADY_ON_BREAK(HttpStatus.CONFLICT, "Anda sedang istirahat"),
+    NOT_ON_BREAK(HttpStatus.CONFLICT, "Anda tidak sedang istirahat"),
+    BREAK_IN_PROGRESS(HttpStatus.CONFLICT, "Akhiri istirahat sebelum clock out"),
+    BREAK_DISABLED(HttpStatus.UNPROCESSABLE_ENTITY, "Fitur istirahat tidak aktif di outlet ini"),
+    ATTENDANCE_CLOSED(HttpStatus.CONFLICT, "Kehadiran ini sudah ditutup"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     TERMINAL_ALREADY_OPEN(HttpStatus.CONFLICT, "Terminal sudah memiliki cashier session aktif"),
     CASHIER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Cashier session tidak ditemukan"),
