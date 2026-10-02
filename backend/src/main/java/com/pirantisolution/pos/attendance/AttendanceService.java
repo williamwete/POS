@@ -131,6 +131,10 @@ public class AttendanceService {
     @Transactional
     public AttendanceView forceClockOut(UUID attendanceId, String reason) {
         CurrentUser cu = access.currentUser();
+        // Tanpa izin force di outlet mana pun → 403 (bukan 404 karena RLS menyembunyikan baris).
+        if (access.accessibleOutletIds().stream().noneMatch(o -> access.has("attendance.force_clock_out", o))) {
+            throw ApiException.forbidden();
+        }
         AttendanceView a = repo.findById(attendanceId).orElseThrow(() -> ApiException.notFound("Kehadiran"));
         access.requireOutlet("attendance.force_clock_out", a.outletId());
         if (a.employeeId().equals(cu.employeeId())) {
