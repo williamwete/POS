@@ -20,6 +20,11 @@ class CashierSessionIT extends IntegrationTestBase {
 
     private static final String SESSIONS = "/api/cashier/sessions";
 
+    /** Field null tidak diserialisasi (JSON NON_NULL), jadi "tidak ada" = missing atau null. */
+    private static boolean absent(JsonNode n) {
+        return n == null || n.isMissingNode() || n.isNull();
+    }
+
     private Map<String, String> denominations(String token) throws Exception {
         Map<String, String> ids = new HashMap<>();
         for (JsonNode d : body(call(token, "GET", "/api/cashier/denominations", null)).get("data")) {
@@ -65,7 +70,7 @@ class CashierSessionIT extends IntegrationTestBase {
         String sessionId = s.get("id").asText();
         assertThat(s.get("status").asText()).isEqualTo("OPEN");
         assertThat(s.get("openingCash").decimalValue()).isEqualByComparingTo("500000");
-        assertThat(s.get("expectedCash").isNull()).as("kasir tidak melihat expected cash").isTrue();
+        assertThat(absent(s.path("expectedCash"))).as("kasir tidak melihat expected cash").isTrue();
         assertThat(s.at("/counts/0/countType").asText()).isEqualTo("OPENING");
         assertThat(s.at("/counts/0/items")).hasSize(4);
 
@@ -132,7 +137,7 @@ class CashierSessionIT extends IntegrationTestBase {
                 .getResponse().getStatus()).isEqualTo(403);
 
         // tidak ada session yang tertinggal dari percobaan yang gagal
-        assertThat(body(call(c.token(), "GET", SESSIONS + "/current", null)).get("data").isNull()).isTrue();
+        assertThat(absent(body(call(c.token(), "GET", SESSIONS + "/current", null)).path("data"))).isTrue();
     }
 
     @Test
@@ -216,7 +221,7 @@ class CashierSessionIT extends IntegrationTestBase {
         JsonNode cc = body(count).get("data");
         assertThat(cc.get("countType").asText()).isEqualTo("MID");
         assertThat(cc.get("totalAmount").decimalValue()).isEqualByComparingTo("50000");
-        assertThat(cc.get("difference").isNull()).isTrue();
+        assertThat(absent(cc.path("difference"))).isTrue();
 
         JsonNode bySupervisor = body(getAs("supervisor.jkt", SESSIONS + "/" + id)).get("data");
         JsonNode mid = bySupervisor.at("/counts/1");
