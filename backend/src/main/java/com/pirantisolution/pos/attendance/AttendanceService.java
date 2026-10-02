@@ -3,6 +3,7 @@ package com.pirantisolution.pos.attendance;
 import com.pirantisolution.pos.attendance.AttendanceDtos.AttendanceView;
 import com.pirantisolution.pos.audit.AuditEvent;
 import com.pirantisolution.pos.audit.AuditService;
+import com.pirantisolution.pos.cashier.CashierRepository;
 import com.pirantisolution.pos.common.error.ApiException;
 import com.pirantisolution.pos.common.error.ErrorCode;
 import com.pirantisolution.pos.common.error.Guards;
@@ -23,8 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
  * Kehadiran karyawan (§11, §12, §55).
  *
  * <p>Alur: clock in → (break → akhiri break)* → clock out. Attendance terpisah dari cashier
- * session; aturan "tidak boleh clock out selama cashier session OPEN" ditegakkan di Phase 3
- * pada trigger database attendance, sehingga berlaku untuk semua jalur.
+ * session; aturan "tidak boleh clock out selama cashier session aktif" ditegakkan trigger database
+ * attendance (V010), sehingga berlaku untuk semua jalur. Mulai istirahat dan force clock out
+ * mengunci session kasir yang terbuka (juga oleh trigger); service mencatatnya di audit.
  */
 @Service
 public class AttendanceService {
@@ -33,12 +35,15 @@ public class AttendanceService {
     private final AccessService access;
     private final AuditService audit;
     private final JdbcClient jdbc;
+    private final CashierRepository cashier;
 
-    public AttendanceService(AttendanceRepository repo, AccessService access, AuditService audit, JdbcClient jdbc) {
+    public AttendanceService(AttendanceRepository repo, AccessService access, AuditService audit, JdbcClient jdbc,
+            CashierRepository cashier) {
         this.repo = repo;
         this.access = access;
         this.audit = audit;
         this.jdbc = jdbc;
+        this.cashier = cashier;
     }
 
     @Transactional(readOnly = true)
@@ -89,6 +94,7 @@ public class AttendanceService {
         v.put("breakId", breakId);
         v.put("reason", Guards.trimToNull(reason));
         audit.record(AuditEvent.of("BREAK_START", "ATTENDANCE", a.id()).outlet(a.outletId()).change(null, v));
+        auditSessionLock(cu.employeeId(), "BREAK");
         return after;
     }
 
@@ -118,6 +124,9 @@ public class AttendanceService {
             throw new ApiException(ErrorCode.BREAK_IN_PROGRESS);
         }
         access.requireOutlet("attendance.clock_out", a.outletId());
+        if (cashier.findActiveForEmployee(cu.employeeId()).isPresent()) {
+            throw new ApiException(ErrorCode.CASHIER_SESSION_OPEN);
+        }
         if (!repo.transition(a.id(), "WORKING", "COMPLETED", cu.userId(), null)) {
             throw new ApiException(ErrorCode.CONCURRENT_MODIFICATION);
         }
@@ -154,6 +163,7 @@ public class AttendanceService {
         closedBreak.ifPresent(s -> v.put("closedBreakSeconds", s));
         audit.record(AuditEvent.of("FORCE_CLOCK_OUT", "ATTENDANCE", a.id()).outlet(a.outletId())
                 .change(summary(a), v).reason(why));
+        auditSessionLock(a.employeeId(), "FORCED_CLOCK_OUT");
         return after;
     }
 
@@ -187,6 +197,13 @@ public class AttendanceService {
             throw new ApiException(ErrorCode.EMPLOYEE_NOT_LINKED);
         }
         return cu;
+    }
+
+    /** Catat penguncian session kasir yang dilakukan trigger attendance dalam transaksi ini. */
+    private void auditSessionLock(UUID employeeId, String reason) {
+        cashier.lockedNowForEmployee(employeeId).ifPresent(s ->
+                audit.record(AuditEvent.of("CASHIER_LOCK", "CASHIER_SESSION", s.id()).outlet(s.outletId())
+                        .change(Map.of("status", "OPEN"), Map.of("status", s.status(), "lockReason", reason))));
     }
 
     private AttendanceView openAttendance(CurrentUser cu) {

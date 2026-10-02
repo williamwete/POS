@@ -79,11 +79,39 @@ public class RlsTransactionManager extends DataSourceTransactionManager {
             claims.put("aud", aud.get(0));
         }
         claims.put("email", jwt.getClaimAsString("email"));
+        Long authTime = authTime(jwt);
+        if (authTime != null) {
+            claims.put("auth_time", authTime);
+        }
         try {
             return objectMapper.writeValueAsString(claims);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Cannot serialize JWT claims", e);
         }
+    }
+
+    /**
+     * Waktu (epoch detik) user terakhir membuktikan identitasnya (password/OTP/SSO), diambil dari
+     * klaim {@code amr} Supabase. Refresh token tidak mengubah nilai ini, sehingga database dapat
+     * mensyaratkan "login ulang setelah terminal dikunci" (ASSUMPTIONS B20).
+     */
+    static Long authTime(Jwt jwt) {
+        Object amr = jwt.getClaims().get("amr");
+        if (!(amr instanceof List<?> entries)) {
+            return null;
+        }
+        Long latest = null;
+        for (Object e : entries) {
+            if (e instanceof Map<?, ?> m && m.get("timestamp") instanceof Number n) {
+                String method = String.valueOf(m.get("method"));
+                if (method.contains("refresh") || method.equals("anonymous")) {
+                    continue;
+                }
+                long ts = n.longValue();
+                latest = latest == null ? ts : Math.max(latest, ts);
+            }
+        }
+        return latest;
     }
 
     private static void execute(Connection con, String sql) throws SQLException {

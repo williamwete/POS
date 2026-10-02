@@ -52,13 +52,19 @@ public class GlobalExceptionHandler {
             Map.entry("roles_code_uk", "Kode role sudah dipakai"),
             Map.entry("user_roles_scope_uk", "Role sudah diberikan pada scope ini"),
             Map.entry("attendance_open_per_employee_uk", "Anda sudah clock in dan belum clock out"),
-            Map.entry("attendance_breaks_open_uk", "Anda sedang istirahat"));
+            Map.entry("attendance_breaks_open_uk", "Anda sedang istirahat"),
+            Map.entry("cashier_sessions_active_terminal_uk", "Terminal sudah memiliki cashier session aktif"),
+            Map.entry("cashier_sessions_active_employee_uk", "Anda masih memiliki cashier session aktif"),
+            Map.entry("cash_count_items_uk", "Denominasi yang sama dikirim lebih dari sekali"));
 
     /** Constraint unik yang punya kode error bisnis sendiri. */
     private static final Map<String, ErrorCode> UNIQUE_CODES = Map.of(
             "users_employee_uk", ErrorCode.EMPLOYEE_ALREADY_LINKED,
             "attendance_open_per_employee_uk", ErrorCode.ATTENDANCE_ALREADY_OPEN,
-            "attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK);
+            "attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK,
+            "cashier_sessions_active_terminal_uk", ErrorCode.TERMINAL_ALREADY_OPEN,
+            "cashier_sessions_active_employee_uk", ErrorCode.CASHIER_SESSION_ALREADY_OPEN,
+            "cash_count_items_uk", ErrorCode.VALIDATION_FAILED);
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiResponse<Void>> handleApi(ApiException ex) {
@@ -169,6 +175,19 @@ public class GlobalExceptionHandler {
             case "ATTENDANCE_NOT_WORKING" -> ErrorCode.ALREADY_ON_BREAK;
             case "ATTENDANCE_INVALID_TRANSITION", "ATTENDANCE_IMMUTABLE_FIELD", "BREAK_IMMUTABLE_FIELD",
                     "BREAK_INVALID_UPDATE" -> ErrorCode.CONCURRENT_MODIFICATION;
+            case "CASHIER_SESSION_OPEN" -> ErrorCode.CASHIER_SESSION_OPEN;
+            case "CASHIER_SESSION_CLOSED" -> ErrorCode.CASHIER_SESSION_CLOSED;
+            case "CASHIER_SESSION_LOCKED" -> ErrorCode.CASHIER_SESSION_LOCKED;
+            case "CASHIER_SESSION_HAS_ACTIVITY" -> ErrorCode.CASHIER_SESSION_HAS_ACTIVITY;
+            case "CASHIER_SESSION_NOT_OWNER" -> ErrorCode.USER_NOT_AUTHORIZED;
+            case "ATTENDANCE_REQUIRED" -> ErrorCode.ATTENDANCE_REQUIRED;
+            case "TERMINAL_INACTIVE" -> ErrorCode.TERMINAL_INACTIVE;
+            case "REAUTH_REQUIRED" -> ErrorCode.REAUTH_REQUIRED;
+            case "DENOMINATION_INVALID" -> ErrorCode.DENOMINATION_INVALID;
+            case "OPENING_CASH_MISMATCH" -> ErrorCode.OPENING_CASH_MISMATCH;
+            case "CASHIER_SESSION_INVALID_TRANSITION", "CASHIER_SESSION_IMMUTABLE_FIELD",
+                    "CASHIER_SESSION_LOCK_REASON_REQUIRED", "CASH_COUNT_IMMUTABLE",
+                    "CASH_COUNT_TYPE_NOT_ENABLED" -> ErrorCode.CONCURRENT_MODIFICATION;
             default -> null;
         };
     }

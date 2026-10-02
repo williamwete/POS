@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pirantisolution.pos.auth.local.LocalTokenService;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,5 +95,72 @@ public abstract class IntegrationTestBase {
 
     protected static String unique(String prefix) {
         return prefix + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    // ------------------------------------------------------------ helper user/terminal baru per test
+
+    /** Kasir baru (karyawan + akun CASHIER di satu outlet) beserta token hasil login password. */
+    protected record Cashier(String token, String employeeId, String email, String password) {
+    }
+
+    /** Admin membuat karyawan + akun kasir di outlet tertentu, lalu kasir login. */
+    protected Cashier newCashier(UUID outletId) throws Exception {
+        String code = unique("E").replace("-", "").substring(0, 9);
+        MvcResult emp = postAs("admin", "/api/employees",
+                Map.of("employeeCode", code, "fullName", "Kasir " + code, "homeOutletId", outletId));
+        if (emp.getResponse().getStatus() != 201) {
+            throw new IllegalStateException("create employee failed: " + emp.getResponse().getContentAsString());
+        }
+        String employeeId = body(emp).at("/data/id").asText();
+
+        String cashierRoleId = null;
+        for (JsonNode r : body(getAs("admin", "/api/roles")).get("data")) {
+            if ("CASHIER".equals(r.get("code").asText())) {
+                cashierRoleId = r.get("id").asText();
+            }
+        }
+        String username = ("att." + code).toLowerCase();
+        String email = username + "@demo.local";
+        String password = "KasirAbsen2026";
+        MvcResult user = postAs("admin", "/api/users", Map.of(
+                "username", username, "email", email, "displayName", "Kasir " + code,
+                "employeeId", employeeId, "password", password,
+                "outletIds", List.of(outletId),
+                "roles", List.of(Map.of("roleId", cashierRoleId, "outletId", outletId))));
+        if (user.getResponse().getStatus() != 201) {
+            throw new IllegalStateException("create user failed: " + user.getResponse().getContentAsString());
+        }
+        return new Cashier(signIn(email, password), employeeId, email, password);
+    }
+
+    /** Login lewat endpoint dev (setara signInWithPassword Supabase). */
+    protected String signIn(String email, String password) throws Exception {
+        MvcResult login = mvc.perform(post("/api/dev-auth/token").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("email", email, "password", password)))).andReturn();
+        return body(login).at("/data/accessToken").asText();
+    }
+
+    /** Terminal baru di outlet, agar test tidak berebut terminal seed. */
+    protected String newTerminal(UUID outletId) throws Exception {
+        MvcResult t = postAs("admin", "/api/terminals",
+                Map.of("outletId", outletId, "code", unique("T"), "name", "Terminal test"));
+        if (t.getResponse().getStatus() != 201) {
+            throw new IllegalStateException("create terminal failed: " + t.getResponse().getContentAsString());
+        }
+        return body(t).at("/data/id").asText();
+    }
+
+    protected MvcResult call(String token, String method, String url, Object body) throws Exception {
+        var req = "GET".equals(method) ? get(url) : post(url);
+        req.header("Authorization", "Bearer " + token);
+        if (body != null) {
+            req.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
+        return mvc.perform(req).andReturn();
+    }
+
+    protected String code(MvcResult r) throws Exception {
+        String s = r.getResponse().getContentAsString();
+        return s.isEmpty() ? "" : json.readTree(s).path("errorCode").asText();
     }
 }

@@ -1,8 +1,6 @@
 package com.pirantisolution.pos;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
@@ -10,62 +8,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 /** Phase 2 — attendance (§11, §12, §55, §75). Setiap test memakai kasir baru agar terisolasi. */
 class AttendanceIT extends IntegrationTestBase {
-
-    private record Cashier(String token, String employeeId) {
-    }
-
-    /** Admin membuat karyawan + akun kasir di outlet tertentu, lalu kasir login. */
-    private Cashier newCashier(UUID outletId) throws Exception {
-        String code = unique("E").replace("-", "").substring(0, 9);
-        MvcResult emp = postAs("admin", "/api/employees",
-                Map.of("employeeCode", code, "fullName", "Kasir " + code, "homeOutletId", outletId));
-        assertThat(emp.getResponse().getStatus()).isEqualTo(201);
-        String employeeId = body(emp).at("/data/id").asText();
-
-        String cashierRoleId = null;
-        for (JsonNode r : body(getAs("admin", "/api/roles")).get("data")) {
-            if ("CASHIER".equals(r.get("code").asText())) {
-                cashierRoleId = r.get("id").asText();
-            }
-        }
-        String username = ("att." + code).toLowerCase();
-        String email = username + "@demo.local";
-        MvcResult user = postAs("admin", "/api/users", Map.of(
-                "username", username, "email", email, "displayName", "Kasir " + code,
-                "employeeId", employeeId, "password", "KasirAbsen2026",
-                "outletIds", List.of(outletId),
-                "roles", List.of(Map.of("roleId", cashierRoleId, "outletId", outletId))));
-        assertThat(user.getResponse().getStatus()).isEqualTo(201);
-
-        MvcResult login = mvc.perform(post("/api/dev-auth/token").contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(Map.of("email", email, "password", "KasirAbsen2026")))).andReturn();
-        return new Cashier(body(login).at("/data/accessToken").asText(), employeeId);
-    }
-
-    private MvcResult call(String token, String method, String url, Object body) throws Exception {
-        var req = "GET".equals(method) ? get(url) : post(url);
-        req.header("Authorization", "Bearer " + token);
-        if (body != null) {
-            req.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
-        }
-        return mvc.perform(req).andReturn();
-    }
-
-    private static String code(MvcResult r) throws Exception {
-        String s = r.getResponse().getContentAsString();
-        return s.isEmpty() ? "" : new com.fasterxml.jackson.databind.ObjectMapper().readTree(s).path("errorCode").asText();
-    }
 
     @Test
     void fullDayFlow() throws Exception {

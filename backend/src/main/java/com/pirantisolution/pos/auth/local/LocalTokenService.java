@@ -50,7 +50,9 @@ public class LocalTokenService {
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(ttl))
                 .claim("role", "authenticated")
-                .claim("email", email);
+                .claim("email", email)
+                // bentuk sama dengan Supabase: metode & waktu autentikasi (dipakai unlock terminal)
+                .claim("amr", List.of(java.util.Map.of("method", "password", "timestamp", now.getEpochSecond())));
         if (StringUtils.hasText(properties.jwt().issuer())) {
             claims.issuer(properties.jwt().issuer());
         }

@@ -49,9 +49,24 @@ public enum ErrorCode {
     BREAK_DISABLED(HttpStatus.UNPROCESSABLE_ENTITY, "Fitur istirahat tidak aktif di outlet ini"),
     ATTENDANCE_CLOSED(HttpStatus.CONFLICT, "Kehadiran ini sudah ditutup"),
 
-    // didefinisikan sekarang, dipakai phase berikutnya (§99)
+    // cashier session (Phase 3)
     TERMINAL_ALREADY_OPEN(HttpStatus.CONFLICT, "Terminal sudah memiliki cashier session aktif"),
     CASHIER_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "Cashier session tidak ditemukan"),
+    CASHIER_SESSION_ALREADY_OPEN(HttpStatus.CONFLICT, "Anda masih memiliki cashier session aktif"),
+    CASHIER_SESSION_OPEN(HttpStatus.CONFLICT, "Tutup kasir terlebih dahulu sebelum clock out"),
+    CASHIER_SESSION_CLOSED(HttpStatus.CONFLICT, "Cashier session ini sudah ditutup"),
+    CASHIER_SESSION_LOCKED(HttpStatus.CONFLICT, "Terminal sedang terkunci"),
+    CASHIER_SESSION_NOT_LOCKED(HttpStatus.CONFLICT, "Terminal tidak sedang terkunci"),
+    CASHIER_SESSION_HAS_ACTIVITY(HttpStatus.CONFLICT,
+            "Session sudah memiliki aktivitas kas, tidak bisa dibatalkan (gunakan tutup kasir)"),
+    ATTENDANCE_REQUIRED(HttpStatus.CONFLICT, "Clock in di outlet ini terlebih dahulu (dan selesaikan istirahat)"),
+    TERMINAL_INACTIVE(HttpStatus.UNPROCESSABLE_ENTITY, "Terminal tidak aktif"),
+    TERMINAL_MISMATCH(HttpStatus.CONFLICT, "Cashier session Anda terbuka di terminal lain"),
+    REAUTH_REQUIRED(HttpStatus.FORBIDDEN, "Masukkan password Anda lagi untuk membuka kunci terminal"),
+    DENOMINATION_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Denominasi uang tidak valid"),
+    OPENING_CASH_MISMATCH(HttpStatus.CONFLICT, "Modal awal tidak cocok dengan hitungan kas"),
+
+    // didefinisikan sekarang, dipakai phase berikutnya (§99)
     OPEN_ORDER_EXISTS(HttpStatus.CONFLICT, "Masih ada order yang belum selesai"),
     PAYMENT_PENDING(HttpStatus.CONFLICT, "Pembayaran masih pending"),
     PAYMENT_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran gagal"),
