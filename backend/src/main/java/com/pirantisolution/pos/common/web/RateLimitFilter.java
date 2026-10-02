@@ -52,7 +52,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain chain) throws ServletException, IOException {
-        boolean authEndpoint = request.getRequestURI().startsWith("/api/dev-auth/");
+        // Endpoint yang memeriksa password (login dev & approval supervisor) memakai limit ketat.
+        boolean authEndpoint = request.getRequestURI().startsWith("/api/dev-auth/")
+                || request.getRequestURI().equals("/api/approvals");
         String key;
         int limit;
         if (authEndpoint) {

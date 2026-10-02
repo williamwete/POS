@@ -58,6 +58,11 @@ public class LocalAuthAdmin implements AuthProviderAdmin {
                 .query((rs, n) -> 1).list());
     }
 
+    @Override
+    public UUID verifyPassword(String email, String password) {
+        return verify(email, password);
+    }
+
     /** Verifikasi password untuk endpoint token lokal. */
     public UUID verify(String email, String password) {
         java.util.List<UUID> result = tx.localAuth(() -> jdbc.sql("SELECT auth.local_verify_password(:e, :p)")

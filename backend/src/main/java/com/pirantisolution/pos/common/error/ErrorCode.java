@@ -66,6 +66,25 @@ public enum ErrorCode {
     DENOMINATION_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Denominasi uang tidak valid"),
     OPENING_CASH_MISMATCH(HttpStatus.CONFLICT, "Modal awal tidak cocok dengan hitungan kas"),
 
+    // penjualan (Phase 4)
+    CASHIER_SESSION_REQUIRED(HttpStatus.CONFLICT, "Buka kasir terlebih dahulu sebelum bertransaksi"),
+    SALE_NOT_FOUND(HttpStatus.NOT_FOUND, "Transaksi tidak ditemukan"),
+    SALE_NOT_EDITABLE(HttpStatus.CONFLICT, "Transaksi ini tidak bisa diubah lagi"),
+    SALE_CLOSED(HttpStatus.CONFLICT, "Transaksi ini sudah dibatalkan"),
+    SALE_EMPTY(HttpStatus.UNPROCESSABLE_ENTITY, "Keranjang masih kosong"),
+    SALE_NOT_EMPTY(HttpStatus.CONFLICT, "Keranjang berisi barang; gunakan void dengan alasan"),
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "Produk tidak ditemukan"),
+    PRODUCT_NOT_AVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Produk tidak dapat dijual"),
+    PRICE_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "Harga produk belum tersedia di price list"),
+    QUANTITY_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Jumlah tidak valid untuk produk ini"),
+    APPROVAL_REQUIRED(HttpStatus.FORBIDDEN, "Tindakan ini memerlukan persetujuan supervisor"),
+    APPROVER_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Email atau password approver salah"),
+    APPROVER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "Approver tidak berwenang menyetujui tindakan ini"),
+    APPROVAL_EXPIRED(HttpStatus.CONFLICT, "Persetujuan sudah kedaluwarsa, minta persetujuan lagi"),
+    DISCOUNT_LIMIT_EXCEEDED(HttpStatus.UNPROCESSABLE_ENTITY, "Diskon melebihi batas maksimum"),
+    DISCOUNT_INVALID(HttpStatus.CONFLICT, "Diskon tidak sesuai dengan isi keranjang"),
+    RECEIPT_NOT_AVAILABLE(HttpStatus.CONFLICT, "Struk belum tersedia; lakukan checkout terlebih dahulu"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     OPEN_ORDER_EXISTS(HttpStatus.CONFLICT, "Masih ada order yang belum selesai"),
     PAYMENT_PENDING(HttpStatus.CONFLICT, "Pembayaran masih pending"),

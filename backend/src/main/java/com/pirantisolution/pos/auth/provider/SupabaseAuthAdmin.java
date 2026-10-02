@@ -33,6 +33,7 @@ public class SupabaseAuthAdmin implements AuthProviderAdmin {
     private static final String BAN_FOREVER = "876000h";
 
     private final RestClient client;
+    private final RestClient authClient;
 
     public SupabaseAuthAdmin(PosProperties properties) {
         PosProperties.Auth cfg = properties.auth();
@@ -50,6 +51,36 @@ public class SupabaseAuthAdmin implements AuthProviderAdmin {
                 .defaultHeader("apikey", cfg.supabaseServiceRoleKey())
                 .defaultHeader("Authorization", "Bearer " + cfg.supabaseServiceRoleKey())
                 .build();
+        this.authClient = RestClient.builder()
+                .baseUrl(cfg.supabaseUrl().replaceAll("/+$", "") + "/auth/v1")
+                .requestFactory(factory)
+                .defaultHeader("apikey", cfg.supabaseServiceRoleKey())
+                .build();
+    }
+
+    @Override
+    public UUID verifyPassword(String email, String password) {
+        try {
+            JsonNode body = authClient.post()
+                    .uri("/token?grant_type=password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("email", email, "password", password))
+                    .retrieve()
+                    .body(JsonNode.class);
+            // Sesi yang terbentuk tidak dipakai/disimpan; hanya identitas approver yang diambil.
+            JsonNode id = body == null ? null : body.path("user").path("id");
+            return id == null || id.isMissingNode() || id.isNull() ? null : UUID.fromString(id.asText());
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 400 || e.getStatusCode().value() == 401
+                    || e.getStatusCode().value() == 422) {
+                return null;
+            }
+            throw unavailable("verify", e.getStatusCode(), e);
+        } catch (RestClientResponseException e) {
+            throw unavailable("verify", e.getStatusCode(), e);
+        } catch (ResourceAccessException e) {
+            throw unavailable("verify", null, e);
+        }
     }
 
     @Override

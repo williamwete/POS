@@ -70,9 +70,19 @@ AS $$
     FROM pos.users u
     WHERE u.auth_user_id = p_auth_user AND u.active AND u.organization_id = pos.current_org_id()
 $$;
+-- Nama tampilan approver untuk catatan transaksi (hanya user dalam organisasi pemanggil).
+CREATE OR REPLACE FUNCTION pos.approver_name(p_user uuid)
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, pos
+AS $$
+    SELECT u.username FROM pos.users u WHERE u.id = p_user AND u.organization_id = pos.current_org_id()
+$$;
 REVOKE ALL ON FUNCTION pos.user_has_permission_at(uuid, text, uuid), pos.user_rank_at(uuid, uuid),
-    pos.approver_lookup(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION pos.approver_lookup(uuid) TO pos_app_user;
+    pos.approver_lookup(uuid), pos.approver_name(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION pos.approver_lookup(uuid), pos.approver_name(uuid) TO pos_app_user;
 
 -- ---------------------------------------------------------------- tabel
 CREATE TABLE pos.sales (

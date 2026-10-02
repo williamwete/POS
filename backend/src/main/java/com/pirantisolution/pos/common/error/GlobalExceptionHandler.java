@@ -55,7 +55,10 @@ public class GlobalExceptionHandler {
             Map.entry("attendance_breaks_open_uk", "Anda sedang istirahat"),
             Map.entry("cashier_sessions_active_terminal_uk", "Terminal sudah memiliki cashier session aktif"),
             Map.entry("cashier_sessions_active_employee_uk", "Anda masih memiliki cashier session aktif"),
-            Map.entry("cash_count_items_uk", "Denominasi yang sama dikirim lebih dari sekali"));
+            Map.entry("cash_count_items_uk", "Denominasi yang sama dikirim lebih dari sekali"),
+            Map.entry("sales_one_draft_per_session_uk", "Masih ada transaksi aktif; tahan atau selesaikan dulu"),
+            Map.entry("sales_client_tx_uk", "Transaksi dengan ID ini sudah dibuat"),
+            Map.entry("sale_discounts_active_uk", "Hapus diskon yang ada sebelum menambah diskon baru"));
 
     /** Constraint unik yang punya kode error bisnis sendiri. */
     private static final Map<String, ErrorCode> UNIQUE_CODES = Map.of(
@@ -64,7 +67,10 @@ public class GlobalExceptionHandler {
             "attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK,
             "cashier_sessions_active_terminal_uk", ErrorCode.TERMINAL_ALREADY_OPEN,
             "cashier_sessions_active_employee_uk", ErrorCode.CASHIER_SESSION_ALREADY_OPEN,
-            "cash_count_items_uk", ErrorCode.VALIDATION_FAILED);
+            "cash_count_items_uk", ErrorCode.VALIDATION_FAILED,
+            "sales_one_draft_per_session_uk", ErrorCode.OPEN_ORDER_EXISTS,
+            "sales_client_tx_uk", ErrorCode.DUPLICATE_TRANSACTION,
+            "sale_discounts_active_uk", ErrorCode.DISCOUNT_INVALID);
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiResponse<Void>> handleApi(ApiException ex) {
@@ -150,7 +156,12 @@ public class GlobalExceptionHandler {
             if (m.find()) {
                 ErrorCode mapped = mapDbCode(m.group(1));
                 if (mapped != null) {
-                    return build(mapped, mapped.defaultMessage(), null);
+                    String text = mapped.defaultMessage();
+                    if (mapped == ErrorCode.STOCK_UNAVAILABLE) {
+                        // detail buatan trigger stok aman ditampilkan: SKU, tersedia, diminta
+                        text = text + ": " + message.substring(message.indexOf(':') + 1).trim();
+                    }
+                    return build(mapped, text, null);
                 }
             }
         }
@@ -188,6 +199,25 @@ public class GlobalExceptionHandler {
             case "CASHIER_SESSION_INVALID_TRANSITION", "CASHIER_SESSION_IMMUTABLE_FIELD",
                     "CASHIER_SESSION_LOCK_REASON_REQUIRED", "CASH_COUNT_IMMUTABLE",
                     "CASH_COUNT_TYPE_NOT_ENABLED" -> ErrorCode.CONCURRENT_MODIFICATION;
+            case "SALE_NOT_FOUND" -> ErrorCode.SALE_NOT_FOUND;
+            case "SALE_NOT_EDITABLE", "SALE_ITEM_VOID", "DISCOUNT_REMOVED" -> ErrorCode.SALE_NOT_EDITABLE;
+            case "SALE_CLOSED" -> ErrorCode.SALE_CLOSED;
+            case "SALE_EMPTY" -> ErrorCode.SALE_EMPTY;
+            case "SALE_NOT_EMPTY" -> ErrorCode.SALE_NOT_EMPTY;
+            case "PRODUCT_NOT_AVAILABLE" -> ErrorCode.PRODUCT_NOT_AVAILABLE;
+            case "PRICE_NOT_FOUND" -> ErrorCode.PRICE_NOT_FOUND;
+            case "QUANTITY_INVALID" -> ErrorCode.QUANTITY_INVALID;
+            case "STOCK_UNAVAILABLE" -> ErrorCode.STOCK_UNAVAILABLE;
+            case "APPROVAL_REQUIRED", "APPROVAL_USED" -> ErrorCode.APPROVAL_REQUIRED;
+            case "APPROVAL_EXPIRED" -> ErrorCode.APPROVAL_EXPIRED;
+            case "APPROVER_INVALID" -> ErrorCode.APPROVER_INVALID;
+            case "APPROVER_NOT_AUTHORIZED" -> ErrorCode.APPROVER_NOT_AUTHORIZED;
+            case "DISCOUNT_LIMIT_EXCEEDED" -> ErrorCode.DISCOUNT_LIMIT_EXCEEDED;
+            case "DISCOUNT_ALLOCATION_INVALID" -> ErrorCode.DISCOUNT_INVALID;
+            case "RECEIPT_NOT_AVAILABLE" -> ErrorCode.RECEIPT_NOT_AVAILABLE;
+            case "PRICE_OVERRIDE_REASON_REQUIRED" -> ErrorCode.VALIDATION_FAILED;
+            case "SALE_INVALID_TRANSITION", "SALE_IMMUTABLE_FIELD", "SALE_ITEM_IMMUTABLE_FIELD",
+                    "DISCOUNT_IMMUTABLE_FIELD", "APPROVAL_IMMUTABLE_FIELD" -> ErrorCode.CONCURRENT_MODIFICATION;
             default -> null;
         };
     }
