@@ -270,3 +270,142 @@ export interface CountLine {
   denominationId: string
   quantity: number
 }
+
+export interface Product {
+  id: string
+  sku: string
+  name: string
+  categoryName?: string
+  uom: string
+  allowDecimalQty: boolean
+  barcode?: string
+  price?: number
+  priceVersion?: number
+  taxRate: number
+  /** null/undefined = stok tidak diketahui */
+  available?: number | null
+  allowNegativeStock: boolean
+}
+
+export type SaleStatus = 'DRAFT' | 'HELD' | 'CHECKOUT' | 'PAYMENT_PENDING' | 'PAID' | 'POSTING' | 'POSTED'
+  | 'VOID' | 'RETURNED' | 'CANCELLED'
+
+export interface SaleItem {
+  id: string
+  lineNo: number
+  productId: string
+  sku: string
+  productName: string
+  barcode?: string
+  uom: string
+  quantity: number
+  listPrice: number
+  unitPrice: number
+  priceOverrideReason?: string
+  taxRate: number
+  grossAmount: number
+  itemDiscountAmount: number
+  cartDiscountAmount: number
+  netAmount: number
+  taxAmount: number
+  status: 'ACTIVE' | 'VOID'
+  voidReason?: string
+}
+
+export interface SaleDiscount {
+  id: string
+  saleItemId?: string
+  discountType: 'PERCENTAGE' | 'AMOUNT'
+  discountValue: number
+  amount: number
+  reason: string
+  approvedByUsername?: string
+  status: 'ACTIVE' | 'REMOVED'
+}
+
+export interface Sale {
+  id: string
+  clientTransactionId: string
+  receiptNo?: string
+  status: SaleStatus
+  syncStatus: string
+  outletId: string
+  outletCode: string
+  terminalId: string
+  terminalCode: string
+  cashierSessionId: string
+  employeeId: string
+  employeeName: string
+  businessDate: string
+  pricesIncludeTax: boolean
+  lineCount: number
+  itemCount: number
+  subtotal: number
+  itemDiscountTotal: number
+  cartDiscountTotal: number
+  discountTotal: number
+  taxTotal: number
+  grandTotal: number
+  note?: string
+  heldAt?: string
+  checkedOutAt?: string
+  voidedAt?: string
+  voidReason?: string
+  createdAt: string
+  version: number
+  items: SaleItem[]
+  discounts: SaleDiscount[]
+}
+
+export type ApprovalAction = 'DISCOUNT' | 'PRICE_OVERRIDE' | 'VOID_SALE'
+
+export interface ApprovalPayload {
+  action: ApprovalAction
+  saleId: string
+  saleItemId?: string
+  discountType?: 'PERCENTAGE' | 'AMOUNT'
+  discountValue?: number
+  price?: number
+}
+
+export interface ApprovalResult {
+  id: string
+  action: ApprovalAction
+  approverName: string
+  maxPercent?: number
+  expiresAt: string
+}
+
+export interface ReceiptLine {
+  name: string
+  sku: string
+  quantity: number
+  uom: string
+  unitPrice: number
+  listPrice: number
+  discount: number
+  amount: number
+  taxRate: number
+}
+
+export interface Receipt {
+  saleId: string
+  receiptNo: string
+  status: SaleStatus
+  organizationName: string
+  outletName: string
+  outletAddress?: string
+  outletPhone?: string
+  terminalCode: string
+  cashierName: string
+  businessDate: string
+  issuedAt?: string
+  pricesIncludeTax: boolean
+  lines: ReceiptLine[]
+  itemCount: number
+  subtotal: number
+  discountTotal: number
+  taxTotal: number
+  grandTotal: number
+  printCount: number
+}

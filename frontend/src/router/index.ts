@@ -31,6 +31,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Kehadiran outlet', anyOf: [{ permission: 'attendance.view', scope: 'any' }] },
       },
       {
+        path: 'pos', name: 'pos', component: () => import('@/modules/pos/PosPage.vue'),
+        meta: { requiresContext: true, title: 'Kasir', anyOf: [{ permission: 'sale.create', scope: 'current' }] },
+      },
+      {
         path: 'cashier/open', name: 'cashier-open', component: () => import('@/modules/cashier/OpenCashierPage.vue'),
         meta: { requiresContext: true, title: 'Buka kasir', anyOf: [{ permission: 'cashier.open', scope: 'current' }] },
       },

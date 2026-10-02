@@ -41,3 +41,27 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Cetak struk 80 mm: hanya area .receipt-print yang tercetak. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: absolute;
+    inset: 0 auto auto 0;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+}

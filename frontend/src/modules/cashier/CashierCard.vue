@@ -102,6 +102,7 @@ async function submitCancel() {
           @click="router.push({ name: 'cashier-open' })"
         />
         <template v-else-if="s.status === 'OPEN' && !otherTerminal">
+          <Button v-if="session.can('sale.create')" label="Mulai transaksi" icon="pi pi-shopping-cart" @click="router.push({ name: 'pos' })" />
           <Button label="Hitung kas" icon="pi pi-calculator" severity="secondary" :loading="busy" @click="openCount" />
           <Button
             label="Kunci terminal"

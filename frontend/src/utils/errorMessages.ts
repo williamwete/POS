@@ -16,6 +16,9 @@ const MESSAGES: Record<string, string> = {
   TERMINAL_MISMATCH: 'Cashier session Anda masih terbuka di terminal lain. Lanjutkan di terminal tersebut.',
   CASHIER_SESSION_OPEN: 'Tutup atau batalkan kasir terlebih dahulu sebelum clock out.',
   REAUTH_REQUIRED: 'Masukkan password Anda untuk membuka kunci terminal.',
+  CASHIER_SESSION_REQUIRED: 'Buka kasir terlebih dahulu sebelum bertransaksi.',
+  OPEN_ORDER_EXISTS: 'Masih ada transaksi aktif. Tahan atau selesaikan dulu sebelum melanjutkan transaksi lain.',
+  APPROVER_NOT_AUTHORIZED: 'Approver ini tidak berwenang menyetujui tindakan tersebut.',
   IDEMPOTENCY_KEY_REUSED: 'Permintaan ganda dengan isi berbeda terdeteksi. Muat ulang halaman.',
 }
 

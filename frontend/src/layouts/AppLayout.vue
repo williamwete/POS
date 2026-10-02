@@ -9,6 +9,7 @@ import { useAttendanceStore } from '@/stores/attendance'
 import BreakLockScreen from '@/modules/attendance/BreakLockScreen.vue'
 import TerminalLockScreen from '@/modules/cashier/TerminalLockScreen.vue'
 import { useCashierStore } from '@/stores/cashier'
+import { useSaleStore } from '@/stores/sale'
 import { useIdleLock } from '@/composables/useIdleLock'
 
 const session = useSessionStore()
@@ -17,6 +18,7 @@ const route = useRoute()
 const navOpen = ref(false)
 const attendance = useAttendanceStore()
 const cashier = useCashierStore()
+const saleStore = useSaleStore()
 
 // Status kehadiran & kasir dibutuhkan di semua halaman (layar kunci istirahat / terminal).
 // Kasir dimuat ulang berkala agar kunci dari tempat lain (mis. force clock out) ikut terlihat.
@@ -61,6 +63,7 @@ const outlet = computed(() => session.currentOutlet)
 async function logout() {
   attendance.reset()
   cashier.reset()
+  saleStore.reset()
   await session.logout()
   await router.push({ name: 'login' })
 }
@@ -158,6 +161,11 @@ async function logout() {
           <li v-if="session.me?.employee">
             <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
               <i class="pi pi-clock" /> Kehadiran saya
+            </RouterLink>
+          </li>
+          <li v-if="session.me?.employee && cashier.current && allowed('pos')">
+            <RouterLink :to="{ name: 'pos' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-shopping-cart" /> Transaksi
             </RouterLink>
           </li>
           <li v-if="session.me?.employee && session.can('cashier.open') && !cashier.current">

@@ -6,6 +6,7 @@ import Password from 'primevue/password'
 import { useSessionStore } from '@/stores/session'
 import { useAttendanceStore } from '@/stores/attendance'
 import { useCashierStore } from '@/stores/cashier'
+import { useSaleStore } from '@/stores/sale'
 import { useApiAction } from '@/composables/useApiAction'
 
 /**
@@ -16,6 +17,7 @@ import { useApiAction } from '@/composables/useApiAction'
 const session = useSessionStore()
 const attendance = useAttendanceStore()
 const cashier = useCashierStore()
+const saleStore = useSaleStore()
 const router = useRouter()
 const { busy, run } = useApiAction()
 const password = ref('')
@@ -64,6 +66,7 @@ async function unlock() {
 async function logout() {
   attendance.reset()
   cashier.reset()
+  saleStore.reset()
   await session.logout()
   await router.push({ name: 'login' })
 }
