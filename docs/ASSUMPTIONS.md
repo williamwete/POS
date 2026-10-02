@@ -81,4 +81,7 @@ asumsi yang dibuat selama implementasi. Setiap perubahan keputusan harus dicatat
 | B12 | Payment method dan product seed (§90) dibuat di phase yang memiliki tabelnya (Phase 4–5). | Phase 1 tidak membuat tabel di luar scope. |
 | B13 | Login memakai **email** (bukan username). Spec menyebut "username/email"; mendukung username memerlukan endpoint publik pemetaan username→email yang membuka celah enumerasi akun. | Username tetap ada sebagai identitas tampilan & audit. Dapat ditambahkan nanti lewat Supabase custom claim / edge function. |
 | B14 | Pilihan outlet & terminal di frontend disimpan di sessionStorage dan dikirim sebagai header untuk jejak audit saja. Validasi "terminal ini dipakai oleh kasir ini" ditegakkan server mulai Phase 3 (cashier session). | Sebelum Phase 3, header terminal di audit log adalah klaim client. |
+| B15 | Aturan §55 "tidak boleh clock out selama cashier session OPEN" ditegakkan mulai Phase 3 di trigger `pos.tg_attendance_guard`, karena tabel cashier session belum ada di Phase 2. | Sampai Phase 3 selesai, clock out tidak memeriksa cashier session. |
+| B16 | Kehadiran tidak bisa diedit atau dihapus. Kesalahan ditangani dengan force clock out (beralasan, tercatat audit). Fitur koreksi jam kehadiran dengan approval belum termasuk scope. | Butuh fitur koreksi bila HR memerlukan penyesuaian jam. |
+| B17 | Clock out normal ditolak selama istirahat berjalan (kasir harus "Selesai istirahat" dulu); force clock out supervisor menutup istirahat otomatis. | |
 

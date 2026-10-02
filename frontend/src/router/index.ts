@@ -25,6 +25,11 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/layouts/AppLayout.vue'),
     children: [
       { path: '', name: 'home', component: () => import('@/modules/home/HomePage.vue'), meta: { requiresContext: true, title: 'Beranda' } },
+      { path: 'attendance/me', name: 'my-attendance', component: () => import('@/modules/attendance/MyAttendancePage.vue'), meta: { title: 'Kehadiran saya' } },
+      {
+        path: 'attendance/outlet', name: 'outlet-attendance', component: () => import('@/modules/attendance/OutletAttendancePage.vue'),
+        meta: { title: 'Kehadiran outlet', anyOf: [{ permission: 'attendance.view', scope: 'any' }] },
+      },
       { path: 'context', name: 'context', component: () => import('@/modules/auth/SelectContextPage.vue'), meta: { title: 'Pilih outlet & terminal' } },
       {
         path: 'admin/outlets', name: 'outlets', component: () => import('@/modules/admin/OutletsPage.vue'),

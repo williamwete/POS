@@ -180,3 +180,32 @@ export interface AuditLog {
   requestId?: string
   createdAt: string
 }
+
+export type AttendanceStatus = 'WORKING' | 'ON_BREAK' | 'COMPLETED' | 'FORCED_CLOSED'
+
+export interface AttendanceBreak {
+  id: string
+  breakStart: string
+  breakEnd?: string
+  durationSeconds?: number
+  reason?: string
+}
+
+export interface Attendance {
+  id: string
+  employeeId: string
+  employeeCode: string
+  employeeName: string
+  outletId: string
+  outletCode: string
+  businessDate: string
+  clockIn: string
+  clockOut?: string
+  status: AttendanceStatus
+  deviceId?: string
+  forcedReason?: string
+  clockOutByUsername?: string
+  breakSeconds: number
+  version: number
+  breaks: AttendanceBreak[]
+}

@@ -4,6 +4,7 @@ import { useSessionStore } from '@/stores/session'
 import { api } from '@/services'
 import type { Permission } from '@/types/api'
 import { formatBusinessDate } from '@/utils/format'
+import AttendanceCard from '@/modules/attendance/AttendanceCard.vue'
 
 const session = useSessionStore()
 const now = ref(new Date())
@@ -80,6 +81,8 @@ onBeforeUnmount(() => window.clearInterval(timer))
         <dd class="mt-1 font-semibold">{{ formatBusinessDate(session.currentOutlet?.businessDate) }}</dd>
       </div>
     </dl>
+
+    <AttendanceCard class="mt-6" />
 
     <section class="mt-10">
       <h2 class="text-lg font-semibold">Yang dapat Anda lakukan di outlet ini</h2>

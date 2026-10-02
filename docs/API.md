@@ -48,6 +48,14 @@ Response replay idempotency membawa header `Idempotent-Replayed: true`.
 | GET | `/api/permissions` | login | katalog |
 | PUT | `/api/roles/{id}/permissions` | `role.manage` (org) + rank | hanya permission yang dipegang sendiri |
 | GET | `/api/audit-logs?action=&entityType=&entityId=&outletId=&actorUserId=&from=&to=&page=&size=` | `audit.view` | org-wide, atau outlet tertentu |
+| GET | `/api/attendance/current` | login | kehadiran terbuka milik sendiri (null jika belum clock in) |
+| POST | `/api/attendance/clock-in` | `attendance.clock_in` @outlet | `{outletId}`; idempotent; waktu dari server |
+| POST | `/api/attendance/break/start` | kehadiran sendiri WORKING | `{reason?}`; setting `break_enabled` |
+| POST | `/api/attendance/break/end` | kehadiran sendiri ON_BREAK | |
+| POST | `/api/attendance/clock-out` | `attendance.clock_out` @outlet | ditolak jika masih istirahat |
+| POST | `/api/attendance/{id}/force-clock-out` | `attendance.force_clock_out` @outlet, bukan diri sendiri | `{reason}` min 5 karakter; menutup break yang berjalan |
+| GET | `/api/attendance/history?from=&to=` | login (karyawan) | riwayat sendiri, maks 1 tahun |
+| GET | `/api/attendance?outletId=&businessDate=&status=` | `attendance.view` @outlet | default business date hari ini |
 | GET | `/api/settings/effective?outletId=` | login / akses outlet | konfigurasi efektif §73 |
 | GET | `/actuator/health/liveness`, `/readiness` | publik | probe |
 

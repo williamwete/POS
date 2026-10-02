@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import { useSessionStore } from '@/stores/session'
 import { formatBusinessDate } from '@/utils/format'
 import { routes, type PermissionRequirement } from '@/router'
+import { useAttendanceStore } from '@/stores/attendance'
+import BreakLockScreen from '@/modules/attendance/BreakLockScreen.vue'
 
 const session = useSessionStore()
 const router = useRouter()
 const route = useRoute()
 const navOpen = ref(false)
+const attendance = useAttendanceStore()
+
+// Status kehadiran dibutuhkan di semua halaman (layar kunci saat istirahat).
+onMounted(() => {
+  if (session.me?.employee && !attendance.loaded) void attendance.load().catch(() => undefined)
+})
 
 watch(() => route.fullPath, () => (navOpen.value = false))
 
@@ -38,6 +46,7 @@ const adminNav = computed(() => ADMIN_NAV.filter((n) => allowed(n.name)))
 const outlet = computed(() => session.currentOutlet)
 
 async function logout() {
+  attendance.reset()
   await session.logout()
   await router.push({ name: 'login' })
 }
@@ -122,6 +131,16 @@ async function logout() {
               <i class="pi pi-home" /> Beranda
             </RouterLink>
           </li>
+          <li v-if="session.me?.employee">
+            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-clock" /> Kehadiran saya
+            </RouterLink>
+          </li>
+          <li v-if="allowed('outlet-attendance')">
+            <RouterLink :to="{ name: 'outlet-attendance' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-calendar" /> Kehadiran outlet
+            </RouterLink>
+          </li>
         </ul>
         <template v-if="adminNav.length">
           <p class="px-6 pb-1 pt-4 text-xs font-semibold text-ink-faint">Administrasi</p>
@@ -139,6 +158,7 @@ async function logout() {
       <main class="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
         <RouterView />
       </main>
+      <BreakLockScreen />
     </div>
   </div>
 </template>
