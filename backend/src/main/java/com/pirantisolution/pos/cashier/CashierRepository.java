@@ -32,7 +32,8 @@ public class CashierRepository {
                    s.business_date, s.opened_at, s.closed_at, s.opening_cash,
                    CASE WHEN pos.has_permission('cashier.view', s.outlet_id)
                         THEN pos.session_expected_cash(s.id) END AS expected_cash,
-                   s.status, s.locked_at, s.lock_reason, s.cancel_reason, s.version
+                   s.status, s.locked_at, s.lock_reason, s.cancel_reason, s.version,
+                   round((pos.get_setting('terminal_idle_lock_minutes', s.outlet_id))::numeric)::integer AS idle_lock_minutes
             FROM pos.cashier_sessions s
             JOIN pos.employees e ON e.id = s.employee_id
             JOIN pos.outlets o ON o.id = s.outlet_id
@@ -68,6 +69,7 @@ public class CashierRepository {
                 rs.getString("lock_reason"),
                 rs.getString("cancel_reason"),
                 rs.getInt("version"),
+                rs.getInt("idle_lock_minutes"),
                 List.of());
     }
 

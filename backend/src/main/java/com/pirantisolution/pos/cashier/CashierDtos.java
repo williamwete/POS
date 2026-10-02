@@ -82,12 +82,13 @@ public final class CashierDtos {
             String lockReason,
             String cancelReason,
             int version,
+            int idleLockMinutes,
             List<CashCountView> counts) {
 
         SessionView withCounts(List<CashCountView> c) {
             return new SessionView(id, employeeId, employeeCode, employeeName, outletId, outletCode, terminalId,
                     terminalCode, terminalName, businessDate, openedAt, closedAt, openingCash, expectedCash, status,
-                    lockedAt, lockReason, cancelReason, version, c);
+                    lockedAt, lockReason, cancelReason, version, idleLockMinutes, c);
         }
     }
 

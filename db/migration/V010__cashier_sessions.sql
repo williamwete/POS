@@ -36,6 +36,11 @@ END
 $$;
 GRANT EXECUTE ON FUNCTION pos.jwt_auth_time() TO pos_app_user, pos_system;
 
+-- Kunci terminal otomatis saat tidak ada aktivitas (§73: aturan bisnis tidak di-hard-code).
+INSERT INTO pos.setting_definitions (key, value_type, default_value, description, max_scope) VALUES
+    ('terminal_idle_lock_minutes', 'NUMBER', '10',
+     'Kunci terminal otomatis setelah tidak ada aktivitas (menit, 0 = nonaktif)', 'OUTLET');
+
 -- Komposit key agar FK bisa memastikan "terminal di outlet ini" dan "attendance milik karyawan ini".
 ALTER TABLE pos.terminals ADD CONSTRAINT terminals_id_outlet_uk UNIQUE (id, outlet_id);
 ALTER TABLE pos.attendance ADD CONSTRAINT attendance_id_employee_uk UNIQUE (id, employee_id);
