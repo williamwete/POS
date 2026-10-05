@@ -185,3 +185,46 @@ AS $$
     RETURNING id
 $$;
 GRANT EXECUTE ON FUNCTION pos_test.add_item(uuid, text, numeric) TO PUBLIC;
+
+-- Catat pembayaran seperti backend. Tunai: p_amount diabaikan, p_received = uang diterima.
+CREATE OR REPLACE FUNCTION pos_test.pay(p_sale uuid, p_method text, p_amount numeric, p_received numeric,
+                                        p_ref text DEFAULT NULL, p_approval uuid DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.payments (organization_id, outlet_id, sale_id, cashier_session_id, payment_method_id,
+                              method_code, method_kind, confirmation, client_payment_id, amount, amount_received,
+                              reference_number, approval_id, created_by)
+    SELECT pos.current_org_id(), s.outlet_id, s.id, s.cashier_session_id, m.id, 'x', 'x', 'x',
+           'PAY-' || replace(gen_random_uuid()::text, '-', ''), coalesce(p_amount, 1), coalesce(p_received, 0),
+           p_ref, p_approval, pos.current_app_user_id()
+    FROM pos.sales s JOIN pos.payment_methods m ON m.organization_id = s.organization_id AND m.code = p_method
+    WHERE s.id = p_sale
+    RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.pay(uuid, text, numeric, numeric, text, uuid) TO PUBLIC;
+
+-- Siapkan transaksi CHECKOUT: clock in, buka kasir, 4 × SKU-0001 (Rp 5.000) = Rp 20.000.
+CREATE OR REPLACE FUNCTION pos_test.checked_out_sale(p_terminal uuid, p_outlet uuid)
+RETURNS uuid
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_sale uuid;
+BEGIN
+    PERFORM pos_test.clock_in(p_outlet);
+    PERFORM pos_test.open_session(p_terminal, '{{100000,1}}');
+    v_sale := pos_test.new_sale();
+    PERFORM pos_test.add_item(v_sale, 'SKU-0001', 4);
+    UPDATE pos.sales SET status = 'CHECKOUT' WHERE id = v_sale;
+    RETURN v_sale;
+END
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.checked_out_sale(uuid, uuid) TO PUBLIC;
+
+-- Konteks sistem (callback gateway / job): tanpa klaim JWT, role pos_system.
+CREATE OR REPLACE FUNCTION pos_test.as_system()
+RETURNS void
+LANGUAGE sql
+AS $$ SELECT set_config('request.jwt.claims', '', true) $$;
+GRANT EXECUTE ON FUNCTION pos_test.as_system() TO PUBLIC;

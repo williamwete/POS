@@ -55,7 +55,7 @@ SELECT pos_test.ok(pos.available_to_sell((SELECT id FROM pos.products WHERE sku 
     'stok tersedia = snapshot − penjualan lokal');
 SELECT pos_test.throws($$SELECT pos_test.add_item((SELECT sale FROM t), 'SKU-0002', 1)$$, 'SALE_NOT_EDITABLE',
     'keranjang terkunci setelah checkout');
-SELECT pos_test.throws($$UPDATE pos.sales SET status = 'PAID'$$, 'SALE_INVALID_TRANSITION', 'PAID baru di Phase 5');
+SELECT pos_test.throws($$UPDATE pos.sales SET status = 'PAID'$$, 'SALE_NOT_FULLY_PAID', 'PAID tanpa pembayaran ditolak (§23)');
 SELECT pos_test.throws($$UPDATE pos.sales SET status = 'VOID', void_reason = 'Pelanggan batal'$$,
     'APPROVAL_REQUIRED', 'void setelah checkout butuh approval');
 SELECT pos_test.throws($$DELETE FROM pos.sales$$, 'permission denied', 'penjualan tidak bisa dihapus');
