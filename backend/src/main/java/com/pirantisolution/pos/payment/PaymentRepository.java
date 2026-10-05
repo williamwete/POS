@@ -28,11 +28,10 @@ public class PaymentRepository {
             SELECT p.id, p.sale_id, p.method_code, m.name AS method_name, p.method_kind, p.confirmation, p.amount,
                    p.amount_received, p.change_amount, p.status, p.reference_number, p.provider,
                    p.external_transaction_id, p.qr_payload, p.expires_at, p.paid_at, p.failed_reason,
-                   p.cancel_reason, u.username AS approved_by_username, m.manual_confirm_allowed,
+                   p.cancel_reason, pos.approver_name(p.approved_by) AS approved_by_username, m.manual_confirm_allowed,
                    p.created_at, p.version
             FROM pos.payments p
             JOIN pos.payment_methods m ON m.id = p.payment_method_id
-            LEFT JOIN pos.users u ON u.id = p.approved_by
             """;
 
     private final JdbcClient jdbc;

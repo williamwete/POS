@@ -119,10 +119,9 @@ public class CashierRepository {
                        CASE WHEN pos.has_permission('cashier.view', s.outlet_id) THEN c.expected_amount END
                            AS expected_amount,
                        CASE WHEN pos.has_permission('cashier.view', s.outlet_id) THEN c.difference END AS difference,
-                       c.note, c.counted_at, u.username AS counted_by_username
+                       c.note, c.counted_at, pos.approver_name(c.counted_by) AS counted_by_username
                 FROM pos.cash_counts c
                 JOIN pos.cashier_sessions s ON s.id = c.cashier_session_id
-                LEFT JOIN pos.users u ON u.id = c.counted_by
                 WHERE c.cashier_session_id = :s
                 ORDER BY c.counted_at
                 """)
