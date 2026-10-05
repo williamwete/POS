@@ -58,6 +58,22 @@ public class SupabaseAuthAdmin implements AuthProviderAdmin {
                 .build();
     }
 
+    private void revokeQuietly(String accessToken) {
+        if (accessToken == null || accessToken.isBlank()) {
+            return;
+        }
+        try {
+            authClient.post()
+                    .uri("/logout?scope=local")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RuntimeException e) {
+            // Gagal mencabut tidak membatalkan approval; sesi tetap kedaluwarsa sesuai TTL Supabase.
+            log.warn("Could not revoke approver session: {}", e.getClass().getSimpleName());
+        }
+    }
+
     @Override
     public UUID verifyPassword(String email, String password) {
         try {
@@ -67,7 +83,9 @@ public class SupabaseAuthAdmin implements AuthProviderAdmin {
                     .body(Map.of("email", email, "password", password))
                     .retrieve()
                     .body(JsonNode.class);
-            // Sesi yang terbentuk tidak dipakai/disimpan; hanya identitas approver yang diambil.
+            // Sesi yang terbentuk tidak dipakai/disimpan; hanya identitas approver yang diambil,
+            // lalu sesi itu langsung dicabut agar tidak ada refresh token supervisor yang menggantung.
+            revokeQuietly(body == null ? null : body.path("access_token").asText(null));
             JsonNode id = body == null ? null : body.path("user").path("id");
             return id == null || id.isMissingNode() || id.isNull() ? null : UUID.fromString(id.asText());
         } catch (HttpClientErrorException e) {

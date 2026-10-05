@@ -33,6 +33,8 @@ Password ini **tidak** ada di migration. Seed demo (`db/seed`) hanya untuk lokal
 | V008 | perbaikan policy SELECT outlets/users agar `INSERT ... RETURNING` oleh admin tidak ditolak (bug ditemukan CI) |
 | V009 | attendance & attendance_breaks: waktu dari server, trigger transisi status, satu kehadiran terbuka per karyawan, RLS |
 | V010 | cash_denominations, cashier_sessions, cash_counts, cash_count_items, cash_movements: satu session aktif per terminal & karyawan, modal awal = hitungan OPENING = movement OPENING_CASH (constraint trigger saat commit), session lock dengan syarat login ulang, clock out ditolak selama session aktif, RLS; setting `terminal_idle_lock_minutes` |
+| V011 | Cache master dari Openbravo: `tax_rates`, `product_categories`, `products`, `product_barcodes`, `product_price_cache` (periode berlaku, harga outlet > organisasi), `product_stock_cache`; fungsi `product_price`; hanya `pos_system` yang menulis; setting `prices_include_tax` |
+| V012 | `sales`, `sale_items`, `sale_discounts`, `approvals` (sekali pakai, 2 menit, approver ≠ peminta, izin & rank), `receipts`, `terminal_receipt_sequences`; trigger menghitung harga/pajak/total, validasi diskon & stok saat checkout (advisory lock per produk), nomor struk `<terminal>-<YYYYMMDD>-<urut>`; batal buka kasir ditolak bila sudah ada penjualan; RLS |
 
 Aturan: tidak ada perubahan schema manual; tidak ada `DROP TABLE` di production; Flyway `clean`
 dinonaktifkan. Data master dinonaktifkan (`active=false`), tidak dihapus (trigger menolak DELETE

@@ -82,3 +82,40 @@ Error baru: `ATTENDANCE_REQUIRED`, `TERMINAL_ALREADY_OPEN`, `TERMINAL_MISMATCH`,
 
 Kode error: lihat `backend/.../common/error/ErrorCode.java`; pesan human readable di
 `frontend/src/utils/errorMessages.ts`.
+
+### Produk & penjualan (Phase 4)
+
+Semua `/api/sales/*` hanya untuk pemegang cashier session **OPEN** (tidak terkunci) yang sedang WORKING.
+Harga, pajak, total, dan nomor struk dihitung database; client hanya mengirim produk, jumlah, dan definisi diskon.
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/products?q=&outletId=` | login, akses outlet | cari nama/SKU/barcode; harga berlaku & stok tersedia outlet |
+| GET | `/api/products/barcode/{barcode}?outletId=` | login, akses outlet | produk untuk satu barcode |
+| GET | `/api/sales/current` | login | transaksi aktif (DRAFT/CHECKOUT) di session sendiri |
+| GET | `/api/sales/held` | login | transaksi yang ditahan di session sendiri |
+| GET | `/api/sales?outletId=&businessDate=` | `sale.view` @outlet | daftar transaksi outlet |
+| POST | `/api/sales` | `sale.create` @outlet session | `{clientTransactionId, note?}`; satu DRAFT per session; `clientTransactionId` unik (anti duplikat) |
+| GET | `/api/sales/{id}` | pemilik atau `sale.view` | detail + baris + diskon |
+| POST | `/api/sales/{id}/items` | pemilik, DRAFT | `{productId \| barcode, quantity}`; produk sama digabung |
+| POST | `/api/sales/{id}/items/{itemId}/quantity` | pemilik, DRAFT | `{quantity}`; desimal hanya untuk produk timbangan |
+| POST | `/api/sales/{id}/items/{itemId}/void` | pemilik, DRAFT | `{reason}`; baris tidak dihapus |
+| POST | `/api/sales/{id}/items/{itemId}/price` | pemilik, DRAFT | `{unitPrice, reason, approvalId?}`; approval sesuai `require_supervisor_for_price_override` |
+| POST | `/api/sales/{id}/discounts` | `sale.discount` | `{saleItemId?, type: PERCENTAGE\|AMOUNT, value, reason, approvalId?}`; tanpa `saleItemId` = diskon transaksi |
+| POST | `/api/sales/{id}/discounts/{discountId}/remove` | pemilik, DRAFT | |
+| POST | `/api/sales/{id}/hold` · `/resume` | pemilik | tahan / lanjutkan (§26) |
+| POST | `/api/sales/{id}/checkout` | pemilik | validasi diskon, approval & stok; alokasi nomor struk |
+| POST | `/api/sales/{id}/reopen` | pemilik, CHECKOUT | kembali ke keranjang sebelum pembayaran; nomor struk tetap |
+| POST | `/api/sales/{id}/cancel` | pemilik | hanya keranjang kosong |
+| POST | `/api/sales/{id}/void` | pemilik; approval bila sudah checkout | `{reason, approvalId?}` |
+| GET | `/api/sales/{id}/receipt` | pemilik atau `sale.view` | data struk 80 mm |
+| POST | `/api/sales/{id}/receipt/print` | pemilik atau `sale.view` | catat cetak / cetak ulang (print count) |
+| POST | `/api/approvals` | approver: izin & rank sesuai aksi | `{action: DISCOUNT\|PRICE_OVERRIDE\|VOID_SALE, saleId, saleItemId?, discountType?, discountValue?, price?, email, password}`; rate limit ketat; approval sekali pakai, berlaku 2 menit |
+
+Semua POST di atas (kecuali `/api/approvals`) idempotent dengan `Idempotency-Key`.
+
+Error baru: `CASHIER_SESSION_REQUIRED`, `SALE_NOT_FOUND`, `SALE_NOT_EDITABLE`, `SALE_CLOSED`, `SALE_EMPTY`,
+`SALE_NOT_EMPTY`, `PRODUCT_NOT_FOUND`, `PRODUCT_NOT_AVAILABLE`, `PRICE_NOT_FOUND`, `QUANTITY_INVALID`,
+`STOCK_UNAVAILABLE`, `APPROVAL_REQUIRED`, `APPROVER_INVALID`, `APPROVER_NOT_AUTHORIZED`, `APPROVAL_EXPIRED`,
+`DISCOUNT_LIMIT_EXCEEDED`, `DISCOUNT_INVALID`, `RECEIPT_NOT_AVAILABLE`.
+
