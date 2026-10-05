@@ -346,6 +346,9 @@ export interface Sale {
   discountTotal: number
   taxTotal: number
   grandTotal: number
+  paidAmount: number
+  changeAmount: number
+  paidAt?: string
   note?: string
   heldAt?: string
   checkedOutAt?: string
@@ -357,7 +360,7 @@ export interface Sale {
   discounts: SaleDiscount[]
 }
 
-export type ApprovalAction = 'DISCOUNT' | 'PRICE_OVERRIDE' | 'VOID_SALE'
+export type ApprovalAction = 'DISCOUNT' | 'PRICE_OVERRIDE' | 'VOID_SALE' | 'PAYMENT_CONFIRM'
 
 export interface ApprovalPayload {
   action: ApprovalAction
@@ -407,5 +410,68 @@ export interface Receipt {
   discountTotal: number
   taxTotal: number
   grandTotal: number
+  payments: ReceiptPayment[]
+  paidAmount: number
+  changeAmount: number
+  paidAt?: string
   printCount: number
+}
+
+export interface ReceiptPayment {
+  methodName: string
+  methodKind: string
+  amount: number
+  amountReceived: number
+  changeAmount: number
+  referenceNumber?: string
+}
+
+export type PaymentConfirmation = 'IMMEDIATE' | 'MANUAL' | 'GATEWAY'
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'REFUNDED'
+
+export interface PaymentMethod {
+  id: string
+  code: string
+  name: string
+  kind: 'CASH' | 'CARD' | 'QRIS' | 'EWALLET' | 'TRANSFER' | 'OTHER'
+  confirmation: PaymentConfirmation
+  requiresReference: boolean
+  requiresApproval: boolean
+  manualConfirmAllowed: boolean
+  active: boolean
+  sortOrder: number
+  openbravoPaymentMethodId?: string
+  version: number
+  available: boolean
+}
+
+export interface Payment {
+  id: string
+  saleId: string
+  methodCode: string
+  methodName: string
+  methodKind: string
+  confirmation: PaymentConfirmation
+  amount: number
+  amountReceived: number
+  changeAmount: number
+  status: PaymentStatus
+  referenceNumber?: string
+  provider?: string
+  externalTransactionId?: string
+  qrPayload?: string
+  expiresAt?: string
+  paidAt?: string
+  failedReason?: string
+  cancelReason?: string
+  approvedByUsername?: string
+  manualConfirmAllowed: boolean
+  createdAt: string
+  version: number
+}
+
+export interface PaymentResult {
+  payment: Payment
+  sale: Sale
+  simulated: boolean
 }

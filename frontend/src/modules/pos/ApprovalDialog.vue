@@ -29,6 +29,7 @@ const ACTION_LABEL: Record<string, string> = {
   DISCOUNT: 'Diskon',
   PRICE_OVERRIDE: 'Ubah harga',
   VOID_SALE: 'Void transaksi',
+  PAYMENT_CONFIRM: 'Konfirmasi pembayaran',
 }
 
 function detail(): string {
@@ -38,6 +39,7 @@ function detail(): string {
     return p.discountType === 'PERCENTAGE' ? `${p.discountValue}%` : formatRupiah(p.discountValue)
   }
   if (p.action === 'PRICE_OVERRIDE') return `Harga baru ${formatRupiah(p.price)}`
+  if (p.action === 'PAYMENT_CONFIRM') return `Pembayaran ${formatRupiah(p.price)}`
   return sales.sale?.receiptNo ?? ''
 }
 

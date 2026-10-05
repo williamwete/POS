@@ -19,6 +19,9 @@ const MESSAGES: Record<string, string> = {
   CASHIER_SESSION_REQUIRED: 'Buka kasir terlebih dahulu sebelum bertransaksi.',
   OPEN_ORDER_EXISTS: 'Masih ada transaksi aktif. Tahan atau selesaikan dulu sebelum melanjutkan transaksi lain.',
   APPROVER_NOT_AUTHORIZED: 'Approver ini tidak berwenang menyetujui tindakan tersebut.',
+  SALE_ALREADY_PAID: 'Tagihan sudah tertutup oleh pembayaran yang ada.',
+  PAYMENT_EXCEEDS_REMAINING: 'Pembayaran non-tunai tidak boleh melebihi sisa tagihan.',
+  PAYMENT_GATEWAY_UNAVAILABLE: 'Penyedia pembayaran tidak dapat dihubungi. Gunakan metode lain.',
   IDEMPOTENCY_KEY_REUSED: 'Permintaan ganda dengan isi berbeda terdeteksi. Muat ulang halaman.',
 }
 

@@ -48,6 +48,7 @@ const ADMIN_NAV: NavItem[] = [
   { name: 'employees', label: 'Karyawan', icon: 'pi pi-id-card' },
   { name: 'users', label: 'User & akses', icon: 'pi pi-users' },
   { name: 'roles', label: 'Role & permission', icon: 'pi pi-shield' },
+  { name: 'payment-methods', label: 'Metode pembayaran', icon: 'pi pi-wallet' },
   { name: 'audit', label: 'Audit log', icon: 'pi pi-history' },
 ]
 

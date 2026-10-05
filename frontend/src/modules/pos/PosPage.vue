@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -20,10 +20,14 @@ import PriceDialog from './PriceDialog.vue'
 import ReasonDialog from './ReasonDialog.vue'
 import HeldSalesDialog from './HeldSalesDialog.vue'
 import ReceiptDialog from './ReceiptDialog.vue'
+import PaymentPanel from './PaymentPanel.vue'
+import PaidPanel from './PaidPanel.vue'
+import { usePaymentStore } from '@/stores/payment'
 
 const session = useSessionStore()
 const cashier = useCashierStore()
 const sales = useSaleStore()
+const payments = usePaymentStore()
 const router = useRouter()
 const toast = useToast()
 const prompt = useApprovalPrompt()
@@ -40,6 +44,18 @@ const items = computed(() => sales.activeItems)
 const sessionOk = computed(
   () => cashier.current?.status === 'OPEN' && cashier.current.terminalId === session.terminal?.id,
 )
+// pembayaran milik transaksi yang sedang dibuka; ganti transaksi = kosongkan
+watch(() => sales.sale?.id, (id, old) => {
+  if (id !== old) payments.reset()
+})
+
+/** Selesai: lanjut ke transaksi berikutnya (pemindaian membuat transaksi baru). */
+function nextSale() {
+  sales.clear()
+  payments.reset()
+  focusScan()
+}
+
 const discountOf = (item: SaleItem) => s.value?.discounts.find((d) => d.saleItemId === item.id) ?? null
 
 onMounted(async () => {
@@ -63,6 +79,7 @@ function focusScan() {
 function onKey(e: KeyboardEvent) {
   if (e.key === 'F2') {
     e.preventDefault()
+    if (sales.isPaid) nextSale()
     focusScan()
   } else if (e.key === 'F4' && sales.isDraft && items.value.length) {
     e.preventDefault()
@@ -412,7 +429,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
 
       <!-- ============================ panel kanan -->
       <aside class="flex flex-col gap-4">
-        <template v-if="!sales.isCheckout">
+        <template v-if="!sales.isCheckout && !sales.isPaid">
           <form class="rounded-lg border border-line bg-surface p-4" role="search" @submit.prevent="onScan">
             <label for="scan" class="mb-1 block text-sm font-semibold">Pindai / cari produk <span class="text-xs font-normal text-ink-faint">(F2)</span></label>
             <div class="flex gap-2">
@@ -454,7 +471,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
         </section>
 
         <!-- aksi keranjang -->
-        <div v-if="!sales.isCheckout" class="grid grid-cols-2 gap-2">
+        <div v-if="!sales.isCheckout && !sales.isPaid" class="grid grid-cols-2 gap-2">
           <Button label="Diskon transaksi" icon="pi pi-percentage" severity="secondary" outlined
             :disabled="busy || !sales.isDraft || items.length === 0 || !!sales.cartDiscount" @click="openCartDiscount" />
           <Button label="Tahan (F4)" icon="pi pi-pause" severity="secondary" outlined
@@ -467,20 +484,10 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
             :disabled="busy || !sales.isDraft || items.length === 0" :loading="busy" @click="checkout" />
         </div>
 
-        <!-- setelah checkout -->
-        <section v-else class="rounded-lg border-2 border-amber-500 bg-amber-100 p-4" aria-live="polite">
-          <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Menunggu pembayaran</p>
-          <p class="tabular mt-1 text-lg font-bold">{{ s?.receiptNo }}</p>
-          <p class="mt-2 text-sm text-ink-soft">
-            Keranjang dikunci, harga & stok sudah divalidasi. Penerimaan pembayaran (tunai, debit, QRIS, split)
-            tersedia di Phase 5.
-          </p>
-          <div class="mt-4 grid grid-cols-2 gap-2">
-            <Button label="Struk sementara" icon="pi pi-print" severity="secondary" class="col-span-2" @click="receiptVisible = true" />
-            <Button label="Ubah keranjang" icon="pi pi-arrow-left" severity="secondary" outlined :disabled="busy" @click="reopen" />
-            <Button label="Void" icon="pi pi-ban" severity="danger" outlined :disabled="busy" @click="voidSaleVisible = true" />
-          </div>
-        </section>
+        <!-- setelah checkout: pembayaran (Phase 5) -->
+        <PaymentPanel v-else-if="sales.isCheckout" :key="s?.id" @reopen="reopen" @void="voidSaleVisible = true"
+          @receipt="receiptVisible = true" />
+        <PaidPanel v-else @receipt="receiptVisible = true" @next="nextSale" />
       </aside>
     </div>
 

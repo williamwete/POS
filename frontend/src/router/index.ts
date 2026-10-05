@@ -73,6 +73,10 @@ export const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'admin/payment-methods', name: 'payment-methods', component: () => import('@/modules/admin/PaymentMethodsPage.vue'),
+        meta: { title: 'Metode pembayaran', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
+      },
+      {
         path: 'admin/audit', name: 'audit', component: () => import('@/modules/admin/AuditLogPage.vue'),
         meta: { title: 'Audit log', anyOf: [{ permission: 'audit.view', scope: 'any' }] },
       },

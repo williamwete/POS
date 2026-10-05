@@ -10,7 +10,7 @@ function normalize(s: Sale): Sale {
     ...s,
     itemCount: num(s.itemCount), subtotal: num(s.subtotal), itemDiscountTotal: num(s.itemDiscountTotal),
     cartDiscountTotal: num(s.cartDiscountTotal), discountTotal: num(s.discountTotal), taxTotal: num(s.taxTotal),
-    grandTotal: num(s.grandTotal),
+    grandTotal: num(s.grandTotal), paidAmount: num(s.paidAmount), changeAmount: num(s.changeAmount),
     items: (s.items ?? []).map((i) => ({
       ...i, quantity: num(i.quantity), listPrice: num(i.listPrice), unitPrice: num(i.unitPrice), taxRate: num(i.taxRate),
       grossAmount: num(i.grossAmount), itemDiscountAmount: num(i.itemDiscountAmount),
@@ -39,7 +39,9 @@ export const useSaleStore = defineStore('sale', () => {
   const activeItems = computed(() => sale.value?.items.filter((i) => i.status === 'ACTIVE') ?? [])
   const cartDiscount = computed(() => sale.value?.discounts.find((d) => !d.saleItemId) ?? null)
   const isDraft = computed(() => sale.value?.status === 'DRAFT')
-  const isCheckout = computed(() => sale.value?.status === 'CHECKOUT')
+  /** Keranjang terkunci dan menunggu pembayaran (§23). */
+  const isCheckout = computed(() => sale.value?.status === 'CHECKOUT' || sale.value?.status === 'PAYMENT_PENDING')
+  const isPaid = computed(() => sale.value?.status === 'PAID')
 
   function set(s: Sale | null) {
     sale.value = s ? normalize(s) : null
@@ -138,8 +140,8 @@ export const useSaleStore = defineStore('sale', () => {
   }
 
   return {
-    sale, held, activeItems, cartDiscount, isDraft, isCheckout,
-    load, loadHeld, create, addProduct, addBarcode, setQuantity, voidItem, overridePrice, addDiscount, removeDiscount,
+    sale, held, activeItems, cartDiscount, isDraft, isCheckout, isPaid,
+    apply: set, load, loadHeld, create, addProduct, addBarcode, setQuantity, voidItem, overridePrice, addDiscount, removeDiscount,
     transition, resume, voidSale, approve, receipt, recordPrint, searchProducts, clear, reset,
   }
 })

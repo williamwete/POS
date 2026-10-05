@@ -40,9 +40,20 @@ const unpaid = () => props.receipt.status !== 'PAID' && props.receipt.status !==
     <div v-if="receipt.discountTotal > 0" class="flex justify-between"><span>Total diskon</span><span>-{{ formatNumber(receipt.discountTotal) }}</span></div>
     <div class="flex justify-between"><span>PPN{{ receipt.pricesIncludeTax ? ' (termasuk)' : '' }}</span><span>{{ formatNumber(receipt.taxTotal) }}</span></div>
     <div class="mt-1 flex justify-between text-[15px] font-bold"><span>TOTAL</span><span>{{ formatNumber(receipt.grandTotal) }}</span></div>
+    <template v-if="!unpaid() && receipt.payments?.length">
+      <hr class="my-2 border-dashed border-black" />
+      <div v-for="(p, i) in receipt.payments" :key="i">
+        <div class="flex justify-between">
+          <span>{{ p.methodName }}</span>
+          <span>{{ formatNumber(p.methodKind === 'CASH' ? p.amountReceived : p.amount) }}</span>
+        </div>
+        <div v-if="p.referenceNumber" class="pl-2">Ref {{ p.referenceNumber }}</div>
+      </div>
+      <div class="mt-1 flex justify-between font-bold"><span>KEMBALI</span><span>{{ formatNumber(receipt.changeAmount) }}</span></div>
+    </template>
     <hr class="my-2 border-dashed border-black" />
     <p v-if="unpaid()" class="text-center font-bold">*** BELUM DIBAYAR — BUKAN BUKTI PEMBAYARAN ***</p>
-    <p v-else class="text-center">Terima kasih</p>
+    <p v-else class="text-center"><span class="font-bold">LUNAS</span> — Terima kasih</p>
     <p v-if="receipt.printCount > 1" class="mt-1 text-center">CETAK ULANG #{{ receipt.printCount - 1 }}</p>
   </article>
 </template>
