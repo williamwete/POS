@@ -106,6 +106,20 @@ class PaymentsIT extends IntegrationTestBase {
         assertThat(actions).contains("PAYMENT_ADDED", "SALE_PAID");
     }
 
+    /** §78: total 200.000 = tunai 100.000 + QRIS 100.000 → PAID. */
+    @Test
+    void acceptanceSplitCashAndQris() throws Exception {
+        Cashier c = readyCashier();
+        String sale = checkedOut(c, 4);
+        MvcResult cash = pay(c, sale, Map.of("methodCode", "CASH", "amountReceived", 100000));
+        assertThat(body(cash).at("/data/sale/status").asText()).isEqualTo("CHECKOUT");
+        String qris = body(pay(c, sale, Map.of("methodCode", "QRIS", "amount", 100000))).at("/data/payment/id").asText();
+        MvcResult paid = call(c.token(), "POST", "/api/dev-payments/" + qris + "/simulate", Map.of("result", "PAID"));
+        assertThat(body(paid).at("/data/sale/status").asText()).isEqualTo("PAID");
+        assertThat(body(paid).at("/data/sale/paidAmount").decimalValue()).isEqualByComparingTo("200000");
+        assertThat(body(call(c.token(), "GET", SALES + "/" + sale + "/payments", null)).get("data")).hasSize(2);
+    }
+
     @Test
     void splitPaymentAndDuplicateProtection() throws Exception {
         Cashier c = readyCashier();

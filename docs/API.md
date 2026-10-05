@@ -119,3 +119,25 @@ Error baru: `CASHIER_SESSION_REQUIRED`, `SALE_NOT_FOUND`, `SALE_NOT_EDITABLE`, `
 `STOCK_UNAVAILABLE`, `APPROVAL_REQUIRED`, `APPROVER_INVALID`, `APPROVER_NOT_AUTHORIZED`, `APPROVAL_EXPIRED`,
 `DISCOUNT_LIMIT_EXCEEDED`, `DISCOUNT_INVALID`, `RECEIPT_NOT_AVAILABLE`.
 
+### Pembayaran (Phase 5)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/payment-methods` | login | metode aktif; `available=false` bila metode gateway belum punya penyedia & tidak boleh konfirmasi manual |
+| GET | `/api/sales/{id}/payments` | pemilik atau `sale.view` | semua pembayaran transaksi |
+| POST | `/api/sales/{id}/payments` | pemilik, sale CHECKOUT/PAYMENT_PENDING | `{clientPaymentId, methodCode, amountReceived (tunai) \| amount (non-tunai), referenceNumber?, approvalId?}`; respons `{payment, sale, simulated}`; `clientPaymentId` sama = pembayaran yang sama |
+| GET | `/api/payments/{id}` | pemilik atau `sale.view` | status terbaru; untuk gateway PENDING server menanyakan penyedia (polling) |
+| POST | `/api/payments/{id}/cancel` | pemilik | `{reason}`; PENDING → batal; PAID tunai/manual sebelum lunas → pembalikan (cash movement `CASH_SALE_REVERSAL`) |
+| POST | `/api/payments/{id}/confirm` | pemilik + approval `PAYMENT_CONFIRM` | `{referenceNumber, approvalId}`; hanya metode gateway yang diizinkan konfirmasi manual (QRIS statis) |
+| POST | `/api/payments/callback/{provider}` | **publik**, HMAC | header `X-POS-Signature` = hex(HMAC-SHA256(secret, timestamp + "." + body)), `X-POS-Timestamp` (epoch detik, ±5 menit); body `{externalTransactionId, status: PAID\|FAILED\|EXPIRED, amount, reference}`; idempoten |
+| POST | `/api/dev-payments/{id}/simulate` | login, **hanya profile local/test** | `{result: PAID\|FAILED}`; mengirim callback bertanda tangan dari simulator |
+| GET | `/api/admin/payment-methods` | `configuration.manage` org | semua metode |
+| PUT | `/api/admin/payment-methods/{id}` | `configuration.manage` org | `{name, active, requiresReference, requiresApproval, manualConfirmAllowed, sortOrder, openbravoPaymentMethodId?, version}`; tunai tidak bisa dinonaktifkan |
+
+Approval `POST /api/approvals` mendapat aksi `PAYMENT_CONFIRM` (`price` = jumlah pembayaran; approver perlu `payment.approve`).
+
+Error baru: `SALE_NOT_PAYABLE`, `SALE_ALREADY_PAID`, `SALE_NOT_FULLY_PAID`, `SALE_HAS_PAYMENTS`, `PAYMENT_NOT_FOUND`,
+`PAYMENT_METHOD_INVALID`, `PAYMENT_AMOUNT_INVALID`, `PAYMENT_EXCEEDS_REMAINING`, `PAYMENT_REFERENCE_REQUIRED`,
+`PAYMENT_CONFIRMATION_REQUIRED`, `PAYMENT_NOT_REVERSIBLE`, `PAYMENT_CANCEL_REASON_REQUIRED`, `PAYMENT_INVALID_TRANSITION`,
+`PAYMENT_GATEWAY_UNAVAILABLE`, `PAYMENT_CALLBACK_INVALID`.
+
