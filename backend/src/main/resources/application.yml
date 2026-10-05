@@ -73,6 +73,10 @@ pos:
     enabled: true
     requests-per-minute: ${POS_RATE_LIMIT_PER_MINUTE:300}
     auth-requests-per-minute: 10
+  payment:
+    gateway: ${POS_PAYMENT_GATEWAY:NONE}
+    callback-secret: ${POS_PAYMENT_CALLBACK_SECRET:}
+    timeout-seconds: 10
 
 logging:
   level:
@@ -104,3 +108,7 @@ pos:
     provider: LOCAL
   cors:
     allowed-origins: ${POS_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  payment:
+    # QRIS/e-wallet tiruan untuk pengembangan; tidak bisa diaktifkan di profile lain.
+    gateway: SIMULATOR
+    callback-secret: ${POS_PAYMENT_CALLBACK_SECRET:local-payment-callback-secret-0123456789}

@@ -58,19 +58,21 @@ public class GlobalExceptionHandler {
             Map.entry("cash_count_items_uk", "Denominasi yang sama dikirim lebih dari sekali"),
             Map.entry("sales_one_draft_per_session_uk", "Masih ada transaksi aktif; tahan atau selesaikan dulu"),
             Map.entry("sales_client_tx_uk", "Transaksi dengan ID ini sudah dibuat"),
-            Map.entry("sale_discounts_active_uk", "Hapus diskon yang ada sebelum menambah diskon baru"));
+            Map.entry("sale_discounts_active_uk", "Hapus diskon yang ada sebelum menambah diskon baru"),
+            Map.entry("payments_client_uk", "Pembayaran dengan ID ini sudah dicatat"));
 
     /** Constraint unik yang punya kode error bisnis sendiri. */
-    private static final Map<String, ErrorCode> UNIQUE_CODES = Map.of(
-            "users_employee_uk", ErrorCode.EMPLOYEE_ALREADY_LINKED,
-            "attendance_open_per_employee_uk", ErrorCode.ATTENDANCE_ALREADY_OPEN,
-            "attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK,
-            "cashier_sessions_active_terminal_uk", ErrorCode.TERMINAL_ALREADY_OPEN,
-            "cashier_sessions_active_employee_uk", ErrorCode.CASHIER_SESSION_ALREADY_OPEN,
-            "cash_count_items_uk", ErrorCode.VALIDATION_FAILED,
-            "sales_one_draft_per_session_uk", ErrorCode.OPEN_ORDER_EXISTS,
-            "sales_client_tx_uk", ErrorCode.DUPLICATE_TRANSACTION,
-            "sale_discounts_active_uk", ErrorCode.DISCOUNT_INVALID);
+    private static final Map<String, ErrorCode> UNIQUE_CODES = Map.ofEntries(
+            Map.entry("users_employee_uk", ErrorCode.EMPLOYEE_ALREADY_LINKED),
+            Map.entry("attendance_open_per_employee_uk", ErrorCode.ATTENDANCE_ALREADY_OPEN),
+            Map.entry("attendance_breaks_open_uk", ErrorCode.ALREADY_ON_BREAK),
+            Map.entry("cashier_sessions_active_terminal_uk", ErrorCode.TERMINAL_ALREADY_OPEN),
+            Map.entry("cashier_sessions_active_employee_uk", ErrorCode.CASHIER_SESSION_ALREADY_OPEN),
+            Map.entry("cash_count_items_uk", ErrorCode.VALIDATION_FAILED),
+            Map.entry("sales_one_draft_per_session_uk", ErrorCode.OPEN_ORDER_EXISTS),
+            Map.entry("sales_client_tx_uk", ErrorCode.DUPLICATE_TRANSACTION),
+            Map.entry("sale_discounts_active_uk", ErrorCode.DISCOUNT_INVALID),
+            Map.entry("payments_client_uk", ErrorCode.DUPLICATE_TRANSACTION));
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiResponse<Void>> handleApi(ApiException ex) {
@@ -215,6 +217,19 @@ public class GlobalExceptionHandler {
             case "DISCOUNT_LIMIT_EXCEEDED" -> ErrorCode.DISCOUNT_LIMIT_EXCEEDED;
             case "DISCOUNT_ALLOCATION_INVALID" -> ErrorCode.DISCOUNT_INVALID;
             case "RECEIPT_NOT_AVAILABLE" -> ErrorCode.RECEIPT_NOT_AVAILABLE;
+            case "SALE_NOT_PAYABLE" -> ErrorCode.SALE_NOT_PAYABLE;
+            case "SALE_ALREADY_PAID" -> ErrorCode.SALE_ALREADY_PAID;
+            case "SALE_NOT_FULLY_PAID" -> ErrorCode.SALE_NOT_FULLY_PAID;
+            case "SALE_HAS_PAYMENTS" -> ErrorCode.SALE_HAS_PAYMENTS;
+            case "PAYMENT_METHOD_INVALID" -> ErrorCode.PAYMENT_METHOD_INVALID;
+            case "PAYMENT_AMOUNT_INVALID" -> ErrorCode.PAYMENT_AMOUNT_INVALID;
+            case "PAYMENT_EXCEEDS_REMAINING" -> ErrorCode.PAYMENT_EXCEEDS_REMAINING;
+            case "PAYMENT_REFERENCE_REQUIRED" -> ErrorCode.PAYMENT_REFERENCE_REQUIRED;
+            case "PAYMENT_CONFIRMATION_REQUIRED" -> ErrorCode.PAYMENT_CONFIRMATION_REQUIRED;
+            case "PAYMENT_NOT_REVERSIBLE" -> ErrorCode.PAYMENT_NOT_REVERSIBLE;
+            case "PAYMENT_CANCEL_REASON_REQUIRED" -> ErrorCode.PAYMENT_CANCEL_REASON_REQUIRED;
+            case "PAYMENT_INVALID_TRANSITION", "PAYMENT_INVALID", "PAYMENT_IMMUTABLE_FIELD",
+                    "PAYMENT_METHOD_IMMUTABLE_FIELD" -> ErrorCode.PAYMENT_INVALID_TRANSITION;
             case "PRICE_OVERRIDE_REASON_REQUIRED" -> ErrorCode.VALIDATION_FAILED;
             case "SALE_INVALID_TRANSITION", "SALE_IMMUTABLE_FIELD", "SALE_ITEM_IMMUTABLE_FIELD",
                     "DISCOUNT_IMMUTABLE_FIELD", "APPROVAL_IMMUTABLE_FIELD" -> ErrorCode.CONCURRENT_MODIFICATION;

@@ -4,6 +4,7 @@ import com.pirantisolution.pos.sale.CartCalculator.Discount;
 import com.pirantisolution.pos.sale.CartCalculator.Line;
 import com.pirantisolution.pos.sale.SaleDtos.DiscountView;
 import com.pirantisolution.pos.sale.SaleDtos.ReceiptLine;
+import com.pirantisolution.pos.sale.SaleDtos.ReceiptPayment;
 import com.pirantisolution.pos.sale.SaleDtos.ReceiptView;
 import com.pirantisolution.pos.sale.SaleDtos.SaleItemView;
 import com.pirantisolution.pos.sale.SaleDtos.SaleView;
@@ -30,7 +31,8 @@ public class SaleRepository {
                    o.code AS outlet_code, s.terminal_id, t.code AS terminal_code, s.cashier_session_id,
                    s.employee_id, e.full_name AS employee_name, s.business_date, s.prices_include_tax,
                    s.line_count, s.item_count, s.subtotal, s.item_discount_total, s.cart_discount_total,
-                   s.discount_total, s.tax_total, s.grand_total, s.note, s.held_at, s.checked_out_at,
+                   s.discount_total, s.tax_total, s.grand_total, s.paid_amount, s.change_amount, s.paid_at,
+                   s.note, s.held_at, s.checked_out_at,
                    s.voided_at, s.void_reason, s.created_at, s.version
             FROM pos.sales s
             JOIN pos.outlets o ON o.id = s.outlet_id
@@ -80,6 +82,9 @@ public class SaleRepository {
                 rs.getBigDecimal("discount_total"),
                 rs.getBigDecimal("tax_total"),
                 rs.getBigDecimal("grand_total"),
+                rs.getBigDecimal("paid_amount"),
+                rs.getBigDecimal("change_amount"),
+                rs.getObject("paid_at", OffsetDateTime.class),
                 rs.getString("note"),
                 rs.getObject("held_at", OffsetDateTime.class),
                 rs.getObject("checked_out_at", OffsetDateTime.class),
@@ -105,10 +110,10 @@ public class SaleRepository {
                 .param("c", clientTxId).query(SaleRepository::map).optional().map(this::full);
     }
 
-    /** Transaksi aktif (DRAFT atau CHECKOUT) di cashier session. */
+    /** Transaksi aktif (DRAFT, CHECKOUT atau menunggu pembayaran) di cashier session. */
     public Optional<SaleView> findOpenForSession(UUID sessionId) {
         return jdbc.sql(SELECT + """
-                 WHERE s.cashier_session_id = :s AND s.status IN ('DRAFT', 'CHECKOUT')
+                 WHERE s.cashier_session_id = :s AND s.status IN ('DRAFT', 'CHECKOUT', 'PAYMENT_PENDING')
                  ORDER BY (s.status = 'DRAFT') DESC, s.created_at DESC LIMIT 1
                 """)
                 .param("s", sessionId).query(SaleRepository::map).optional().map(this::full);
@@ -389,12 +394,19 @@ public class SaleRepository {
                 FROM pos.sale_items WHERE sale_id = :s AND status = 'ACTIVE' ORDER BY line_no
                 """)
                 .param("s", saleId).query(ReceiptLine.class).list();
+        List<ReceiptPayment> payments = jdbc.sql("""
+                SELECT m.name AS method_name, p.method_kind, p.amount, p.amount_received, p.change_amount,
+                       p.reference_number
+                FROM pos.payments p JOIN pos.payment_methods m ON m.id = p.payment_method_id
+                WHERE p.sale_id = :s AND p.status = 'PAID' ORDER BY p.created_at
+                """)
+                .param("s", saleId).query(ReceiptPayment.class).list();
         return jdbc.sql("""
                 SELECT s.id AS sale_id, s.receipt_no, s.status, org.name AS organization_name, o.name AS outlet_name,
                        o.address AS outlet_address, o.phone AS outlet_phone, t.code AS terminal_code,
                        e.full_name AS cashier_name, s.business_date, r.issued_at, s.prices_include_tax,
                        s.item_count, s.subtotal, s.discount_total, s.tax_total, s.grand_total,
-                       coalesce(r.print_count, 0) AS print_count
+                       s.paid_amount, s.change_amount, s.paid_at, coalesce(r.print_count, 0) AS print_count
                 FROM pos.sales s
                 JOIN pos.organizations org ON org.id = s.organization_id
                 JOIN pos.outlets o ON o.id = s.outlet_id
@@ -412,7 +424,9 @@ public class SaleRepository {
                         rs.getObject("issued_at", OffsetDateTime.class), rs.getBoolean("prices_include_tax"),
                         lines, rs.getBigDecimal("item_count"), rs.getBigDecimal("subtotal"),
                         rs.getBigDecimal("discount_total"), rs.getBigDecimal("tax_total"),
-                        rs.getBigDecimal("grand_total"), rs.getInt("print_count")))
+                        rs.getBigDecimal("grand_total"), payments, rs.getBigDecimal("paid_amount"),
+                        rs.getBigDecimal("change_amount"), rs.getObject("paid_at", OffsetDateTime.class),
+                        rs.getInt("print_count")))
                 .optional();
     }
 

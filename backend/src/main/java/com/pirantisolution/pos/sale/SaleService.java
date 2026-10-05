@@ -315,6 +315,13 @@ public class SaleService {
             throw new ApiException(ErrorCode.CONCURRENT_MODIFICATION);
         }
         SaleView after = repo.findById(saleId).orElseThrow();
+        if (after.grandTotal().signum() == 0) {
+            // total Rp 0 (mis. diskon 100% yang disetujui): tidak ada yang perlu dibayar (§23)
+            if (!repo.transition(saleId, "CHECKOUT", "PAID")) {
+                throw new ApiException(ErrorCode.CONCURRENT_MODIFICATION);
+            }
+            after = repo.findById(saleId).orElseThrow();
+        }
         Map<String, Object> v = new LinkedHashMap<>();
         v.put("status", after.status());
         v.put("receiptNo", after.receiptNo());
@@ -346,13 +353,14 @@ public class SaleService {
     public SaleView voidSale(UUID saleId, String reason, UUID approvalId) {
         CurrentUser cu = requireEmployee();
         SaleView sale = own(cu, saleId);
-        if (!List.of("DRAFT", "HELD", "CHECKOUT").contains(sale.status())) {
+        if (!List.of("DRAFT", "HELD", "CHECKOUT", "PAYMENT_PENDING").contains(sale.status())) {
             throw new ApiException(ErrorCode.SALE_NOT_EDITABLE);
         }
         openSession(cu);
         UUID approvedBy = null;
         UUID used = null;
-        if ("CHECKOUT".equals(sale.status()) && repo.settings(sale.outletId()).requireVoidApproval()) {
+        if (List.of("CHECKOUT", "PAYMENT_PENDING").contains(sale.status())
+                && repo.settings(sale.outletId()).requireVoidApproval()) {
             UsedApproval a = useApproval(approvalId, "VOID_SALE", saleId);
             approvedBy = a.approvedBy();
             used = a.id();
@@ -409,6 +417,18 @@ public class SaleService {
                 price = req.price();
             }
             case VOID_SALE -> itemId = null;
+            case PAYMENT_CONFIRM -> {
+                // konfirmasi pembayaran non-tunai manual (transfer, QRIS statis): price = jumlah pembayaran
+                if (req.price() == null || req.price().signum() <= 0) {
+                    throw ApiException.validation("Jumlah pembayaran wajib diisi");
+                }
+                requireWholeRupiah(req.price());
+                if (!List.of("CHECKOUT", "PAYMENT_PENDING").contains(sale.status())) {
+                    throw new ApiException(ErrorCode.SALE_NOT_PAYABLE);
+                }
+                itemId = null;
+                price = req.price();
+            }
             default -> throw ApiException.validation("Jenis approval tidak dikenal");
         }
         UUID id = repo.insertApproval(sale.id(), itemId, req.action().name(), percent, price, approver.userId());
@@ -495,6 +515,11 @@ public class SaleService {
         audit.record(AuditEvent.of(auditAction, "SALE", saleId).outlet(sale.outletId())
                 .change(Map.of("status", from), Map.of("status", to)));
         return after;
+    }
+
+    /** Pakai approval sekali (dipakai juga oleh pembayaran). */
+    public UsedApproval consumeApproval(UUID approvalId, String action, UUID saleId) {
+        return useApproval(approvalId, action, saleId);
     }
 
     private UsedApproval useApproval(UUID approvalId, String action, UUID saleId) {

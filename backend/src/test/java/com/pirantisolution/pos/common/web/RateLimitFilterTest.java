@@ -11,7 +11,7 @@ class RateLimitFilterTest {
     @Test
     void blocksAfterLimitWithinWindow() {
         PosProperties props = new PosProperties(null, null, new PosProperties.Cors(java.util.List.of()),
-                new PosProperties.RateLimit(true, 3, 1));
+                new PosProperties.RateLimit(true, 3, 1), null);
         RateLimitFilter filter = new RateLimitFilter(props, new com.fasterxml.jackson.databind.ObjectMapper());
         assertThat(filter.tryAcquire("k", 3)).isTrue();
         assertThat(filter.tryAcquire("k", 3)).isTrue();

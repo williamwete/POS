@@ -20,3 +20,6 @@ pos:
     allowed-origins: http://localhost:5173
   rate-limit:
     enabled: false
+  payment:
+    gateway: SIMULATOR
+    callback-secret: test-payment-callback-secret-0123456789

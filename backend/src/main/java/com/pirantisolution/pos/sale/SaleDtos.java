@@ -18,7 +18,7 @@ public final class SaleDtos {
     private SaleDtos() {
     }
 
-    public enum ApprovalAction { DISCOUNT, PRICE_OVERRIDE, VOID_SALE }
+    public enum ApprovalAction { DISCOUNT, PRICE_OVERRIDE, VOID_SALE, PAYMENT_CONFIRM }
 
     // ---------------------------------------------------------------- views
 
@@ -78,6 +78,9 @@ public final class SaleDtos {
             BigDecimal discountTotal,
             BigDecimal taxTotal,
             BigDecimal grandTotal,
+            BigDecimal paidAmount,
+            BigDecimal changeAmount,
+            OffsetDateTime paidAt,
             String note,
             OffsetDateTime heldAt,
             OffsetDateTime checkedOutAt,
@@ -92,7 +95,7 @@ public final class SaleDtos {
             return new SaleView(id, clientTransactionId, receiptNo, status, syncStatus, outletId, outletCode,
                     terminalId, terminalCode, cashierSessionId, employeeId, employeeName, businessDate,
                     pricesIncludeTax, lineCount, itemCount, subtotal, itemDiscountTotal, cartDiscountTotal,
-                    discountTotal, taxTotal, grandTotal, note, heldAt, checkedOutAt, voidedAt, voidReason, createdAt,
+                    discountTotal, taxTotal, grandTotal, paidAmount, changeAmount, paidAt, note, heldAt, checkedOutAt, voidedAt, voidReason, createdAt,
                     version, i, d);
         }
     }
@@ -103,6 +106,10 @@ public final class SaleDtos {
 
     public record ReceiptLine(String name, String sku, BigDecimal quantity, String uom, BigDecimal unitPrice,
             BigDecimal listPrice, BigDecimal discount, BigDecimal amount, BigDecimal taxRate) {
+    }
+
+    public record ReceiptPayment(String methodName, String methodKind, BigDecimal amount, BigDecimal amountReceived,
+            BigDecimal changeAmount, String referenceNumber) {
     }
 
     public record ReceiptView(
@@ -124,6 +131,10 @@ public final class SaleDtos {
             BigDecimal discountTotal,
             BigDecimal taxTotal,
             BigDecimal grandTotal,
+            List<ReceiptPayment> payments,
+            BigDecimal paidAmount,
+            BigDecimal changeAmount,
+            OffsetDateTime paidAt,
             int printCount) {
     }
 

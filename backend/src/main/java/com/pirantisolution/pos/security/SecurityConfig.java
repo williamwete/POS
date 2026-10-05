@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                         // controller hanya ada pada profile local (DevAuthController)
                         .requestMatchers(HttpMethod.POST, "/api/dev-auth/token").permitAll()
+                        // callback penyedia pembayaran: tanpa login, diverifikasi tanda tangan HMAC (PaymentService)
+                        .requestMatchers(HttpMethod.POST, "/api/payments/callback/*").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(rs -> rs

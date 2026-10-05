@@ -85,6 +85,24 @@ public enum ErrorCode {
     DISCOUNT_INVALID(HttpStatus.CONFLICT, "Diskon tidak sesuai dengan isi keranjang"),
     RECEIPT_NOT_AVAILABLE(HttpStatus.CONFLICT, "Struk belum tersedia; lakukan checkout terlebih dahulu"),
 
+    // pembayaran (Phase 5)
+    SALE_NOT_PAYABLE(HttpStatus.CONFLICT, "Lakukan checkout terlebih dahulu sebelum menerima pembayaran"),
+    SALE_ALREADY_PAID(HttpStatus.CONFLICT, "Tagihan sudah terbayar penuh (atau tertutup pembayaran yang menunggu)"),
+    SALE_NOT_FULLY_PAID(HttpStatus.CONFLICT, "Pembayaran belum mencukupi total transaksi"),
+    SALE_HAS_PAYMENTS(HttpStatus.CONFLICT, "Batalkan pembayaran yang ada terlebih dahulu"),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Pembayaran tidak ditemukan"),
+    PAYMENT_METHOD_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Metode pembayaran tidak tersedia"),
+    PAYMENT_AMOUNT_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Jumlah pembayaran tidak valid"),
+    PAYMENT_EXCEEDS_REMAINING(HttpStatus.UNPROCESSABLE_ENTITY,
+            "Pembayaran non-tunai tidak boleh melebihi sisa tagihan"),
+    PAYMENT_REFERENCE_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Nomor referensi pembayaran wajib diisi"),
+    PAYMENT_CONFIRMATION_REQUIRED(HttpStatus.CONFLICT, "Menunggu konfirmasi dari penyedia pembayaran"),
+    PAYMENT_NOT_REVERSIBLE(HttpStatus.CONFLICT, "Pembayaran ini tidak bisa dibatalkan; gunakan refund"),
+    PAYMENT_CANCEL_REASON_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Alasan pembatalan minimal 5 karakter"),
+    PAYMENT_INVALID_TRANSITION(HttpStatus.CONFLICT, "Status pembayaran tidak bisa diubah dengan cara ini"),
+    PAYMENT_GATEWAY_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Penyedia pembayaran sedang tidak tersedia"),
+    PAYMENT_CALLBACK_INVALID(HttpStatus.UNAUTHORIZED, "Callback pembayaran tidak valid"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     OPEN_ORDER_EXISTS(HttpStatus.CONFLICT, "Masih ada order yang belum selesai"),
     PAYMENT_PENDING(HttpStatus.CONFLICT, "Pembayaran masih pending"),
