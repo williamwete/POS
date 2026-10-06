@@ -171,3 +171,20 @@ Error baru: `OPEN_ORDER_EXISTS` (tutup kasir), `PAYMENT_PENDING`, `CLOSING_COUNT
 Struktur laporan X dan Z sama (dihitung `pos.compute_shift_report`); X tidak berisi `actualCash`/`difference`.
 Error baru: `CASHUP_NOT_FOUND`.
 
+### Retur & refund (Phase 8)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/returns/lookup?receiptNo=` | `sale.create` atau `sale.refund` @outlet struk | data struk untuk retur: baris (terjual, sudah diretur, sisa jumlah & nilai), pembayaran (dibayar, sudah direfund), retur sebelumnya |
+| POST | `/api/returns` | `sale.create`, kasir dengan session OPEN di outlet struk | `{clientReturnId, originalSaleId, reason, refundMode: CASH\|ORIGINAL, refundReference?, items:[{saleItemId, quantity, returnToStock?}]}` → retur `PENDING_APPROVAL` (nomor `RET-<terminal>-<YYYYMMDD>-<urut>`, nilai dari database); `clientReturnId` sama = retur yang sama; idempotent |
+| GET | `/api/returns/{id}` | pembuat, `sale.view` atau `sale.refund` | retur + baris + refund |
+| GET | `/api/returns?outletId=&businessDate=&status=` | `sale.view` atau `sale.refund` @outlet | retur business date tsb + yang masih menunggu |
+| POST | `/api/returns/{id}/approve-at-terminal` | pembuat; **rate limit seperti login** | `{email, password, refundReference?}` approver (izin `sale.refund`, rank ≥ SUPERVISOR, bukan pembuat) → `COMPLETED` + refund |
+| POST | `/api/returns/{id}/approve` | `sale.refund` @outlet, bukan pembuat | `{refundReference?}` → `COMPLETED` + refund; idempotent |
+| POST | `/api/returns/{id}/reject` | pembuat atau `sale.refund` | `{reason}` min 5 karakter → `REJECTED` (sisa jumlah kembali tersedia); idempotent |
+
+Refund dialokasikan database ke pembayaran asli (`originalPaymentId`); mode `CASH` = semua tunai dari laci kasir
+pemroses, mode `ORIGINAL` = bagian non-tunai dikembalikan ke metodenya (wajib `refundReference`), bagian tunai dari laci.
+Error baru: `RETURN_NOT_FOUND`, `REFUND_NOT_ALLOWED`, `RETURN_QUANTITY_EXCEEDED`, `RETURN_EMPTY`, `RETURN_CLOSED`,
+`RETURN_PENDING` (tutup kasir), `REFUND_APPROVAL_REQUIRED`, `REFUND_EXCEEDS_PAYMENT`.
+

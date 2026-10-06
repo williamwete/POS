@@ -55,7 +55,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         // Endpoint yang memeriksa password (login dev & approval supervisor) memakai limit ketat.
         boolean authEndpoint = request.getRequestURI().startsWith("/api/dev-auth/")
                 || request.getRequestURI().equals("/api/approvals")
-                || request.getRequestURI().equals("/api/cashier/approvals");
+                || request.getRequestURI().equals("/api/cashier/approvals")
+                || (request.getRequestURI().startsWith("/api/returns/")
+                    && request.getRequestURI().endsWith("/approve-at-terminal"));
         String key;
         int limit;
         if (authEndpoint) {

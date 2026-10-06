@@ -117,11 +117,22 @@ public enum ErrorCode {
     // laporan closing (Phase 7)
     CASHUP_NOT_FOUND(HttpStatus.NOT_FOUND, "Z report belum tersedia; kasir belum ditutup"),
 
+    // retur & refund (Phase 8)
+    RETURN_NOT_FOUND(HttpStatus.NOT_FOUND, "Retur tidak ditemukan"),
+    REFUND_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY,
+            "Transaksi ini tidak bisa diretur (belum lunas atau dari outlet lain)"),
+    RETURN_QUANTITY_EXCEEDED(HttpStatus.UNPROCESSABLE_ENTITY, "Jumlah retur melebihi sisa yang bisa diretur"),
+    RETURN_EMPTY(HttpStatus.UNPROCESSABLE_ENTITY, "Pilih barang yang diretur"),
+    RETURN_CLOSED(HttpStatus.CONFLICT, "Retur ini sudah selesai atau ditolak"),
+    RETURN_PENDING(HttpStatus.CONFLICT, "Masih ada retur yang menunggu persetujuan; setujui atau tolak dulu"),
+    REFUND_APPROVAL_REQUIRED(HttpStatus.FORBIDDEN, "Refund memerlukan persetujuan supervisor"),
+    REFUND_EXCEEDS_PAYMENT(HttpStatus.CONFLICT, "Refund melebihi pembayaran transaksi asli"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     PAYMENT_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran gagal"),
     INSUFFICIENT_PAYMENT(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran kurang dari total"),
     STOCK_UNAVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Stok tidak mencukupi"),
-    REFUND_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "Refund tidak diizinkan"),
+
     OPENBRAVO_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Openbravo sedang tidak tersedia"),
     SYNC_FAILED(HttpStatus.BAD_GATEWAY, "Sinkronisasi gagal");
 

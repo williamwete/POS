@@ -613,3 +613,84 @@ export interface SessionTransaction {
   paymentMethods?: string | null
   voidReason?: string | null
 }
+
+// ---- Phase 8: retur & refund (nilai dihitung database)
+export interface ReturnLookupItem {
+  saleItemId: string
+  lineNo: number
+  sku: string
+  productName: string
+  uom: string
+  quantity: number
+  unitPrice: number
+  netAmount: number
+  returnedQuantity: number
+  returnedAmount: number
+  remainingQuantity: number
+  remainingAmount: number
+}
+
+export interface ReturnLookup {
+  saleId: string
+  receiptNo: string
+  status: string
+  outletId: string
+  businessDate: string
+  paidAt?: string | null
+  grandTotal: number
+  cashierName: string
+  returnable: boolean
+  items: ReturnLookupItem[]
+  payments: { paymentId: string; methodCode: string; methodKind: string; amount: number; refunded: number }[]
+  returns: { id: string; returnNo: string; status: ReturnStatus; totalAmount: number; createdAt: string }[]
+}
+
+export type ReturnStatus = 'PENDING_APPROVAL' | 'COMPLETED' | 'REJECTED'
+
+export interface ReturnItem {
+  saleItemId: string
+  sku: string
+  productName: string
+  uom: string
+  quantity: number
+  unitPrice: number
+  amount: number
+  taxAmount: number
+  returnToStock: boolean
+}
+
+export interface Refund {
+  id: string
+  originalPaymentId: string
+  refundMethod: string
+  refundAmount: number
+  referenceNumber?: string | null
+  createdAt: string
+}
+
+export interface SaleReturn {
+  id: string
+  returnNo: string
+  status: ReturnStatus
+  originalSaleId: string
+  originalReceiptNo?: string | null
+  outletId: string
+  terminalCode: string
+  cashierSessionId: string
+  businessDate: string
+  reason: string
+  refundMode: 'CASH' | 'ORIGINAL'
+  refundReference?: string | null
+  itemCount: number
+  totalAmount: number
+  taxAmount: number
+  createdByName?: string | null
+  approvedByName?: string | null
+  approvedAt?: string | null
+  rejectReason?: string | null
+  rejectedByName?: string | null
+  createdAt: string
+  version: number
+  items: ReturnItem[]
+  refunds: Refund[]
+}

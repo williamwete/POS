@@ -59,7 +59,9 @@ public class GlobalExceptionHandler {
             Map.entry("sales_one_draft_per_session_uk", "Masih ada transaksi aktif; tahan atau selesaikan dulu"),
             Map.entry("sales_client_tx_uk", "Transaksi dengan ID ini sudah dibuat"),
             Map.entry("sale_discounts_active_uk", "Hapus diskon yang ada sebelum menambah diskon baru"),
-            Map.entry("payments_client_uk", "Pembayaran dengan ID ini sudah dicatat"));
+            Map.entry("payments_client_uk", "Pembayaran dengan ID ini sudah dicatat"),
+            Map.entry("returns_client_uk", "Retur dengan ID ini sudah dibuat"),
+            Map.entry("return_items_line_uk", "Baris yang sama dikirim lebih dari sekali"));
 
     /** Constraint unik yang punya kode error bisnis sendiri. */
     private static final Map<String, ErrorCode> UNIQUE_CODES = Map.ofEntries(
@@ -72,7 +74,9 @@ public class GlobalExceptionHandler {
             Map.entry("sales_one_draft_per_session_uk", ErrorCode.OPEN_ORDER_EXISTS),
             Map.entry("sales_client_tx_uk", ErrorCode.DUPLICATE_TRANSACTION),
             Map.entry("sale_discounts_active_uk", ErrorCode.DISCOUNT_INVALID),
-            Map.entry("payments_client_uk", ErrorCode.DUPLICATE_TRANSACTION));
+            Map.entry("payments_client_uk", ErrorCode.DUPLICATE_TRANSACTION),
+            Map.entry("returns_client_uk", ErrorCode.DUPLICATE_TRANSACTION),
+            Map.entry("return_items_line_uk", ErrorCode.VALIDATION_FAILED));
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiResponse<Void>> handleApi(ApiException ex) {
@@ -240,6 +244,15 @@ public class GlobalExceptionHandler {
             case "CASH_MOVEMENT_REASON_REQUIRED" -> ErrorCode.CASH_MOVEMENT_REASON_REQUIRED;
             case "SELF_MODIFICATION_NOT_ALLOWED" -> ErrorCode.SELF_MODIFICATION_NOT_ALLOWED;
             case "REPORT_NOT_AUTHORIZED" -> ErrorCode.USER_NOT_AUTHORIZED;
+            case "RETURN_NOT_ALLOWED" -> ErrorCode.REFUND_NOT_ALLOWED;
+            case "RETURN_QUANTITY_EXCEEDED" -> ErrorCode.RETURN_QUANTITY_EXCEEDED;
+            case "RETURN_EMPTY" -> ErrorCode.RETURN_EMPTY;
+            case "RETURN_CLOSED" -> ErrorCode.RETURN_CLOSED;
+            case "RETURN_PENDING" -> ErrorCode.RETURN_PENDING;
+            case "REFUND_APPROVAL_REQUIRED" -> ErrorCode.REFUND_APPROVAL_REQUIRED;
+            case "REFUND_NOT_AUTHORIZED" -> ErrorCode.APPROVER_NOT_AUTHORIZED;
+            case "REFUND_EXCEEDS_PAYMENT" -> ErrorCode.REFUND_EXCEEDS_PAYMENT;
+            case "RETURN_IMMUTABLE_FIELD", "RETURN_INVALID_TRANSITION" -> ErrorCode.CONCURRENT_MODIFICATION;
             case "CASHUP_MISMATCH", "CASHUP_MISSING" -> ErrorCode.CONCURRENT_MODIFICATION;
             case "CASHIER_SESSION_NOT_FOUND" -> ErrorCode.CASHIER_SESSION_NOT_FOUND;
             case "SALE_INVALID_TRANSITION", "SALE_IMMUTABLE_FIELD", "SALE_ITEM_IMMUTABLE_FIELD",

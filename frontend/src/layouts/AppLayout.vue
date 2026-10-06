@@ -104,6 +104,11 @@ async function logout() {
               <i class="pi pi-shopping-cart" /> Transaksi
             </RouterLink>
           </li>
+          <li v-if="allowed('returns')">
+            <RouterLink :to="{ name: 'returns' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-replay" /> Retur
+            </RouterLink>
+          </li>
           <li v-if="session.me?.employee && session.can('cashier.open') && !cashier.current">
             <RouterLink :to="{ name: 'cashier-open' }" class="nav-link" active-class="nav-link-active">
               <i class="pi pi-wallet" /> Buka kasir

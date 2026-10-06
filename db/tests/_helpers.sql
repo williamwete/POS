@@ -299,3 +299,27 @@ BEGIN
 END
 $$;
 GRANT EXECUTE ON FUNCTION pos_test.cash_approval(uuid, text, numeric, uuid, boolean) TO PUBLIC;
+
+-- Retur (Phase 8): header + baris; nilai & nomor diisi trigger.
+CREATE OR REPLACE FUNCTION pos_test.new_return(p_sale uuid, p_client text, p_mode text DEFAULT 'CASH',
+                                               p_ref text DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.returns (organization_id, outlet_id, terminal_id, cashier_session_id, original_sale_id,
+                             client_return_id, return_no, business_date, reason, refund_mode, refund_reference, created_by)
+    SELECT pos.current_org_id(), s.outlet_id, s.terminal_id, s.cashier_session_id, s.id, p_client, 'x', '1900-01-01',
+           'Barang rusak', p_mode, p_ref, pos.current_app_user_id()
+    FROM pos.sales s WHERE s.id = p_sale
+    RETURNING id
+$$;
+CREATE OR REPLACE FUNCTION pos_test.return_line(p_return uuid, p_sale uuid, p_sku text, p_qty numeric)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.return_items (return_id, sale_item_id, product_id, sku, product_name, uom, quantity, unit_price, amount)
+    SELECT p_return, i.id, i.product_id, 'x', 'x', 'x', p_qty, 0, 0
+    FROM pos.sale_items i WHERE i.sale_id = p_sale AND i.sku = p_sku AND i.status = 'ACTIVE'
+    RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.new_return(uuid, text, text, text), pos_test.return_line(uuid, uuid, text, numeric) TO PUBLIC;

@@ -39,6 +39,14 @@ export const routes: RouteRecordRaw[] = [
         meta: { requiresContext: true, title: 'Buka kasir', anyOf: [{ permission: 'cashier.open', scope: 'current' }] },
       },
       {
+        path: 'returns', name: 'returns', component: () => import('@/modules/returns/ReturnsPage.vue'),
+        meta: {
+          title: 'Retur & refund',
+          anyOf: [{ permission: 'sale.create', scope: 'current' }, { permission: 'sale.refund', scope: 'any' },
+            { permission: 'sale.view', scope: 'any' }],
+        },
+      },
+      {
         // pemilik menutup kasirnya sendiri; supervisor menutup laci kasir lain lewat ?session=<id>
         path: 'cashier/close', name: 'cashier-close', component: () => import('@/modules/cashier/CloseCashierPage.vue'),
         meta: { title: 'Tutup kasir', anyOf: [{ permission: 'cashier.close', scope: 'any' }] },
