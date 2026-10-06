@@ -539,3 +539,77 @@ export interface PaymentResult {
   sale: Sale
   simulated: boolean
 }
+
+// ---- Phase 7: laporan closing (angka dari database)
+export interface ShiftReportPayment {
+  methodCode: string
+  methodName: string
+  methodKind: string
+  count: number
+  amount: number
+}
+
+export interface ShiftReport {
+  reportType: 'X' | 'Z'
+  zNumber?: number
+  cashupId?: string
+  generatedAt: string
+  header: {
+    organizationName: string
+    outletCode: string
+    outletName: string
+    outletAddress?: string | null
+    terminalCode: string
+    terminalName: string
+    businessDate: string
+    cashierName: string
+    employeeCode: string
+    sessionId: string
+    openedAt: string
+    closedAt?: string | null
+    status: CashierSessionStatus
+  }
+  sales: {
+    transactionCount: number
+    voidCount: number
+    itemCount: number
+    grossSales: number
+    discount: number
+    refund: number
+    netSales: number
+    tax: number
+    openOrders: number
+  }
+  payments: ShiftReportPayment[]
+  cash: {
+    openingCash: number
+    cashSales: number
+    cashIn: number
+    cashOut: number
+    pettyCash: number
+    cashRefund: number
+    adjustment: number
+    expectedCash: number
+    actualCash?: number | null
+    difference?: number | null
+    differenceReason?: DifferenceReason | null
+    differenceNote?: string | null
+  }
+  approval: {
+    cashierName: string
+    closedByName?: string | null
+    differenceApprovedByName?: string | null
+    closedAt?: string | null
+  }
+}
+
+export interface SessionTransaction {
+  id: string
+  receiptNo?: string | null
+  status: string
+  time: string
+  itemCount: number
+  grandTotal: number
+  paymentMethods?: string | null
+  voidReason?: string | null
+}

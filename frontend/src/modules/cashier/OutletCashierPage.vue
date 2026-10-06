@@ -16,7 +16,8 @@ import PageHeader from '@/components/PageHeader.vue'
 import { api } from '@/services'
 import { useApiAction } from '@/composables/useApiAction'
 import { useSessionStore } from '@/stores/session'
-import type { CashCount, CashierSession, CashMovement } from '@/types/api'
+import type { CashCount, CashierSession, CashMovement, SessionTransaction } from '@/types/api'
+import ShiftReportDialog from './ShiftReportDialog.vue'
 import { formatDateTime } from '@/utils/format'
 import { formatNumber, formatRupiah } from '@/utils/money'
 import { clockTime } from '@/modules/attendance/attendanceFormat'
@@ -58,13 +59,26 @@ watch([outletId, date], load)
 onMounted(load)
 
 const movements = ref<CashMovement[]>([])
+const txs = ref<SessionTransaction[]>([])
+const reportType = ref<'X' | 'Z'>('X')
+const reportOpen = ref(false)
+function openReport(t: 'X' | 'Z') {
+  reportType.value = t
+  reportOpen.value = true
+}
 
 async function openDetail(row: CashierSession) {
   await run(async () => {
-    const [d, m] = await Promise.all([cashier.get(row.id), cashier.movements(row.id)])
+    const [d, m, t] = await Promise.all([cashier.get(row.id), cashier.movements(row.id), cashier.transactions(row.id)])
     detail.value = d
     movements.value = m
+    txs.value = t
   })
+}
+
+const STATUS_TX: Record<string, string> = {
+  PAID: 'Lunas', POSTING: 'Lunas', POSTED: 'Lunas', SYNC_ERROR: 'Lunas', RETURNED: 'Diretur', VOID: 'Void',
+  HELD: 'Ditahan', CHECKOUT: 'Belum dibayar', PAYMENT_PENDING: 'Menunggu bayar',
 }
 
 const isActive = (x: CashierSession) => ['OPEN', 'ON_BREAK'].includes(x.status)
@@ -197,11 +211,28 @@ const signed = signedRupiah
           </p>
         </div>
 
-        <div v-if="canAdjust || canCloseOther" class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-4 flex flex-wrap gap-2">
+          <Button v-if="isActive(detail)" label="X report" icon="pi pi-file" severity="secondary" size="small" @click="openReport('X')" />
+          <Button v-if="detail.status === 'CLOSED'" label="Z report" icon="pi pi-print" severity="secondary" size="small" @click="openReport('Z')" />
           <Button v-if="canAdjust" label="Penyesuaian kas" icon="pi pi-sliders-h" severity="secondary" size="small" @click="openAdjust" />
           <Button v-if="canCloseOther" label="Tutup laci ini" icon="pi pi-power-off" severity="danger" outlined size="small"
             @click="router.push({ name: 'cashier-close', query: { session: detail.id } })" />
         </div>
+
+        <h3 class="mt-6 text-sm font-semibold text-ink-soft">Transaksi ({{ txs.length }})</h3>
+        <ul class="mt-2 max-h-80 divide-y divide-line overflow-auto rounded-lg border border-line text-sm">
+          <li v-for="t in txs" :key="t.id" class="flex items-start justify-between gap-3 p-3">
+            <div class="min-w-0">
+              <div class="tabular font-medium">{{ t.receiptNo ?? '—' }}</div>
+              <div class="text-xs text-ink-soft">
+                {{ clockTime(t.time) }} · {{ STATUS_TX[t.status] ?? t.status }}<template v-if="t.paymentMethods"> · {{ t.paymentMethods }}</template>
+              </div>
+              <div v-if="t.voidReason" class="truncate text-xs text-alert-600">{{ t.voidReason }}</div>
+            </div>
+            <span :class="['tabular whitespace-nowrap font-semibold', t.status === 'VOID' ? 'text-ink-faint line-through' : '']">{{ formatRupiah(t.grandTotal) }}</span>
+          </li>
+          <li v-if="!txs.length" class="p-3 text-ink-soft">Belum ada transaksi.</li>
+        </ul>
 
         <h3 class="mt-6 text-sm font-semibold text-ink-soft">Mutasi kas</h3>
         <ul class="mt-2 divide-y divide-line rounded-lg border border-line text-sm">
@@ -248,6 +279,8 @@ const signed = signedRupiah
         <p v-if="lastCount(detail) === null" class="text-sm text-ink-soft">Belum ada hitungan.</p>
       </template>
     </Drawer>
+
+    <ShiftReportDialog v-model:visible="reportOpen" :session-id="detail?.id ?? null" :type="reportType" />
 
     <Dialog v-model:visible="adjustOpen" header="Penyesuaian kas" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="submitAdjust">

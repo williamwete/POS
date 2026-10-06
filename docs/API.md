@@ -159,3 +159,15 @@ tetap hanya untuk `cashier.view`.
 Error baru: `OPEN_ORDER_EXISTS` (tutup kasir), `PAYMENT_PENDING`, `CLOSING_COUNT_REQUIRED`,
 `CASH_DIFFERENCE_REASON_REQUIRED`, `CASH_DIFFERENCE_REQUIRES_APPROVAL`, `CASH_INSUFFICIENT`, `CASH_MOVEMENT_REASON_REQUIRED`.
 
+### Laporan closing (Phase 7)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| POST | `/api/cashier/sessions/{id}/x-report` | `cashier.view` @outlet | X report tengah shift (session OPEN/ON_BREAK); tidak mengubah session; dicatat audit `X_REPORT` |
+| GET | `/api/cashier/sessions/{id}/z-report` | pemilik atau `cashier.view` | cash-up yang dibuat saat tutup kasir: `{reportType: Z, zNumber, cashupId, header, sales, payments[], cash, approval, generatedAt}`; `CASHUP_NOT_FOUND` bila belum ditutup |
+| POST | `/api/cashier/sessions/{id}/z-report/print` | pemilik atau `cashier.view` | catat cetak/cetak ulang Z (`Z_REPORT_PRINT`) |
+| GET | `/api/cashier/sessions/{id}/transactions` | `cashier.view`, atau pemilik setelah CLOSED | §54 detail transaksi: no struk, waktu, status, jumlah item, total, metode bayar, alasan void |
+
+Struktur laporan X dan Z sama (dihitung `pos.compute_shift_report`); X tidak berisi `actualCash`/`difference`.
+Error baru: `CASHUP_NOT_FOUND`.
+

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { api } from '@/services'
 import type {
   CashApprovalAction, CashApprovalResult, CashCount, CashierSession, CashMovement, ClosePreview, CloseRequest,
-  CountLine, Denomination,
+  CountLine, Denomination, SessionTransaction, ShiftReport,
 } from '@/types/api'
 
 /**
@@ -110,6 +110,24 @@ export const useCashierStore = defineStore('cashier', () => {
       { sessionId, action, amount, email, password })).data
   }
 
+  // ---- Phase 7: laporan closing
+
+  async function xReport(sessionId: string) {
+    return (await api().post<ShiftReport>(`/api/cashier/sessions/${sessionId}/x-report`, {})).data
+  }
+
+  async function zReport(sessionId: string) {
+    return (await api().get<ShiftReport>(`/api/cashier/sessions/${sessionId}/z-report`)).data
+  }
+
+  async function recordZPrint(sessionId: string) {
+    await api().post(`/api/cashier/sessions/${sessionId}/z-report/print`, {})
+  }
+
+  async function transactions(sessionId: string) {
+    return (await api().get<SessionTransaction[]>(`/api/cashier/sessions/${sessionId}/transactions`)).data
+  }
+
   function requireCurrent(): CashierSession {
     if (!current.value) throw new Error('Tidak ada cashier session aktif')
     return current.value
@@ -124,6 +142,7 @@ export const useCashierStore = defineStore('cashier', () => {
     current, denominations, loaded, isOpen, isLocked,
     load, loadDenominations, open, cashCount, lock, unlock, cancel, reset,
     cashMovement, movements, adjustment, get, closePreview, close, approveCash,
+    xReport, zReport, recordZPrint, transactions,
   }
 })
 

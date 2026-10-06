@@ -114,6 +114,9 @@ public enum ErrorCode {
     CASH_INSUFFICIENT(HttpStatus.UNPROCESSABLE_ENTITY, "Uang di laci tidak cukup untuk kas keluar ini"),
     CASH_MOVEMENT_REASON_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Alasan kas masuk/keluar wajib diisi"),
 
+    // laporan closing (Phase 7)
+    CASHUP_NOT_FOUND(HttpStatus.NOT_FOUND, "Z report belum tersedia; kasir belum ditutup"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     PAYMENT_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran gagal"),
     INSUFFICIENT_PAYMENT(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran kurang dari total"),

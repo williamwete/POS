@@ -16,6 +16,7 @@ import { countTotal, formatRupiah } from '@/utils/money'
 import { formatDateTime } from '@/utils/format'
 import DenominationCounter from './DenominationCounter.vue'
 import CashApprovalDialog from './CashApprovalDialog.vue'
+import ShiftReportDialog from './ShiftReportDialog.vue'
 import { DIFFERENCE_REASON_LABEL, signedRupiah } from './cashierFormat'
 
 /**
@@ -43,6 +44,7 @@ const approvalId = ref<string | null>(null)
 const approverName = ref<string | null>(null)
 const approvalOpen = ref(false)
 const closed = ref<CashierSession | null>(null)
+const zOpen = ref(false)
 
 const otherSessionId = computed(() => (typeof route.query.session === 'string' ? route.query.session : null))
 
@@ -303,6 +305,7 @@ async function clockOut() {
           <p class="mt-3 text-sm text-ink-soft">Serahkan uang laci ke brankas sesuai prosedur outlet.</p>
         </div>
         <div class="flex flex-wrap justify-end gap-2">
+          <Button label="Z report" icon="pi pi-print" severity="secondary" @click="zOpen = true" />
           <template v-if="isOwner">
             <Button label="Ke beranda" severity="secondary" text @click="router.push({ name: 'home' })" />
             <Button v-if="attendance.current?.status === 'WORKING'" label="Clock out sekarang" icon="pi pi-sign-out"
@@ -310,6 +313,7 @@ async function clockOut() {
           </template>
           <Button v-else label="Kembali ke sesi kasir" @click="router.push({ name: 'cashier-sessions' })" />
         </div>
+        <ShiftReportDialog v-model:visible="zOpen" :session-id="closed.id" type="Z" />
       </div>
     </template>
   </div>
