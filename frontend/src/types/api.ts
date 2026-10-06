@@ -299,6 +299,7 @@ export interface ClosePreview {
   approvalRequired: boolean
   openOrders: number
   pendingPayments: number
+  pendingReturns: number
   allowCloseWithOpenOrders: boolean
 }
 

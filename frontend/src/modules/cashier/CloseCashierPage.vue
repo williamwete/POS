@@ -75,6 +75,7 @@ const blocked = computed(() => {
   const p = preview.value
   if (!p) return null
   if (p.pendingPayments > 0) return `Masih ada ${p.pendingPayments} pembayaran yang menunggu konfirmasi penyedia.`
+  if (p.pendingReturns > 0) return `Masih ada ${p.pendingReturns} retur yang menunggu persetujuan. Setujui atau tolak di menu Retur.`
   if (p.openOrders > 0 && !p.allowCloseWithOpenOrders) {
     return `Masih ada ${p.openOrders} transaksi terbuka atau ditahan. Selesaikan, void, atau batalkan dulu.`
   }

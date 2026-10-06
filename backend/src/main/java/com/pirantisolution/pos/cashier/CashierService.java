@@ -317,7 +317,7 @@ public class CashierService {
         audit.record(AuditEvent.of("CLOSE_PREVIEW", "CASHIER_SESSION", sessionId).outlet(s.outletId()).change(null, v));
         return new ClosePreview(counted, expected, diff, b.differenceThreshold(), diff.signum() != 0,
                 diff.abs().compareTo(b.differenceThreshold()) > 0, b.openOrders(), b.pendingPayments(),
-                b.allowOpenOrders());
+                b.pendingReturns(), b.allowOpenOrders());
     }
 
     /** Tutup kasir: hitungan fisik per pecahan, selisih dihitung database, alasan & approval sesuai ambang. */
@@ -337,6 +337,9 @@ public class CashierService {
         }
         if (b.pendingPayments() > 0) {
             throw new ApiException(ErrorCode.PAYMENT_PENDING);
+        }
+        if (b.pendingReturns() > 0) {
+            throw new ApiException(ErrorCode.RETURN_PENDING);
         }
         BigDecimal counted = countTotal(req.counts());
         BigDecimal diff = counted.subtract(repo.balance(sessionId));

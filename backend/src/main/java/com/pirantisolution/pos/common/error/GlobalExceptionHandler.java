@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /** Pesan RAISE dari trigger/fungsi DB berformat "KODE: detail". */
-    private static final Pattern DB_ERROR_CODE = Pattern.compile("^([A-Z_]{3,64}):");
+    private static final Pattern DB_ERROR_CODE = Pattern.compile("^([A-Z_]{3,64})(?::|$)");
 
     /** Constraint unik -> pesan untuk user. */
     private static final Map<String, String> UNIQUE_MESSAGES = Map.ofEntries(

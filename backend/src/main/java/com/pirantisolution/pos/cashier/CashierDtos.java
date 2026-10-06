@@ -142,6 +142,7 @@ public final class CashierDtos {
             boolean approvalRequired,
             int openOrders,
             int pendingPayments,
+            int pendingReturns,
             boolean allowCloseWithOpenOrders) {
     }
 

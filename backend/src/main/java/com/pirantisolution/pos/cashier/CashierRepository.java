@@ -328,7 +328,7 @@ public class CashierRepository {
         return values.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",", "{", "}"));
     }
 
-    public record CloseBlockers(int openOrders, int pendingPayments, boolean allowOpenOrders,
+    public record CloseBlockers(int openOrders, int pendingPayments, int pendingReturns, boolean allowOpenOrders,
             BigDecimal differenceThreshold) {
     }
 
@@ -336,6 +336,8 @@ public class CashierRepository {
         return jdbc.sql("""
                 SELECT pos.session_open_orders(:s) AS open_orders,
                        pos.session_pending_payments(:s) AS pending_payments,
+                       (SELECT count(*)::integer FROM pos.returns r
+                        WHERE r.cashier_session_id = :s AND r.status = 'PENDING_APPROVAL') AS pending_returns,
                        coalesce((pos.get_setting('allow_close_with_open_orders', :o))::boolean, false) AS allow_open_orders,
                        coalesce((pos.get_setting('cash_difference_approval_threshold', :o))::numeric, 0) AS difference_threshold
                 """)
