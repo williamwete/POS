@@ -24,13 +24,20 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductView> search(UUID outletId, String query, Integer limit) {
+    public List<ProductView> search(UUID outletId, String query, UUID categoryId, Integer limit) {
         access.requireOutletAccess(outletId);
         if (query != null && query.length() > 80) {
             throw ApiException.validation("Kata kunci terlalu panjang");
         }
-        int n = limit == null ? 20 : Math.max(1, Math.min(limit, 50));
-        return repo.search(outletId, query, n);
+        // katalog kasir menampilkan seluruh produk satu kategori; batas tetap ada agar respons kecil
+        int n = limit == null ? 20 : Math.max(1, Math.min(limit, 200));
+        return repo.search(outletId, query, categoryId, n);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductRepository.CategoryView> categories() {
+        access.currentUser();
+        return repo.categories();
     }
 
     @Transactional(readOnly = true)

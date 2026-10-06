@@ -60,6 +60,9 @@ function allowed(name: string): boolean {
 
 const adminNav = computed(() => ADMIN_NAV.filter((n) => allowed(n.name)))
 const outlet = computed(() => session.currentOutlet)
+const initials = computed(() =>
+  (session.me?.user.displayName ?? '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join(''),
+)
 
 async function logout() {
   attendance.reset()
@@ -71,97 +74,29 @@ async function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-field text-ink">
-    <!-- Strip konteks: selalu menunjukkan DI MANA dan KAPAN (business date) user bekerja -->
-    <header class="sticky top-0 z-30 border-b border-jade-900 bg-jade-700 text-white">
-      <div class="flex items-stretch gap-0">
-        <button
-          class="flex items-center px-4 lg:hidden"
-          :aria-expanded="navOpen"
-          aria-controls="side-nav"
-          aria-label="Buka menu"
-          @click="navOpen = !navOpen"
-        >
-          <i class="pi pi-bars text-lg" />
-        </button>
+  <div class="min-h-screen bg-field text-ink lg:flex">
+    <!-- ================= sidebar -->
+    <nav
+      id="side-nav"
+      :class="[
+        'fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-line bg-surface transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+        navOpen ? 'translate-x-0' : '-translate-x-full',
+      ]"
+      aria-label="Navigasi utama"
+    >
+      <RouterLink :to="{ name: 'home' }" class="flex items-center gap-3 px-6 py-5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-jade-600 text-base font-bold text-white">P</span>
+        <span class="min-w-0 leading-tight">
+          <span class="block truncate text-sm font-bold">{{ session.me?.organization.name }}</span>
+          <span class="block text-xs text-ink-faint">Point of Sale</span>
+        </span>
+      </RouterLink>
 
-        <RouterLink :to="{ name: 'home' }" class="flex items-center gap-3 px-4 py-3 lg:w-60 lg:border-r lg:border-jade-600">
-          <span class="grid h-8 w-8 place-items-center rounded-md bg-white/10 text-sm font-bold">P</span>
-          <span class="hidden text-sm font-semibold leading-tight sm:block">
-            {{ session.me?.organization.name }}
-          </span>
-        </RouterLink>
-
-        <div class="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto px-4 py-2">
-          <template v-if="outlet">
-            <div class="hidden min-w-0 sm:block">
-              <div class="text-xs text-jade-100">Outlet</div>
-              <div class="truncate text-sm font-semibold">
-                <span class="tabular">{{ outlet.code }}</span> {{ outlet.name }}
-              </div>
-            </div>
-            <div v-if="session.terminal" class="shrink-0 rounded-md bg-amber-500 px-3 py-1 text-jade-900">
-              <div class="text-xs font-medium">Terminal</div>
-              <div class="tabular text-sm font-bold">{{ session.terminal.code }}</div>
-            </div>
-            <div v-if="cashier.current" class="shrink-0" :title="`Kasir ${cashier.current.terminalCode}`">
-              <div class="text-xs text-jade-100">Kasir</div>
-              <div class="flex items-center gap-1.5 text-sm font-semibold">
-                <span :class="['h-2 w-2 rounded-full', cashier.isOpen ? 'bg-amber-500' : 'bg-white/50']" aria-hidden="true" />
-                {{ cashier.isOpen ? 'Buka' : 'Terkunci' }}
-                <span v-if="cashier.current.terminalId !== session.terminal?.id" class="tabular font-normal text-jade-100">
-                  di {{ cashier.current.terminalCode }}
-                </span>
-              </div>
-            </div>
-            <div class="hidden shrink-0 md:block">
-              <div class="text-xs text-jade-100">Business date</div>
-              <div class="text-sm font-semibold">{{ formatBusinessDate(outlet.businessDate) }}</div>
-            </div>
-          </template>
-          <RouterLink v-else :to="{ name: 'context' }" class="text-sm font-semibold underline underline-offset-4">
-            Pilih outlet & terminal
-          </RouterLink>
-        </div>
-
-        <div class="flex shrink-0 items-center gap-2 px-3">
-          <div class="hidden text-right xl:block">
-            <div class="text-sm font-semibold">{{ session.me?.user.displayName }}</div>
-            <div class="max-w-[16rem] truncate text-xs text-jade-100">{{ session.roleSummary.join(', ') }}</div>
-          </div>
-          <Button
-            v-if="outlet"
-            icon="pi pi-sync"
-            text
-            rounded
-            class="!text-white"
-            aria-label="Ganti outlet atau terminal"
-            v-tooltip.bottom="'Ganti outlet / terminal'"
-            @click="router.push({ name: 'context' })"
-          />
-          <Button icon="pi pi-sign-out" text rounded class="!text-white" aria-label="Keluar" v-tooltip.bottom="'Keluar'" @click="logout" />
-        </div>
-      </div>
-    </header>
-
-    <div class="flex">
-      <nav
-        id="side-nav"
-        :class="[
-          'fixed inset-y-0 left-0 z-20 w-60 shrink-0 border-r border-line bg-surface pt-16 transition-transform lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] lg:translate-x-0 lg:pt-0',
-          navOpen ? 'translate-x-0' : '-translate-x-full',
-        ]"
-        aria-label="Navigasi utama"
-      >
-        <ul class="space-y-1 p-3">
+      <div class="flex-1 overflow-y-auto px-3 pb-4">
+        <ul class="space-y-1">
           <li>
             <RouterLink :to="{ name: 'home' }" class="nav-link" active-class="nav-link-active" exact-active-class="nav-link-active">
-              <i class="pi pi-home" /> Beranda
-            </RouterLink>
-          </li>
-          <li v-if="session.me?.employee">
-            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-clock" /> Kehadiran saya
+              <i class="pi pi-th-large" /> Beranda
             </RouterLink>
           </li>
           <li v-if="session.me?.employee && cashier.current && allowed('pos')">
@@ -172,6 +107,11 @@ async function logout() {
           <li v-if="session.me?.employee && session.can('cashier.open') && !cashier.current">
             <RouterLink :to="{ name: 'cashier-open' }" class="nav-link" active-class="nav-link-active">
               <i class="pi pi-wallet" /> Buka kasir
+            </RouterLink>
+          </li>
+          <li v-if="session.me?.employee">
+            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-clock" /> Kehadiran saya
             </RouterLink>
           </li>
           <li v-if="allowed('cashier-sessions')">
@@ -186,8 +126,8 @@ async function logout() {
           </li>
         </ul>
         <template v-if="adminNav.length">
-          <p class="px-6 pb-1 pt-4 text-xs font-semibold text-ink-faint">Administrasi</p>
-          <ul class="space-y-1 px-3">
+          <p class="px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Administrasi</p>
+          <ul class="space-y-1">
             <li v-for="item in adminNav" :key="item.name">
               <RouterLink :to="{ name: item.name }" class="nav-link" active-class="nav-link-active">
                 <i :class="item.icon" /> {{ item.label }}
@@ -195,23 +135,81 @@ async function logout() {
             </li>
           </ul>
         </template>
-      </nav>
-      <div v-if="navOpen" class="fixed inset-0 z-10 bg-ink/30 lg:hidden" @click="navOpen = false" />
+      </div>
 
-      <main class="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+      <div class="border-t border-line px-3 py-3">
+        <button type="button" class="nav-link w-full" @click="logout"><i class="pi pi-sign-out" /> Keluar</button>
+      </div>
+    </nav>
+    <div v-if="navOpen" class="fixed inset-0 z-30 bg-ink/30 lg:hidden" @click="navOpen = false" />
+
+    <!-- ================= konten -->
+    <div class="flex min-w-0 flex-1 flex-col">
+      <!-- bar konteks: selalu menunjukkan DI MANA dan KAPAN (business date) user bekerja -->
+      <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
+        <button class="grid h-9 w-9 place-items-center rounded-lg hover:bg-field lg:hidden" :aria-expanded="navOpen"
+          aria-controls="side-nav" aria-label="Buka menu" @click="navOpen = !navOpen">
+          <i class="pi pi-bars" />
+        </button>
+
+        <div class="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+          <template v-if="outlet">
+            <span class="ctx-chip hidden sm:inline-flex">
+              <i class="pi pi-building text-ink-faint" aria-hidden="true" />
+              <span class="truncate"><span class="tabular font-semibold">{{ outlet.code }}</span> {{ outlet.name }}</span>
+            </span>
+            <span v-if="session.terminal" class="ctx-chip !border-jade-500/40 !bg-jade-50 text-jade-700">
+              <i class="pi pi-desktop" aria-hidden="true" />
+              <span class="tabular font-semibold">{{ session.terminal.code }}</span>
+            </span>
+            <span v-if="cashier.current" class="ctx-chip" :title="`Kasir ${cashier.current.terminalCode}`">
+              <span :class="['h-2 w-2 rounded-full', cashier.isOpen ? 'bg-jade-500' : 'bg-amber-500']" aria-hidden="true" />
+              Kasir {{ cashier.isOpen ? 'buka' : 'terkunci' }}
+              <span v-if="cashier.current.terminalId !== session.terminal?.id" class="tabular text-ink-faint">di {{ cashier.current.terminalCode }}</span>
+            </span>
+            <span class="ctx-chip hidden md:inline-flex">
+              <i class="pi pi-calendar text-ink-faint" aria-hidden="true" />
+              {{ formatBusinessDate(outlet.businessDate) }}
+            </span>
+          </template>
+          <RouterLink v-else :to="{ name: 'context' }" class="text-sm font-semibold text-jade-700 underline underline-offset-4">
+            Pilih outlet & terminal
+          </RouterLink>
+        </div>
+
+        <Button v-if="outlet" icon="pi pi-sync" text rounded severity="secondary" aria-label="Ganti outlet atau terminal"
+          v-tooltip.bottom="'Ganti outlet / terminal'" @click="router.push({ name: 'context' })" />
+        <div class="flex shrink-0 items-center gap-3 border-l border-line pl-3">
+          <span class="grid h-9 w-9 place-items-center rounded-full bg-jade-50 text-sm font-bold text-jade-700" aria-hidden="true">
+            {{ initials }}
+          </span>
+          <div class="hidden leading-tight xl:block">
+            <div class="text-sm font-semibold">{{ session.me?.user.displayName }}</div>
+            <div class="max-w-[14rem] truncate text-xs text-ink-faint">{{ session.roleSummary.join(', ') }}</div>
+          </div>
+        </div>
+      </header>
+
+      <main class="min-w-0 flex-1 p-4 sm:p-6">
         <RouterView />
       </main>
-      <BreakLockScreen />
-      <TerminalLockScreen />
     </div>
+    <BreakLockScreen />
+    <TerminalLockScreen />
   </div>
 </template>
 
 <style scoped>
 .nav-link {
-  @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field hover:text-ink;
+  @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-ink-soft transition hover:bg-field hover:text-ink;
+}
+.nav-link i {
+  @apply text-base;
 }
 .nav-link-active {
-  @apply bg-jade-50 text-jade-700;
+  @apply bg-jade-50 font-semibold text-jade-700;
+}
+.ctx-chip {
+  @apply inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink;
 }
 </style>

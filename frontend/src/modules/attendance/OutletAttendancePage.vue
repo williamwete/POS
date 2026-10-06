@@ -90,7 +90,7 @@ async function submitForce() {
       <span class="tabular font-semibold text-ink">{{ rows.length }}</span> kehadiran tercatat.
     </p>
 
-    <DataTable :value="rows" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface">
+    <DataTable :value="rows" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface">
       <template #empty>Belum ada yang clock in pada business date ini.</template>
       <Column header="Karyawan">
         <template #body="{ data }">

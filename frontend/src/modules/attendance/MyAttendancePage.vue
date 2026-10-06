@@ -43,7 +43,7 @@ onMounted(load)
       </template>
     </PageHeader>
 
-    <DataTable :value="rows" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface" paginator :rows="31">
+    <DataTable :value="rows" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface" paginator :rows="31">
       <template #empty>Belum ada kehadiran pada rentang ini.</template>
       <Column header="Business date"><template #body="{ data }"><span class="text-sm">{{ formatBusinessDate(data.businessDate) }}</span></template></Column>
       <Column header="Outlet"><template #body="{ data }"><span class="tabular">{{ data.outletCode }}</span></template></Column>

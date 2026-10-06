@@ -207,3 +207,9 @@ CROSS JOIN pos.warehouses w
 WHERE p.organization_id = '00000000-0000-4000-8000-000000000001' AND p.source = 'SEED'
   AND w.organization_id = '00000000-0000-4000-8000-000000000001' AND w.code IN ('WH-JKT01', 'WH-BDG01')
 ON CONFLICT DO NOTHING;
+
+-- Foto produk demo (ilustrasi di frontend/public/products). Produksi: dari sync Openbravo.
+UPDATE pos.products p SET image_url = '/products/' || lower(p.sku) || '.svg'
+WHERE p.organization_id = '00000000-0000-4000-8000-000000000001' AND p.source = 'SEED'
+  AND p.image_url IS DISTINCT FROM '/products/' || lower(p.sku) || '.svg';
+

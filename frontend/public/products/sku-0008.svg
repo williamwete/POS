@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Telur Ayam (kg)">
+<title>Telur Ayam (kg)</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#FBF1DC"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<path d="M60 158h120l-8 26H68z" fill="#C9A87C"/>
+<ellipse cx="94" cy="138" rx="24" ry="30" fill="#F1D9B5"/>
+<ellipse cx="146" cy="138" rx="24" ry="30" fill="#EAC99B"/>
+<ellipse cx="120" cy="126" rx="25" ry="32" fill="#F7E6C8"/>
+<ellipse cx="112" cy="112" rx="6" ry="10" fill="#fff" opacity="0.6"/>
+<path d="M60 158h120v8H60z" fill="#B48F62"/>
+</svg>

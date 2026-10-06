@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Gula Pasir 1 kg">
+<title>Gula Pasir 1 kg</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#ECEFF2"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<path d="M82 64h76l6 136H76z" fill="#FFFFFF" stroke="#D5DBE1" stroke-width="3"/>
+<path d="M82 64h76l-2 16H84z" fill="#2F6FB5"/>
+<rect x="92" y="116" width="56" height="46" rx="6" fill="#2F6FB5"/>
+<g fill="#fff"><rect x="104" y="128" width="12" height="12" rx="2"/><rect x="122" y="128" width="12" height="12" rx="2"/><rect x="113" y="144" width="12" height="12" rx="2"/></g>
+</svg>

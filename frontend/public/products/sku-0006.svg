@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Cokelat Batang 75 g">
+<title>Cokelat Batang 75 g</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#EFDDD6"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<g transform="rotate(-18 120 128)">
+<rect x="70" y="92" width="100" height="72" rx="6" fill="#5A2E1C"/>
+<g fill="#6E3A25" stroke="#4A2516" stroke-width="2"><rect x="76" y="98" width="26" height="28" rx="3"/><rect x="107" y="98" width="26" height="28" rx="3"/><rect x="138" y="98" width="26" height="28" rx="3"/><rect x="76" y="130" width="26" height="28" rx="3"/><rect x="107" y="130" width="26" height="28" rx="3"/><rect x="138" y="130" width="26" height="28" rx="3"/></g>
+<path d="M118 88h56v80h-56z" fill="#C8102E"/><rect x="118" y="118" width="56" height="18" fill="#F2C14E"/>
+</g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Beras Premium 5 kg">
+<title>Beras Premium 5 kg</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#EEF1E6"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<path d="M78 70q42-12 84 0l8 124q-50 14-100 0z" fill="#F4F1E8" stroke="#D8D2C0" stroke-width="3"/>
+<path d="M84 66q36-16 72 0l-4 10q-32-10-64 0z" fill="#C9B98F"/>
+<rect x="92" y="112" width="56" height="50" rx="6" fill="#3E7B3A"/>
+<path d="M120 154c-12-8-12-24 0-34 12 10 12 26 0 34z" fill="#F2C14E"/>
+<path d="M120 154v-30" stroke="#3E7B3A" stroke-width="2"/>
+</svg>

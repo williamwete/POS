@@ -36,6 +36,7 @@ Password ini **tidak** ada di migration. Seed demo (`db/seed`) hanya untuk lokal
 | V011 | Cache master dari Openbravo: `tax_rates`, `product_categories`, `products`, `product_barcodes`, `product_price_cache` (periode berlaku, harga outlet > organisasi), `product_stock_cache`; fungsi `product_price`; hanya `pos_system` yang menulis; setting `prices_include_tax` |
 | V012 | `sales`, `sale_items`, `sale_discounts`, `approvals` (sekali pakai, 2 menit, approver ≠ peminta, izin & rank), `receipts`, `terminal_receipt_sequences`; trigger menghitung harga/pajak/total, validasi diskon & stok saat checkout (advisory lock per produk), nomor struk `<terminal>-<YYYYMMDD>-<urut>`; batal buka kasir ditolak bila sudah ada penjualan; RLS |
 | V013 | `payment_methods` (default 6 metode per organisasi), `payments` (diterapkan/diterima/kembalian, PENDING/PAID/FAILED/CANCELLED/REFUNDED, data gateway), kolom `sales.paid_amount/change_amount/paid_at`; status sale diturunkan dari pembayaran (PAID hanya bila Σ sukses ≥ total), cash movement `CASH_SALE`/`CASH_SALE_REVERSAL` otomatis, approval `PAYMENT_CONFIRM`, izin `payment.approve`, setting `payment_pending_timeout_minutes`; RLS |
+| V014 | `products.image_url` (path aplikasi `/…` atau `https://`, divalidasi constraint); seed demo memakai ilustrasi di `frontend/public/products` |
 
 Aturan: tidak ada perubahan schema manual; tidak ada `DROP TABLE` di production; Flyway `clean`
 dinonaktifkan. Data master dinonaktifkan (`active=false`), tidak dihapus (trigger menolak DELETE

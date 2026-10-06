@@ -2,7 +2,6 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
 import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useToast } from 'primevue/usetoast'
@@ -22,6 +21,7 @@ import HeldSalesDialog from './HeldSalesDialog.vue'
 import ReceiptDialog from './ReceiptDialog.vue'
 import PaymentPanel from './PaymentPanel.vue'
 import PaidPanel from './PaidPanel.vue'
+import ProductCatalog from './ProductCatalog.vue'
 import { usePaymentStore } from '@/stores/payment'
 
 const session = useSessionStore()
@@ -34,10 +34,9 @@ const prompt = useApprovalPrompt()
 
 const loading = ref(true)
 const busy = ref(false)
-const scan = ref('')
-const scanInput = ref<{ $el: HTMLInputElement } | null>(null)
-const results = ref<Product[]>([])
-const searched = ref(false)
+const catalog = ref<InstanceType<typeof ProductCatalog> | null>(null)
+/** naik setiap transaksi lunas/void agar stok katalog dimuat ulang */
+const catalogRefresh = ref(0)
 
 const s = computed(() => sales.sale)
 const items = computed(() => sales.activeItems)
@@ -48,6 +47,19 @@ const sessionOk = computed(
 watch(() => sales.sale?.id, (id, old) => {
   if (id !== old) payments.reset()
 })
+watch(() => sales.sale?.status, (st, old) => {
+  if (st === 'PAID' && old !== 'PAID') catalogRefresh.value++
+})
+
+/** Jumlah per produk di keranjang (untuk kontrol +/− di kartu katalog). */
+const cartQty = computed<Record<string, number>>(() => {
+  const m: Record<string, number> = {}
+  if (!sales.isDraft) return m
+  for (const i of items.value) m[i.productId] = (m[i.productId] ?? 0) + i.quantity
+  return m
+})
+/** Katalog bisa dipakai saat keranjang terbuka, belum ada transaksi, atau transaksi sebelumnya lunas. */
+const catalogDisabled = computed(() => busy.value || sales.isCheckout)
 
 /** Selesai: lanjut ke transaksi berikutnya (pemindaian membuat transaksi baru). */
 function nextSale() {
@@ -73,7 +85,7 @@ onMounted(async () => {
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 function focusScan() {
-  void nextTick(() => (scanInput.value?.$el as HTMLInputElement | undefined)?.focus())
+  void nextTick(() => catalog.value?.focus())
 }
 
 function onKey(e: KeyboardEvent) {
@@ -135,44 +147,39 @@ async function ensureSale(key: string) {
   }
 }
 
-// ---------------------------------------------------------------- scan / cari
-async function onScan() {
-  const text = scan.value.trim()
+// ---------------------------------------------------------------- scan / katalog
+/** Enter di kolom pindai: barcode → langsung masuk keranjang; selain itu tambah bila hasilnya tepat satu. */
+async function onEnter(text: string, results: Product[]) {
   if (!text || !session.outletId) return
   if (/^[0-9]{6,14}$/.test(text)) {
-    // barcode tidak dikenal -> lanjut sebagai pencarian teks (tanpa pesan error)
     const added = await act(async (key) => {
+      if (sales.isPaid) nextSale()
       await ensureSale(key)
       return sales.addBarcode(text, 1, key)
     }, { quiet: ['PRODUCT_NOT_FOUND'] })
     if (added) {
-      scan.value = ''
-      results.value = []
-      searched.value = false
+      catalog.value?.clearQuery()
       return
     }
   }
-  try {
-    results.value = await sales.searchProducts(session.outletId, text)
-    searched.value = true
-    if (results.value.length === 1 && results.value[0]!.sku.toLowerCase() === text.toLowerCase()) {
-      await addProduct(results.value[0]!)
-    }
-  } catch (e) {
-    notify(e)
-  }
+  const exact = results.find((p) => p.sku.toLowerCase() === text.toLowerCase() || p.barcode === text)
+  if (exact) await addProduct(exact)
+  else if (results.length === 1) await addProduct(results[0]!)
 }
 
 async function addProduct(p: Product) {
   const ok = await act(async (key) => {
+    if (sales.isPaid) nextSale()
     await ensureSale(key)
     return sales.addProduct(p.id, 1, key)
   })
-  if (ok) {
-    scan.value = ''
-    results.value = []
-    searched.value = false
-  }
+  if (ok) catalog.value?.clearQuery()
+}
+
+/** Tombol − di kartu katalog: kurangi baris terakhir produk itu; jumlah 1 → batalkan dengan alasan. */
+function decrementProduct(p: Product) {
+  const line = [...items.value].reverse().find((i) => i.productId === p.id)
+  if (line) changeQty(line, -1)
 }
 
 // ---------------------------------------------------------------- baris
@@ -325,7 +332,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl">
+  <div class="mx-auto max-w-[1600px]">
     <div v-if="loading" class="flex justify-center p-10"><ProgressSpinner style="width: 2.5rem; height: 2.5rem" /></div>
 
     <!-- prasyarat: kasir dibuka di terminal ini -->
@@ -344,144 +351,111 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
       </div>
     </div>
 
-    <div v-else class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <!-- ============================ keranjang -->
-      <section class="flex min-h-[60vh] flex-col rounded-lg border border-line bg-surface" aria-labelledby="cart-title">
-        <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-          <div>
-            <h1 id="cart-title" class="text-lg font-bold">Keranjang</h1>
-            <p class="text-xs text-ink-soft">
-              <template v-if="s?.receiptNo">Struk <span class="tabular font-semibold text-ink">{{ s.receiptNo }}</span> · </template>
-              {{ items.length }} baris · {{ qtyText(s?.itemCount ?? 0) }} item
-            </p>
-          </div>
-          <Button
-            :label="`Ditahan (${sales.held.length})`"
-            icon="pi pi-inbox"
-            severity="secondary"
-            size="small"
-            outlined
-            :disabled="busy"
-            @click="openHeld"
-          />
-        </header>
+    <div v-else class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_25rem]">
+      <!-- ============================ katalog (tengah) -->
+      <ProductCatalog ref="catalog" :cart-qty="cartQty" :disabled="catalogDisabled" :refresh-key="catalogRefresh"
+        @add="addProduct" @decrement="decrementProduct" @enter="onEnter" />
 
-        <div v-if="items.length === 0" class="flex flex-1 flex-col items-center justify-center p-10 text-center text-ink-soft">
-          <i class="pi pi-barcode text-4xl text-ink-faint" aria-hidden="true" />
-          <p class="mt-3 font-medium text-ink">Pindai barcode atau cari produk</p>
-          <p class="text-sm">Tekan F2 untuk kembali ke kolom pindai.</p>
-        </div>
-
-        <ol v-else class="flex-1 divide-y divide-line overflow-y-auto">
-          <li v-for="item in items" :key="item.id" class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_7.5rem_auto]">
+      <!-- ============================ pesanan (kanan) -->
+      <aside class="flex flex-col gap-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
+        <section class="flex flex-col rounded-2xl border border-line bg-surface" aria-labelledby="cart-title">
+          <header class="flex items-start justify-between gap-2 px-5 pb-3 pt-4">
             <div class="min-w-0">
-              <div class="truncate font-semibold">{{ item.productName }}</div>
-              <div class="text-xs text-ink-soft">
-                <span class="tabular">{{ item.sku }}</span> ·
-                <span class="tabular">{{ formatRupiah(item.unitPrice) }}</span>{{ unitLabel(item) }}
-                <s v-if="item.unitPrice !== item.listPrice" class="tabular text-ink-faint">{{ formatRupiah(item.listPrice) }}</s>
-                <span v-if="item.taxRate === 0" class="ml-1 rounded bg-field px-1">bebas PPN</span>
+              <h1 id="cart-title" class="text-lg font-bold">Pesanan</h1>
+              <p class="truncate text-xs text-ink-soft">
+                <template v-if="s?.receiptNo">Struk <span class="tabular font-semibold text-ink">{{ s.receiptNo }}</span></template>
+                <template v-else>{{ session.terminal?.code }} · transaksi baru</template>
+              </p>
+            </div>
+            <Button :label="`Ditahan (${sales.held.length})`" icon="pi pi-inbox" severity="secondary" size="small" text
+              :disabled="busy" @click="openHeld" />
+          </header>
+
+          <div class="flex items-center justify-between border-y border-dashed border-line px-5 py-2 text-sm">
+            <span class="font-semibold">Item dipesan</span>
+            <span class="tabular text-ink-soft">{{ items.length }} baris · {{ qtyText(s?.itemCount ?? 0) }} item</span>
+          </div>
+
+          <div v-if="items.length === 0" class="flex flex-col items-center px-6 py-10 text-center text-ink-soft">
+            <i class="pi pi-shopping-cart text-3xl text-ink-faint" aria-hidden="true" />
+            <p class="mt-2 text-sm font-medium text-ink">Belum ada barang</p>
+            <p class="text-xs">Pilih produk di katalog atau pindai barcode (F2).</p>
+          </div>
+
+          <ol v-else class="max-h-[40vh] divide-y divide-line overflow-y-auto">
+            <li v-for="item in items" :key="item.id" class="px-5 py-2.5">
+              <div class="flex items-start gap-3">
+                <span class="tabular mt-0.5 shrink-0 text-sm text-ink-soft">{{ qtyText(item.quantity) }}×</span>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-semibold">{{ item.productName }}</div>
+                  <div class="text-xs text-ink-soft">
+                    <span class="tabular">{{ formatRupiah(item.unitPrice) }}</span>{{ unitLabel(item) }}
+                    <s v-if="item.unitPrice !== item.listPrice" class="tabular text-ink-faint">{{ formatRupiah(item.listPrice) }}</s>
+                    <span v-if="item.taxRate === 0" class="ml-1 rounded bg-field px-1">bebas PPN</span>
+                  </div>
+                  <div v-if="discountOf(item)" class="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-700">
+                    <i class="pi pi-percentage text-[9px]" aria-hidden="true" />
+                    {{ discountOf(item)!.discountType === 'PERCENTAGE' ? `${formatNumber(discountOf(item)!.discountValue)}%` : formatRupiah(discountOf(item)!.discountValue) }}
+                    · {{ discountOf(item)!.reason }}<template v-if="discountOf(item)!.approvedByUsername"> · {{ discountOf(item)!.approvedByUsername }}</template>
+                  </div>
+                  <div v-if="item.priceOverrideReason" class="mt-1 text-[11px] text-amber-700">Harga diubah: {{ item.priceOverrideReason }}</div>
+                </div>
+                <div class="shrink-0 text-right">
+                  <div class="tabular text-sm font-semibold">{{ formatRupiah(item.netAmount) }}</div>
+                  <s v-if="item.itemDiscountAmount + item.cartDiscountAmount > 0" class="tabular text-[11px] text-ink-faint">{{ formatRupiah(item.grossAmount) }}</s>
+                </div>
               </div>
-              <div v-if="discountOf(item)" class="mt-1 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">
-                <i class="pi pi-percentage text-[10px]" aria-hidden="true" />
-                {{ discountOf(item)!.discountType === 'PERCENTAGE' ? `${formatNumber(discountOf(item)!.discountValue)}%` : formatRupiah(discountOf(item)!.discountValue) }}
-                · {{ discountOf(item)!.reason }}
-                <template v-if="discountOf(item)!.approvedByUsername"> · disetujui {{ discountOf(item)!.approvedByUsername }}</template>
-              </div>
-              <div v-if="item.priceOverrideReason" class="mt-1 text-xs text-amber-700">Harga diubah: {{ item.priceOverrideReason }}</div>
-            </div>
-
-            <div class="flex items-center self-center" role="group" :aria-label="`Jumlah ${item.productName}`">
-              <Button icon="pi pi-minus" text rounded size="small" :disabled="busy || !sales.isDraft" aria-label="Kurangi" @click="changeQty(item, -1)" />
-              <input
-                :value="qtyText(item.quantity)"
-                class="tabular w-12 rounded border border-line py-1 text-center text-sm"
-                :disabled="busy || !sales.isDraft"
-                :aria-label="`Jumlah ${item.productName}`"
-                inputmode="decimal"
-                @change="(e) => setQty(item, e)"
-              />
-              <Button icon="pi pi-plus" text rounded size="small" :disabled="busy || !sales.isDraft" aria-label="Tambah" @click="changeQty(item, 1)" />
-            </div>
-
-            <div class="col-start-1 text-right sm:col-start-auto">
-              <div class="tabular font-semibold">{{ formatRupiah(item.netAmount) }}</div>
-              <div v-if="item.itemDiscountAmount + item.cartDiscountAmount > 0" class="tabular text-xs text-ink-faint">
-                <s>{{ formatRupiah(item.grossAmount) }}</s>
-              </div>
-            </div>
-            <Button icon="pi pi-ellipsis-v" text rounded size="small" :disabled="busy || !sales.isDraft"
-              :aria-label="`Aksi ${item.productName}`" class="self-center" @click="(e) => openMenu(e, item)" />
-          </li>
-        </ol>
-
-        <footer v-if="sales.cartDiscount" class="flex items-center justify-between gap-2 border-t border-line bg-amber-100 px-4 py-2 text-sm">
-          <span>
-            Diskon transaksi
-            {{ sales.cartDiscount.discountType === 'PERCENTAGE' ? `${formatNumber(sales.cartDiscount.discountValue)}%` : formatRupiah(sales.cartDiscount.discountValue) }}
-            · {{ sales.cartDiscount.reason }}
-            <template v-if="sales.cartDiscount.approvedByUsername"> · disetujui {{ sales.cartDiscount.approvedByUsername }}</template>
-          </span>
-          <Button v-if="sales.isDraft" label="Hapus" text size="small" :disabled="busy" @click="removeDiscount(sales.cartDiscount!.id)" />
-        </footer>
-        <Menu ref="lineMenu" :model="menuModel" popup />
-      </section>
-
-      <!-- ============================ panel kanan -->
-      <aside class="flex flex-col gap-4">
-        <template v-if="!sales.isCheckout && !sales.isPaid">
-          <form class="rounded-lg border border-line bg-surface p-4" role="search" @submit.prevent="onScan">
-            <label for="scan" class="mb-1 block text-sm font-semibold">Pindai / cari produk <span class="text-xs font-normal text-ink-faint">(F2)</span></label>
-            <div class="flex gap-2">
-              <InputText id="scan" ref="scanInput" v-model="scan" class="tabular w-full" autocomplete="off"
-                placeholder="Barcode, SKU, atau nama" :disabled="busy" />
-              <Button type="submit" icon="pi pi-search" aria-label="Cari" :loading="busy" />
-            </div>
-            <ul v-if="results.length" class="mt-3 max-h-72 divide-y divide-line overflow-y-auto rounded-md border border-line">
-              <li v-for="p in results" :key="p.id">
-                <button type="button" class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-field disabled:opacity-50"
-                  :disabled="busy || p.price === undefined || p.price === null" @click="addProduct(p)">
-                  <span class="min-w-0">
-                    <span class="block truncate text-sm font-semibold">{{ p.name }}</span>
-                    <span class="tabular block text-xs text-ink-soft">
-                      {{ p.sku }} · stok {{ p.available === null || p.available === undefined ? '?' : qtyText(Number(p.available)) }}
-                    </span>
-                  </span>
-                  <span class="tabular shrink-0 text-sm font-semibold">{{ p.price !== undefined && p.price !== null ? formatRupiah(p.price) : 'Tanpa harga' }}</span>
+              <div v-if="sales.isDraft" class="mt-1.5 flex items-center justify-end gap-1 pl-8">
+                <button type="button" class="line-btn" :disabled="busy" :aria-label="`Kurangi ${item.productName}`" @click="changeQty(item, -1)">
+                  <i class="pi pi-minus text-[9px]" />
                 </button>
-              </li>
-            </ul>
-            <p v-else-if="searched" class="mt-3 text-sm text-ink-soft">Produk tidak ditemukan.</p>
-          </form>
-        </template>
+                <input :value="qtyText(item.quantity)" class="tabular h-7 w-12 rounded-md border border-line text-center text-sm"
+                  :disabled="busy" :aria-label="`Jumlah ${item.productName}`" inputmode="decimal" @change="(e) => setQty(item, e)" />
+                <button type="button" class="line-btn" :disabled="busy" :aria-label="`Tambah ${item.productName}`" @click="changeQty(item, 1)">
+                  <i class="pi pi-plus text-[9px]" />
+                </button>
+                <Button icon="pi pi-ellipsis-h" text rounded size="small" :disabled="busy" :aria-label="`Aksi ${item.productName}`"
+                  @click="(e) => openMenu(e, item)" />
+              </div>
+            </li>
+          </ol>
 
-        <section class="rounded-lg border border-line bg-surface" aria-label="Ringkasan">
-          <dl class="space-y-1 p-4 text-sm">
+          <div v-if="sales.cartDiscount" class="flex items-center justify-between gap-2 bg-amber-100 px-5 py-2 text-xs">
+            <span>
+              Diskon transaksi
+              {{ sales.cartDiscount.discountType === 'PERCENTAGE' ? `${formatNumber(sales.cartDiscount.discountValue)}%` : formatRupiah(sales.cartDiscount.discountValue) }}
+              · {{ sales.cartDiscount.reason }}
+              <template v-if="sales.cartDiscount.approvedByUsername"> · {{ sales.cartDiscount.approvedByUsername }}</template>
+            </span>
+            <Button v-if="sales.isDraft" label="Hapus" text size="small" :disabled="busy" @click="removeDiscount(sales.cartDiscount!.id)" />
+          </div>
+
+          <dl class="space-y-1.5 border-t border-dashed border-line px-5 py-4 text-sm">
             <div class="flex justify-between"><dt class="text-ink-soft">Subtotal</dt><dd class="tabular">{{ formatRupiah(s?.subtotal ?? 0) }}</dd></div>
             <div class="flex justify-between"><dt class="text-ink-soft">Diskon</dt><dd class="tabular">−{{ formatRupiah(s?.discountTotal ?? 0) }}</dd></div>
             <div class="flex justify-between">
               <dt class="text-ink-soft">PPN{{ s?.pricesIncludeTax !== false ? ' (termasuk harga)' : '' }}</dt>
               <dd class="tabular">{{ formatRupiah(s?.taxTotal ?? 0) }}</dd>
             </div>
+            <div class="flex items-end justify-between border-t border-dashed border-line pt-3">
+              <dt class="font-semibold">Total bayar</dt>
+              <dd class="tabular text-2xl font-bold tracking-tight" aria-live="polite">{{ formatRupiah(s?.grandTotal ?? 0) }}</dd>
+            </div>
           </dl>
-          <div class="flex items-end justify-between rounded-b-lg bg-jade-700 px-4 py-3 text-white">
-            <span class="text-sm text-jade-100">Total</span>
-            <output class="tabular text-3xl font-bold tracking-tight" aria-live="polite">{{ formatRupiah(s?.grandTotal ?? 0) }}</output>
-          </div>
         </section>
 
         <!-- aksi keranjang -->
-        <div v-if="!sales.isCheckout && !sales.isPaid" class="grid grid-cols-2 gap-2">
-          <Button label="Diskon transaksi" icon="pi pi-percentage" severity="secondary" outlined
+        <div v-if="!sales.isCheckout && !sales.isPaid" class="grid grid-cols-3 gap-2">
+          <Button label="Diskon" icon="pi pi-percentage" severity="secondary" outlined size="small"
             :disabled="busy || !sales.isDraft || items.length === 0 || !!sales.cartDiscount" @click="openCartDiscount" />
-          <Button label="Tahan (F4)" icon="pi pi-pause" severity="secondary" outlined
+          <Button label="Tahan" icon="pi pi-pause" severity="secondary" outlined size="small"
             :disabled="busy || !sales.isDraft || items.length === 0" @click="hold" />
-          <Button v-if="s && items.length === 0 && sales.isDraft" label="Batalkan" icon="pi pi-times" severity="secondary" text
-            class="col-span-2" :disabled="busy" @click="cancelEmpty" />
-          <Button v-else label="Void transaksi" icon="pi pi-ban" severity="danger" text class="col-span-2"
+          <Button v-if="s && items.length === 0 && sales.isDraft" label="Batal" icon="pi pi-times" severity="secondary" outlined
+            size="small" :disabled="busy" @click="cancelEmpty" />
+          <Button v-else label="Void" icon="pi pi-ban" severity="danger" outlined size="small"
             :disabled="busy || !s || !sales.isDraft" @click="voidSaleVisible = true" />
-          <Button label="Checkout (F9)" icon="pi pi-arrow-right" icon-pos="right" size="large" class="col-span-2"
-            :disabled="busy || !sales.isDraft || items.length === 0" :loading="busy" @click="checkout" />
+          <Button :label="`Checkout ${items.length ? formatRupiah(s?.grandTotal ?? 0) : ''} (F9)`" icon="pi pi-arrow-right" icon-pos="right"
+            size="large" class="col-span-3" :disabled="busy || !sales.isDraft || items.length === 0" :loading="busy" @click="checkout" />
         </div>
 
         <!-- setelah checkout: pembayaran (Phase 5) -->
@@ -491,6 +465,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
       </aside>
     </div>
 
+    <Menu ref="lineMenu" :model="menuModel" popup />
     <ApprovalDialog />
     <DiscountDialog v-model:visible="discountVisible" :title="discountTarget ? `Diskon · ${discountTarget.productName}` : 'Diskon transaksi'"
       :base="discountBase" :busy="busy" @confirm="applyDiscount" />
@@ -508,3 +483,9 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
     <ReceiptDialog v-model:visible="receiptVisible" :sale-id="s?.id ?? null" />
   </div>
 </template>
+
+<style scoped>
+.line-btn {
+  @apply grid h-7 w-7 place-items-center rounded-full border border-line bg-surface text-ink hover:bg-field disabled:opacity-50;
+}
+</style>

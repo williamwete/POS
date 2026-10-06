@@ -78,7 +78,7 @@ async function submitCancel() {
 </script>
 
 <template>
-  <section v-if="hasEmployee" class="rounded-lg border border-line bg-surface p-5" aria-labelledby="cashier-title">
+  <section v-if="hasEmployee" class="rounded-2xl border border-line bg-surface p-5" aria-labelledby="cashier-title">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <h2 id="cashier-title" class="text-lg font-semibold">Kasir</h2>

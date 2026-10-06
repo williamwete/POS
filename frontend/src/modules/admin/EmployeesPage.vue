@@ -123,7 +123,7 @@ async function save() {
       />
     </div>
 
-    <DataTable :value="employees" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface" paginator :rows="25">
+    <DataTable :value="employees" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface" paginator :rows="25">
       <template #empty>Tidak ada karyawan yang cocok dengan filter.</template>
       <Column header="Kode"><template #body="{ data }"><span class="tabular font-semibold">{{ data.employeeCode }}</span></template></Column>
       <Column field="fullName" header="Nama" />

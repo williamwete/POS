@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        field: '#EEF2F0',
+        field: '#F4F6F5',
         surface: '#FFFFFF',
         ink: { DEFAULT: '#15302B', soft: '#4A5F5A', faint: '#8A9B97' },
         jade: { 50: '#E8F3F0', 100: '#CDE6DF', 500: '#16876F', 600: '#0F6E5A', 700: '#0B5747', 900: '#08352C' },

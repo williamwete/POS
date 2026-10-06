@@ -73,7 +73,7 @@ function clockOut() {
 </script>
 
 <template>
-  <section v-if="hasEmployee" class="rounded-lg border border-line bg-surface p-5" aria-labelledby="att-title">
+  <section v-if="hasEmployee" class="rounded-2xl border border-line bg-surface p-5" aria-labelledby="att-title">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h2 id="att-title" class="text-lg font-semibold">Kehadiran</h2>

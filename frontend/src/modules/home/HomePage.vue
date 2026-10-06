@@ -95,7 +95,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
         Akun Anda belum memiliki izin di outlet ini. Hubungi supervisor atau admin.
       </p>
       <div v-else class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="g in grouped" :key="g.module" class="rounded-lg border border-line bg-surface p-4">
+        <div v-for="g in grouped" :key="g.module" class="rounded-2xl border border-line bg-surface p-4">
           <h3 class="font-semibold">{{ g.label }}</h3>
           <ul class="mt-2 space-y-1 text-sm text-ink-soft">
             <li v-for="p in g.perms" :key="p.code" class="flex gap-2"><i class="pi pi-check mt-1 text-xs text-jade-600" />{{ p.description }}</li>

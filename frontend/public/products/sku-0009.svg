@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Minyak Goreng 2 L">
+<title>Minyak Goreng 2 L</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#FBF0C9"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<rect x="108" y="44" width="24" height="14" rx="4" fill="#C0392B"/>
+<path d="M98 58h44l18 30v102a12 12 0 0 1-12 12H92a12 12 0 0 1-12-12V88z" fill="#F4C430" opacity="0.92"/>
+<path d="M142 70h16a8 8 0 0 1 8 8v26a8 8 0 0 1-8 8h-10" stroke="#E0AE10" stroke-width="6" fill="none"/>
+<rect x="86" y="118" width="66" height="44" rx="5" fill="#fff"/>
+<path d="M102 148c8-20 26-20 34 0" fill="#3E7B3A"/><circle cx="119" cy="132" r="7" fill="#F4C430"/>
+</svg>

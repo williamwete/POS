@@ -86,7 +86,7 @@ function submit() {
         Role Anda tidak memiliki izin membuka kasir di outlet ini.
       </Message>
 
-      <div v-else-if="cashier.current" class="mt-6 rounded-lg border border-line bg-surface p-5">
+      <div v-else-if="cashier.current" class="mt-6 rounded-2xl border border-line bg-surface p-5">
         <p class="font-semibold">Anda sudah membuka kasir di {{ cashier.current.terminalCode }}.</p>
         <p class="mt-1 text-sm text-ink-soft">Satu karyawan hanya boleh memegang satu laci kas pada satu waktu.</p>
         <Button class="mt-4" label="Kembali ke beranda" severity="secondary" @click="router.push({ name: 'home' })" />

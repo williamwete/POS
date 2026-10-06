@@ -275,7 +275,9 @@ export interface Product {
   id: string
   sku: string
   name: string
+  categoryId?: string
   categoryName?: string
+  imageUrl?: string
   uom: string
   allowDecimalQty: boolean
   barcode?: string
@@ -285,6 +287,13 @@ export interface Product {
   /** null/undefined = stok tidak diketahui */
   available?: number | null
   allowNegativeStock: boolean
+}
+
+export interface ProductCategory {
+  id: string
+  code: string
+  name: string
+  productCount: number
 }
 
 export type SaleStatus = 'DRAFT' | 'HELD' | 'CHECKOUT' | 'PAYMENT_PENDING' | 'PAID' | 'POSTING' | 'POSTED'

@@ -88,7 +88,7 @@ function signed(n?: number | null) {
       :value="rows"
       :loading="loading"
       data-key="id"
-      class="rounded-lg border border-line bg-surface"
+      class="rounded-2xl border border-line bg-surface"
       row-hover
       @row-click="(e) => openDetail(e.data as CashierSession)"
     >

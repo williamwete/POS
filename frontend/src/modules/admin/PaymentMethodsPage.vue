@@ -68,7 +68,7 @@ async function save() {
     <PageHeader title="Metode pembayaran"
       description="Metode yang tampil di layar kasir dan cara konfirmasinya. Kode & jenis metode tetap; perubahan tercatat di audit log." />
 
-    <DataTable :value="methods" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface">
+    <DataTable :value="methods" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface">
       <Column header="Metode">
         <template #body="{ data }">
           <div class="flex items-center gap-2">

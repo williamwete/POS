@@ -21,8 +21,14 @@ public class ProductController {
 
     @GetMapping("/api/products")
     public ResponseEntity<ApiResponse<List<ProductView>>> search(@RequestParam UUID outletId,
-            @RequestParam(required = false) String q, @RequestParam(required = false) Integer limit) {
-        return Responses.ok(service.search(outletId, q, limit));
+            @RequestParam(required = false) String q, @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Integer limit) {
+        return Responses.ok(service.search(outletId, q, categoryId, limit));
+    }
+
+    @GetMapping("/api/product-categories")
+    public ResponseEntity<ApiResponse<List<ProductRepository.CategoryView>>> categories() {
+        return Responses.ok(service.categories());
     }
 
     @GetMapping("/api/products/barcode/{barcode}")

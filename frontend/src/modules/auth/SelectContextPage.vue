@@ -122,7 +122,7 @@ async function confirm() {
       <Button :label="`Lanjutkan di ${openSession.terminalCode}`" icon="pi pi-arrow-right" icon-pos="right" @click="resume" />
     </div>
 
-    <div v-if="activeOutlets.length === 0" class="mt-8 rounded-lg border border-line bg-surface p-6">
+    <div v-if="activeOutlets.length === 0" class="mt-8 rounded-2xl border border-line bg-surface p-6">
       <p class="font-semibold">Akun Anda belum memiliki akses ke outlet mana pun.</p>
       <p class="mt-1 text-sm text-ink-soft">Minta admin menambahkan akses outlet ke akun Anda.</p>
       <Button

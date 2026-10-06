@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Kopi Susu Kaleng 240 ml">
+<title>Kopi Susu Kaleng 240 ml</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#EFE3D7"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<rect x="88" y="58" width="64" height="142" rx="10" fill="#7A4A2E"/>
+<rect x="88" y="58" width="64" height="12" rx="6" fill="#B9B9B9"/>
+<rect x="88" y="188" width="64" height="12" rx="6" fill="#9C9C9C"/>
+<rect x="88" y="104" width="64" height="46" fill="#F3E6D3"/>
+<path d="M106 120h22v12a11 11 0 0 1-22 0z" fill="#7A4A2E"/><path d="M128 122h5a5 5 0 0 1 0 10h-5" stroke="#7A4A2E" stroke-width="3" fill="none"/>
+<path d="M100 76v104" stroke="#fff" stroke-width="5" opacity="0.25" stroke-linecap="round"/>
+</svg>

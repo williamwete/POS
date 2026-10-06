@@ -94,7 +94,7 @@ function pretty(v: unknown) {
         v-model:expanded-rows="expanded"
         :value="result.items" :loading="loading" data-key="id" lazy paginator
         :rows="size" :total-records="result.total" :first="page * size"
-        class="rounded-lg border border-line bg-surface" @page="onPage"
+        class="rounded-2xl border border-line bg-surface" @page="onPage"
       >
         <template #empty>Tidak ada catatan untuk filter ini.</template>
         <Column expander class="w-12" />

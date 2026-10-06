@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Air Mineral 600 ml">
+<title>Air Mineral 600 ml</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#DCEEF8"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<rect x="104" y="40" width="32" height="16" rx="4" fill="#2F6FB5"/>
+<path d="M100 60h40l6 22v108a14 14 0 0 1-14 14h-24a14 14 0 0 1-14-14V82z" fill="#BFE3F7" stroke="#7FB7DD" stroke-width="3"/>
+<rect x="94" y="110" width="52" height="40" rx="4" fill="#2F6FB5"/>
+<path d="M104 130c6-8 10-8 16 0s10 8 16 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M112 70v100" stroke="#fff" stroke-width="5" opacity="0.6" stroke-linecap="round"/>
+</svg>

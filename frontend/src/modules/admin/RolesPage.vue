@@ -90,7 +90,7 @@ async function save() {
         </ul>
       </nav>
 
-      <section v-if="selected" class="rounded-lg border border-line bg-surface p-5">
+      <section v-if="selected" class="rounded-2xl border border-line bg-surface p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 class="text-lg font-semibold">{{ selected.name }}</h2>

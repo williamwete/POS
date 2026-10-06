@@ -37,7 +37,7 @@ const groups = computed(() => [
     <div class="grid gap-6 lg:grid-cols-2">
       <fieldset v-for="g in groups" :key="g.key" class="min-w-0">
         <legend class="mb-2 text-sm font-semibold text-ink-soft">{{ g.label }}</legend>
-        <ul class="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+        <ul class="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
           <li v-for="d in g.items" :key="d.id" class="flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3">
             <label
               :for="`${idPrefix ?? 'den'}-${d.id}`"

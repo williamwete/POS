@@ -168,7 +168,7 @@ async function saveDevice() {
       <TabPanels class="!px-0">
         <TabPanel value="terminals">
           <div class="mb-3 flex justify-end"><Button label="Tambah terminal" icon="pi pi-plus" @click="openTerminal()" /></div>
-          <DataTable :value="terminals" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface">
+          <DataTable :value="terminals" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface">
             <template #empty>Belum ada terminal di outlet ini.</template>
             <Column header="Kode"><template #body="{ data }"><span class="tabular font-semibold">{{ data.code }}</span></template></Column>
             <Column field="name" header="Nama" />
@@ -180,7 +180,7 @@ async function saveDevice() {
         </TabPanel>
         <TabPanel value="devices">
           <div class="mb-3 flex justify-end"><Button label="Tambah device" icon="pi pi-plus" @click="openDevice()" /></div>
-          <DataTable :value="devices" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface">
+          <DataTable :value="devices" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface">
             <template #empty>Belum ada device di outlet ini.</template>
             <Column header="Kode"><template #body="{ data }"><span class="tabular font-semibold">{{ data.code }}</span></template></Column>
             <Column field="name" header="Nama" />

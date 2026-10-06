@@ -100,6 +100,30 @@ class SalesIT extends IntegrationTestBase {
         assertThat(seen).isTrue();
     }
 
+    /** Katalog kasir: kategori dengan jumlah produk, filter kategori, foto & stok per produk. */
+    @Test
+    void catalogListsCategoriesWithImagesAndStock() throws Exception {
+        JsonNode cats = body(getAs("cashier.jkt", "/api/product-categories")).get("data");
+        String sembako = null;
+        for (JsonNode c : cats) {
+            if ("SEMBAKO".equals(c.get("code").asText())) {
+                sembako = c.get("id").asText();
+                assertThat(c.get("productCount").asInt()).isEqualTo(4);
+            }
+        }
+        assertThat(sembako).isNotNull();
+        JsonNode list = body(getAs("cashier.jkt", "/api/products?outletId=" + OUTLET_JKT + "&categoryId=" + sembako
+                + "&limit=200")).get("data");
+        assertThat(list).hasSize(4);
+        for (JsonNode p : list) {
+            assertThat(p.get("categoryId").asText()).isEqualTo(sembako);
+            assertThat(p.get("imageUrl").asText()).startsWith("/products/");
+            assertThat(p.has("available")).isTrue();
+        }
+        assertThat(body(getAs("cashier.jkt", "/api/products?outletId=" + OUTLET_JKT + "&limit=500")).get("data").size())
+                .isGreaterThanOrEqualTo(12);
+    }
+
     @Test
     void barcodeScanMergesLinesAndUnknownBarcodeFails() throws Exception {
         Cashier c = readyCashier(OUTLET_JKT);

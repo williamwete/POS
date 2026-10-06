@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Sabun Cuci Piring 780 ml">
+<title>Sabun Cuci Piring 780 ml</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#DFF2E6"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<path d="M110 40h20v18h-20z" fill="#1F7A4F"/><path d="M130 46h18v6h-18z" fill="#1F7A4F"/>
+<path d="M98 58h44q8 0 8 10v120a14 14 0 0 1-14 14h-32a14 14 0 0 1-14-14V68q0-10 8-10z" fill="#47B36B"/>
+<rect x="96" y="112" width="48" height="50" rx="6" fill="#F4F9F5"/>
+<circle cx="112" cy="132" r="7" fill="#F2C14E"/><circle cx="128" cy="140" r="9" fill="#9AD3A9"/><circle cx="118" cy="150" r="5" fill="#9AD3A9"/>
+<path d="M108 72v100" stroke="#fff" stroke-width="5" opacity="0.3" stroke-linecap="round"/>
+</svg>

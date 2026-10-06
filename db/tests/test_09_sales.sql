@@ -182,3 +182,18 @@ SELECT pos_test.ok((SELECT unit_price FROM pos.sale_items) = 4500, 'harga khusus
 SELECT pos_test.add_item((SELECT sale FROM t), 'SKU-0006', 1);
 SELECT pos_test.throws($$UPDATE pos.sales SET status = 'CHECKOUT'$$, 'STOCK_UNAVAILABLE', 'stok habis menolak checkout');
 ROLLBACK;
+
+-- Foto produk: hanya path aplikasi atau https; user tidak bisa mengubah master produk
+BEGIN;
+SET LOCAL ROLE pos_system;
+SELECT pos_test.throws($$UPDATE pos.products SET image_url = 'javascript:alert(1)' WHERE sku = 'SKU-0001'$$,
+    'products_image_url_ck', 'image_url javascript: ditolak');
+SELECT pos_test.throws($$UPDATE pos.products SET image_url = 'http://contoh.test/a.png' WHERE sku = 'SKU-0001'$$,
+    'products_image_url_ck', 'image_url http (tanpa TLS) ditolak');
+SELECT pos_test.ok(pos_test.affected($$UPDATE pos.products SET image_url = 'https://cdn.contoh.test/p/1.webp' WHERE sku = 'SKU-0001'$$) = 1,
+    'image_url https diterima');
+RESET ROLE;
+SELECT pos_test.login('cashier.jkt');
+SET LOCAL ROLE pos_app_user;
+SELECT pos_test.throws($$UPDATE pos.products SET image_url = '/x.png'$$, 'permission denied', 'kasir tidak bisa mengubah foto produk');
+ROLLBACK;

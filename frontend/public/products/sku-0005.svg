@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Biskuit Kelapa 300 g">
+<title>Biskuit Kelapa 300 g</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#F6EBD9"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<rect x="62" y="96" width="116" height="78" rx="12" fill="#2F8A6E"/>
+<rect x="62" y="96" width="116" height="20" rx="10" fill="#26735B"/>
+<circle cx="100" cy="146" r="22" fill="#E2B36B" stroke="#C7924A" stroke-width="3"/>
+<circle cx="140" cy="146" r="22" fill="#E2B36B" stroke="#C7924A" stroke-width="3"/>
+<g fill="#C7924A"><circle cx="94" cy="140" r="2"/><circle cx="104" cy="150" r="2"/><circle cx="134" cy="140" r="2"/><circle cx="146" cy="152" r="2"/><circle cx="140" cy="146" r="2"/><circle cx="100" cy="146" r="2"/></g>
+</svg>

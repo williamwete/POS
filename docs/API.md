@@ -90,7 +90,8 @@ Harga, pajak, total, dan nomor struk dihitung database; client hanya mengirim pr
 
 | Method | Path | Izin | Catatan |
 |---|---|---|---|
-| GET | `/api/products?q=&outletId=` | login, akses outlet | cari nama/SKU/barcode; harga berlaku & stok tersedia outlet |
+| GET | `/api/products?outletId=&q=&categoryId=&limit=` | login, akses outlet | katalog/cari nama/SKU/barcode; harga berlaku, stok tersedia outlet, foto (`imageUrl`); `limit` maks 200 |
+| GET | `/api/product-categories` | login | kategori yang punya produk aktif + jumlah produk (tab katalog) |
 | GET | `/api/products/barcode/{barcode}?outletId=` | login, akses outlet | produk untuk satu barcode |
 | GET | `/api/sales/current` | login | transaksi aktif (DRAFT/CHECKOUT) di session sendiri |
 | GET | `/api/sales/held` | login | transaksi yang ditahan di session sendiri |

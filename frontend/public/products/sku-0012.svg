@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Tisu Wajah 250 lembar">
+<title>Tisu Wajah 250 lembar</title>
+<rect width="240" height="240" fill="#F6F8F7"/>
+<circle cx="120" cy="124" r="86" fill="#E7E9F7"/>
+<ellipse cx="120" cy="206" rx="58" ry="8" fill="#000" opacity="0.08"/>
+<path d="M66 108h108v84H66z" fill="#6C7BD9"/>
+<path d="M66 108l14-16h80l14 16z" fill="#8A97E6"/>
+<path d="M104 108q16-44 32 0z" fill="#FFFFFF" stroke="#D5DAF3" stroke-width="2"/>
+<ellipse cx="120" cy="108" rx="22" ry="5" fill="#4F5DB8"/>
+<path d="M80 150c14-14 26 14 40 0s26 14 40 0" stroke="#fff" stroke-width="4" fill="none" opacity="0.8"/>
+</svg>

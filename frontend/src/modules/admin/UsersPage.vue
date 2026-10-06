@@ -224,7 +224,7 @@ async function resetPassword() {
     </IconField>
 
     <DataTable
-      :value="users" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface"
+      :value="users" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface"
       selection-mode="single" paginator :rows="25" @row-click="openDetail($event.data)"
     >
       <template #empty>Tidak ada user yang cocok.</template>

@@ -114,7 +114,7 @@ async function submitEdit() {
       </template>
     </PageHeader>
 
-    <DataTable :value="outlets" :loading="loading" data-key="id" class="rounded-lg border border-line bg-surface" striped-rows>
+    <DataTable :value="outlets" :loading="loading" data-key="id" class="rounded-2xl border border-line bg-surface" striped-rows>
       <template #empty>Belum ada outlet. Tambahkan outlet pertama Anda.</template>
       <Column field="code" header="Kode"><template #body="{ data }"><span class="tabular font-semibold">{{ data.code }}</span></template></Column>
       <Column field="name" header="Nama" />
