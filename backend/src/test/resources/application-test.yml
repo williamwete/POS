@@ -23,3 +23,7 @@ pos:
   payment:
     gateway: SIMULATOR
     callback-secret: test-payment-callback-secret-0123456789
+  openbravo:
+    mode: SIMULATOR
+    # test memicu worker secara eksplisit (POST /api/sync/run) agar hasil deterministik
+    worker-enabled: false

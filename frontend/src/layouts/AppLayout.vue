@@ -49,6 +49,8 @@ const ADMIN_NAV: NavItem[] = [
   { name: 'users', label: 'User & akses', icon: 'pi pi-users' },
   { name: 'roles', label: 'Role & permission', icon: 'pi pi-shield' },
   { name: 'payment-methods', label: 'Metode pembayaran', icon: 'pi pi-wallet' },
+  { name: 'sync', label: 'Sinkronisasi', icon: 'pi pi-sync' },
+  { name: 'openbravo-mappings', label: 'Pemetaan Openbravo', icon: 'pi pi-link' },
   { name: 'audit', label: 'Audit log', icon: 'pi pi-history' },
 ]
 

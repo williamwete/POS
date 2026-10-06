@@ -13,7 +13,8 @@ public record PosProperties(
         Auth auth,
         @DefaultValue Cors cors,
         @DefaultValue RateLimit rateLimit,
-        @DefaultValue Payment payment) {
+        @DefaultValue Payment payment,
+        @DefaultValue Openbravo openbravo) {
 
     /**
      * Validasi JWT Supabase. Isi salah satu: {@code jwkSetUri} (signing key asimetris,
@@ -47,6 +48,35 @@ public record PosProperties(
     }
 
     public enum GatewayType { NONE, SIMULATOR }
+
+    /**
+     * Integrasi Openbravo (§38). Kredensial HANYA dari environment server, tidak pernah ke frontend.
+     * DISABLED = antrean tetap terkumpul tetapi tidak dikirim; SIMULATOR hanya profile local/test;
+     * HTTP = Openbravo sungguhan lewat {@code baseUrl} + akun integrasi.
+     */
+    public record Openbravo(
+            @DefaultValue("DISABLED") OpenbravoMode mode,
+            String baseUrl,
+            String username,
+            String password,
+            @DefaultValue("30") int timeoutSeconds,
+            @DefaultValue("true") boolean workerEnabled,
+            @DefaultValue("20") int batchSize,
+            @DefaultValue Paths paths) {
+    }
+
+    public enum OpenbravoMode { DISABLED, SIMULATOR, HTTP }
+
+    /** Path endpoint Openbravo (relatif terhadap baseUrl) — dapat disesuaikan tanpa ubah kode. */
+    public record Paths(
+            @DefaultValue("/org.openbravo.service.json.jsonrest/Product") String products,
+            @DefaultValue("/org.openbravo.service.json.jsonrest/PricingProductPrice") String prices,
+            @DefaultValue("/org.openbravo.service.json.jsonrest/MaterialMgmtStorageDetail") String stock,
+            @DefaultValue("/org.openbravo.service.json.jsonrest/BusinessPartner") String customers,
+            @DefaultValue("/ws/pos-integration/sales") String sales,
+            @DefaultValue("/ws/pos-integration/returns") String returns,
+            @DefaultValue("/ws/pos-integration/cashups") String cashups) {
+    }
 
     public record Cors(@DefaultValue({}) List<String> allowedOrigins) {
     }

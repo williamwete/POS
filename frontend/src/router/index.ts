@@ -90,6 +90,14 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Metode pembayaran', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
       },
       {
+        path: 'admin/sync', name: 'sync', component: () => import('@/modules/admin/SyncPage.vue'),
+        meta: { title: 'Sinkronisasi Openbravo', anyOf: [{ permission: 'sync.view', scope: 'any' }, { permission: 'sync.manage', scope: 'org' }] },
+      },
+      {
+        path: 'admin/openbravo-mappings', name: 'openbravo-mappings', component: () => import('@/modules/admin/OpenbravoMappingsPage.vue'),
+        meta: { title: 'Pemetaan Openbravo', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
+      },
+      {
         path: 'admin/audit', name: 'audit', component: () => import('@/modules/admin/AuditLogPage.vue'),
         meta: { title: 'Audit log', anyOf: [{ permission: 'audit.view', scope: 'any' }] },
       },

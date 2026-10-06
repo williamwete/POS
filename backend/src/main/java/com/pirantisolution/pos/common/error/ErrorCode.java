@@ -128,6 +128,10 @@ public enum ErrorCode {
     REFUND_APPROVAL_REQUIRED(HttpStatus.FORBIDDEN, "Refund memerlukan persetujuan supervisor"),
     REFUND_EXCEEDS_PAYMENT(HttpStatus.CONFLICT, "Refund melebihi pembayaran transaksi asli"),
 
+    // integrasi Openbravo (Phase 9)
+    SYNC_JOB_NOT_RETRYABLE(HttpStatus.CONFLICT, "Hanya sinkronisasi yang gagal yang bisa dicoba ulang"),
+    MAPPING_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Data pemetaan Openbravo tidak valid"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
     PAYMENT_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran gagal"),
     INSUFFICIENT_PAYMENT(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran kurang dari total"),

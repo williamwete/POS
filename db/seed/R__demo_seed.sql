@@ -214,3 +214,24 @@ UPDATE pos.products p SET image_url = '/products/' || lower(p.sku) || '.svg'
 WHERE p.organization_id = '00000000-0000-4000-8000-000000000001' AND p.source = 'SEED'
   AND p.image_url IS DISTINCT FROM '/products/' || lower(p.sku) || '.svg';
 
+
+-- Pemetaan ID Openbravo demo (Phase 9). Produksi: diisi admin di menu "Pemetaan Openbravo" dengan ID asli.
+INSERT INTO pos.openbravo_mappings (organization_id, entity_type, pos_id, openbravo_id)
+SELECT '00000000-0000-4000-8000-000000000001'::uuid, v.t, v.id::uuid, v.ob
+FROM (VALUES
+    ('ORGANIZATION', '00000000-0000-4000-8000-000000000001', 'DEMO-ORG'),
+    ('OUTLET',    '00000000-0000-4000-8000-000000000101', 'DEMO-ORG-JKT01'),
+    ('OUTLET',    '00000000-0000-4000-8000-000000000102', 'DEMO-ORG-BDG01'),
+    ('WAREHOUSE', '00000000-0000-4000-8000-000000000201', 'DEMO-WH-JKT01'),
+    ('WAREHOUSE', '00000000-0000-4000-8000-000000000202', 'DEMO-WH-BDG01'),
+    ('TERMINAL',  '00000000-0000-4000-8000-000000000401', 'DEMO-POS-JKT-01'),
+    ('TERMINAL',  '00000000-0000-4000-8000-000000000402', 'DEMO-POS-JKT-02'),
+    ('TERMINAL',  '00000000-0000-4000-8000-000000000403', 'DEMO-POS-BDG-01'),
+    ('TAX',       '00000000-0000-4000-8000-000000000901', 'DEMO-TAX-PPN11'),
+    ('TAX',       '00000000-0000-4000-8000-000000000902', 'DEMO-TAX-EXEMPT')
+) AS v(t, id, ob)
+ON CONFLICT DO NOTHING;
+INSERT INTO pos.openbravo_mappings (organization_id, entity_type, pos_id, openbravo_id)
+SELECT m.organization_id, 'PAYMENT_METHOD', m.id, 'DEMO-PM-' || m.code
+FROM pos.payment_methods m WHERE m.organization_id = '00000000-0000-4000-8000-000000000001'
+ON CONFLICT DO NOTHING;

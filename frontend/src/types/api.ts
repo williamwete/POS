@@ -695,3 +695,68 @@ export interface SaleReturn {
   items: ReturnItem[]
   refunds: Refund[]
 }
+
+// ---- Phase 9: sinkronisasi Openbravo
+export type SyncJobType = 'SALE' | 'RETURN' | 'CASHUP' | 'MASTER_PRODUCT' | 'MASTER_PRICE' | 'MASTER_STOCK' | 'MASTER_CUSTOMER'
+export type SyncJobStatus = 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'RETRYING' | 'MANUAL_REVIEW'
+
+export interface SyncJob {
+  id: string
+  jobType: SyncJobType
+  direction: 'IN' | 'OUT'
+  entityId?: string | null
+  entityRef?: string | null
+  outletId?: string | null
+  outletCode?: string | null
+  status: SyncJobStatus
+  attempts: number
+  maxAttempts: number
+  nextAttemptAt: string
+  lastError?: string | null
+  openbravoDocumentId?: string | null
+  openbravoDocumentNo?: string | null
+  syncStartedAt?: string | null
+  syncFinishedAt?: string | null
+  recordsProcessed: number
+  recordsSuccess: number
+  recordsFailed: number
+  errorCount: number
+  requestedByName?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SyncLog {
+  attempt: number
+  status: string
+  message?: string | null
+  durationMs?: number | null
+  createdAt: string
+}
+
+export interface SyncStatus {
+  mode: 'DISABLED' | 'SIMULATOR' | 'HTTP'
+  enabled: boolean
+  workerEnabled: boolean
+  counts: { jobType: SyncJobType; status: SyncJobStatus; count: number }[]
+  lastMasterSyncs: SyncJob[]
+  oldestPendingAt?: string | null
+}
+
+export interface SyncRunResult {
+  requested: SyncJob[]
+  summary: { processed: number; success: number; failed: number; deferred: number; busy: boolean }
+}
+
+export type MappingEntityType = 'ORGANIZATION' | 'OUTLET' | 'WAREHOUSE' | 'TERMINAL' | 'PAYMENT_METHOD' | 'TAX'
+
+export interface OpenbravoMapping {
+  entityType: MappingEntityType
+  posId: string
+  posCode: string
+  posName: string
+  openbravoId?: string | null
+  version?: number | null
+  updatedAt?: string | null
+  updatedByName?: string | null
+}

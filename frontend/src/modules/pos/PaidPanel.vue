@@ -29,6 +29,10 @@ onMounted(() => {
           <span class="tabular font-semibold">{{ formatRupiah(p.amount) }}</span>
         </li>
       </ul>
+      <p class="mt-4 text-xs text-ink-soft">
+        <i class="pi pi-cloud-upload mr-1" aria-hidden="true" />Pembayaran berhasil. Transaksi tersimpan dan akan
+        disinkronkan ke Openbravo secara otomatis.
+      </p>
       <div class="mt-5 grid gap-2">
         <Button label="Cetak struk" icon="pi pi-print" size="large" @click="emit('receipt')" />
         <Button label="Transaksi baru (F2)" icon="pi pi-plus" severity="secondary" outlined @click="emit('next')" />

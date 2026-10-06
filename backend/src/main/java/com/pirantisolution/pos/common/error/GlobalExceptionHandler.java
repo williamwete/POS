@@ -244,6 +244,9 @@ public class GlobalExceptionHandler {
             case "CASH_MOVEMENT_REASON_REQUIRED" -> ErrorCode.CASH_MOVEMENT_REASON_REQUIRED;
             case "SELF_MODIFICATION_NOT_ALLOWED" -> ErrorCode.SELF_MODIFICATION_NOT_ALLOWED;
             case "REPORT_NOT_AUTHORIZED" -> ErrorCode.USER_NOT_AUTHORIZED;
+            case "SYNC_JOB_NOT_RETRYABLE" -> ErrorCode.SYNC_JOB_NOT_RETRYABLE;
+            case "SYNC_JOB_INVALID" -> ErrorCode.VALIDATION_FAILED;
+            case "MAPPING_TARGET_INVALID", "MAPPING_IMMUTABLE_FIELD" -> ErrorCode.MAPPING_INVALID;
             case "RETURN_NOT_ALLOWED" -> ErrorCode.REFUND_NOT_ALLOWED;
             case "RETURN_QUANTITY_EXCEEDED" -> ErrorCode.RETURN_QUANTITY_EXCEEDED;
             case "RETURN_EMPTY" -> ErrorCode.RETURN_EMPTY;

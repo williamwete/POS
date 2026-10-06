@@ -77,6 +77,14 @@ pos:
     gateway: ${POS_PAYMENT_GATEWAY:NONE}
     callback-secret: ${POS_PAYMENT_CALLBACK_SECRET:}
     timeout-seconds: 10
+  openbravo:
+    # DISABLED | HTTP (SIMULATOR hanya profile local/test). Kredensial hanya dari environment.
+    mode: ${POS_OPENBRAVO_MODE:DISABLED}
+    base-url: ${POS_OPENBRAVO_BASE_URL:}
+    username: ${POS_OPENBRAVO_USERNAME:}
+    password: ${POS_OPENBRAVO_PASSWORD:}
+    timeout-seconds: ${POS_OPENBRAVO_TIMEOUT_SECONDS:30}
+    worker-enabled: ${POS_OPENBRAVO_WORKER_ENABLED:true}
 
 logging:
   level:
@@ -112,3 +120,7 @@ pos:
     # QRIS/e-wallet tiruan untuk pengembangan; tidak bisa diaktifkan di profile lain.
     gateway: SIMULATOR
     callback-secret: ${POS_PAYMENT_CALLBACK_SECRET:local-payment-callback-secret-0123456789}
+  openbravo:
+    # Openbravo tiruan untuk pengembangan (data master demo, dokumen diberi nomor SIM). Set
+    # POS_OPENBRAVO_MODE=HTTP + kredensial untuk mencoba server Openbravo sungguhan dari lokal.
+    mode: ${POS_OPENBRAVO_MODE:SIMULATOR}

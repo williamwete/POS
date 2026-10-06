@@ -138,8 +138,10 @@ async function save() {
             <InputNumber v-model="form.sortOrder" input-id="pm-sort" :min="0" :max="999" class="w-full" />
           </div>
           <div>
-            <label for="pm-ob" class="mb-1 block text-sm font-medium">ID Openbravo</label>
-            <InputText id="pm-ob" v-model="form.openbravoPaymentMethodId" class="w-full" maxlength="64" />
+            <span class="mb-1 block text-sm font-medium">ID Openbravo</span>
+            <RouterLink :to="{ name: 'openbravo-mappings' }" class="text-sm text-jade-700 underline underline-offset-4">
+              Atur di Pemetaan Openbravo
+            </RouterLink>
           </div>
         </div>
         <div class="flex justify-end gap-2">

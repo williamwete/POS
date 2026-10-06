@@ -188,3 +188,18 @@ pemroses, mode `ORIGINAL` = bagian non-tunai dikembalikan ke metodenya (wajib `r
 Error baru: `RETURN_NOT_FOUND`, `REFUND_NOT_ALLOWED`, `RETURN_QUANTITY_EXCEEDED`, `RETURN_EMPTY`, `RETURN_CLOSED`,
 `RETURN_PENDING` (tutup kasir), `REFUND_APPROVAL_REQUIRED`, `REFUND_EXCEEDS_PAYMENT`.
 
+### Sinkronisasi Openbravo (Phase 9)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/sync/status` | `sync.view` (org atau outlet) / `sync.manage` | `{mode: DISABLED\|SIMULATOR\|HTTP, enabled, workerEnabled, counts[{jobType,status,count}], lastMasterSyncs[], oldestPendingAt}` |
+| GET | `/api/sync/errors` | `sync.view` | job FAILED / MANUAL_REVIEW / RETRYING / menunggu dokumen lain (maks. 200) |
+| GET | `/api/sync/jobs?status=&jobType=` | `sync.view` | daftar job terbaru |
+| GET | `/api/sync/jobs/{id}` | `sync.view` | job + riwayat percobaan (`logs`) |
+| POST | `/api/sync/run` | `sync.manage` org | `{types?: [MASTER_PRODUCT\|MASTER_PRICE\|MASTER_STOCK\|MASTER_CUSTOMER]}` → minta sinkron master lalu proses antrean yang jatuh tempo; `{requested[], summary{processed, success, failed, deferred, busy}}`; `OPENBRAVO_UNAVAILABLE` bila integrasi DISABLED |
+| POST | `/api/sync/{id}/retry` | `sync.manage` org | job FAILED / MANUAL_REVIEW → RETRYING (jatah percobaan baru); `SYNC_JOB_NOT_RETRYABLE` |
+| GET | `/api/admin/openbravo-mappings` | `configuration.manage` atau `sync.view` (org) | semua entitas POS yang perlu dipetakan + ID Openbravo-nya |
+| PUT | `/api/admin/openbravo-mappings` | `configuration.manage` org | `{entityType: ORGANIZATION\|OUTLET\|WAREHOUSE\|TERMINAL\|PAYMENT_METHOD\|TAX, posId, openbravoId}` |
+
+Kontrak payload & respons Openbravo: [OPENBRAVO.md](OPENBRAVO.md). Error baru: `SYNC_JOB_NOT_RETRYABLE`, `MAPPING_INVALID`.
+
