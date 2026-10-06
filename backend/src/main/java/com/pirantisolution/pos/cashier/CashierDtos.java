@@ -1,6 +1,8 @@
 package com.pirantisolution.pos.cashier;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -83,13 +85,91 @@ public final class CashierDtos {
             String cancelReason,
             int version,
             int idleLockMinutes,
+            // hasil tutup kasir (hanya terisi bila CLOSED)
+            BigDecimal closingCash,
+            BigDecimal difference,
+            String differenceReason,
+            String differenceNote,
+            String closedByName,
+            String differenceApprovedByName,
             List<CashCountView> counts) {
 
         SessionView withCounts(List<CashCountView> c) {
             return new SessionView(id, employeeId, employeeCode, employeeName, outletId, outletCode, terminalId,
                     terminalCode, terminalName, businessDate, openedAt, closedAt, openingCash, expectedCash, status,
-                    lockedAt, lockReason, cancelReason, version, idleLockMinutes, c);
+                    lockedAt, lockReason, cancelReason, version, idleLockMinutes, closingCash, difference,
+                    differenceReason, differenceNote, closedByName, differenceApprovedByName, c);
         }
+    }
+
+    // ------------------------------------------------------------------ Phase 6: kas & tutup kasir
+
+    /** Kas masuk/keluar/petty cash oleh pemegang laci. Nominal selalu positif; arah dari jenisnya. */
+    public record CashMovementRequest(
+            @NotNull @Pattern(regexp = "CASH_IN|CASH_OUT|PETTY_CASH") String type,
+            @NotNull @DecimalMin("1") BigDecimal amount,
+            @NotBlank @Size(min = 3, max = 500) String reason,
+            UUID approvalId) {
+    }
+
+    /** Penyesuaian kas oleh atasan (bertanda: + menambah, − mengurangi isi laci). */
+    public record AdjustmentRequest(
+            @NotNull BigDecimal amount,
+            @NotBlank @Size(min = 5, max = 500) String reason) {
+    }
+
+    public record MovementView(
+            UUID id,
+            String movementType,
+            BigDecimal amount,
+            String reason,
+            String referenceType,
+            OffsetDateTime createdAt,
+            String createdByName,
+            String approvedByName) {
+    }
+
+    public record ClosePreviewRequest(@NotNull @Size(max = 40) List<@Valid @NotNull CountLine> counts) {
+    }
+
+    /** Ringkasan sebelum tutup kasir: dihitung server dari hitungan fisik (tidak menulis apa pun selain audit). */
+    public record ClosePreview(
+            BigDecimal countedCash,
+            BigDecimal expectedCash,
+            BigDecimal difference,
+            BigDecimal approvalThreshold,
+            boolean reasonRequired,
+            boolean approvalRequired,
+            int openOrders,
+            int pendingPayments,
+            boolean allowCloseWithOpenOrders) {
+    }
+
+    public record CloseRequest(
+            @NotNull @Size(max = 40) List<@Valid @NotNull CountLine> counts,
+            @Pattern(regexp = "SHORTAGE|OVERAGE|WRONG_CHANGE|COUNTING_ERROR|OTHER") String differenceReason,
+            @Size(max = 500) String differenceNote,
+            UUID approvalId,
+            @Size(max = 500) String note) {
+    }
+
+    /** Approval supervisor untuk kas keluar besar / selisih kas (rate limit seperti login). */
+    public record CashApprovalRequest(
+            @NotNull @Pattern(regexp = "CASH_OUT|CASH_DIFFERENCE") String action,
+            @NotNull UUID sessionId,
+            @NotNull @DecimalMin("1") BigDecimal amount,
+            @NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Size(max = 200) String password) {
+
+        /** Password tidak pernah muncul di log. */
+        @Override
+        public String toString() {
+            return "CashApprovalRequest[action=" + action + ", sessionId=" + sessionId + "]";
+        }
+    }
+
+    public record CashApprovalView(UUID id, String action, String approverName, BigDecimal amount,
+            OffsetDateTime expiresAt) {
     }
 
     /** Info terminal yang dibutuhkan saat membuka kasir (dibaca di bawah RLS). */

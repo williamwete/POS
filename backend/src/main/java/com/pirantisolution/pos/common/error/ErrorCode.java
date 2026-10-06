@@ -103,14 +103,22 @@ public enum ErrorCode {
     PAYMENT_GATEWAY_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Penyedia pembayaran sedang tidak tersedia"),
     PAYMENT_CALLBACK_INVALID(HttpStatus.UNAUTHORIZED, "Callback pembayaran tidak valid"),
 
+    // manajemen kas & tutup kasir (Phase 6)
+    OPEN_ORDER_EXISTS(HttpStatus.CONFLICT, "Masih ada transaksi terbuka yang belum selesai"),
+    PAYMENT_PENDING(HttpStatus.CONFLICT, "Masih ada pembayaran yang menunggu konfirmasi"),
+    CLOSING_COUNT_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Hitung uang di laci terlebih dahulu"),
+    CASH_DIFFERENCE_REASON_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY,
+            "Ada selisih kas: pilih alasan (dan isi keterangan untuk alasan lainnya)"),
+    CASH_DIFFERENCE_REQUIRES_APPROVAL(HttpStatus.UNPROCESSABLE_ENTITY,
+            "Selisih kas melewati batas, perlu persetujuan supervisor"),
+    CASH_INSUFFICIENT(HttpStatus.UNPROCESSABLE_ENTITY, "Uang di laci tidak cukup untuk kas keluar ini"),
+    CASH_MOVEMENT_REASON_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Alasan kas masuk/keluar wajib diisi"),
+
     // didefinisikan sekarang, dipakai phase berikutnya (§99)
-    OPEN_ORDER_EXISTS(HttpStatus.CONFLICT, "Masih ada order yang belum selesai"),
-    PAYMENT_PENDING(HttpStatus.CONFLICT, "Pembayaran masih pending"),
     PAYMENT_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran gagal"),
     INSUFFICIENT_PAYMENT(HttpStatus.UNPROCESSABLE_ENTITY, "Pembayaran kurang dari total"),
     STOCK_UNAVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Stok tidak mencukupi"),
     REFUND_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "Refund tidak diizinkan"),
-    CASH_DIFFERENCE_REQUIRES_APPROVAL(HttpStatus.UNPROCESSABLE_ENTITY, "Selisih kas memerlukan approval"),
     OPENBRAVO_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Openbravo sedang tidak tersedia"),
     SYNC_FAILED(HttpStatus.BAD_GATEWAY, "Sinkronisasi gagal");
 

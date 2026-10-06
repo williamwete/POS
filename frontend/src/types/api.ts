@@ -262,7 +262,62 @@ export interface CashierSession {
   cancelReason?: string
   version: number
   idleLockMinutes: number
+  // hasil tutup kasir (hanya bila CLOSED)
+  closingCash?: number | null
+  difference?: number | null
+  differenceReason?: DifferenceReason | null
+  differenceNote?: string | null
+  closedByName?: string | null
+  differenceApprovedByName?: string | null
   counts: CashCount[]
+}
+
+export type CashMovementType =
+  | 'OPENING_CASH' | 'CASH_SALE' | 'CASH_SALE_REVERSAL' | 'CASH_IN' | 'CASH_OUT' | 'PETTY_CASH'
+  | 'CASH_REFUND' | 'CASH_ADJUSTMENT' | 'CLOSING_CASH'
+
+export interface CashMovement {
+  id: string
+  movementType: CashMovementType
+  /** bertanda: + masuk laci, − keluar laci */
+  amount: number
+  reason?: string | null
+  referenceType?: string | null
+  createdAt: string
+  createdByName?: string | null
+  approvedByName?: string | null
+}
+
+export type DifferenceReason = 'SHORTAGE' | 'OVERAGE' | 'WRONG_CHANGE' | 'COUNTING_ERROR' | 'OTHER'
+
+export interface ClosePreview {
+  countedCash: number
+  expectedCash: number
+  difference: number
+  approvalThreshold: number
+  reasonRequired: boolean
+  approvalRequired: boolean
+  openOrders: number
+  pendingPayments: number
+  allowCloseWithOpenOrders: boolean
+}
+
+export interface CloseRequest {
+  counts: CountLine[]
+  differenceReason?: DifferenceReason | null
+  differenceNote?: string | null
+  approvalId?: string | null
+  note?: string | null
+}
+
+export type CashApprovalAction = 'CASH_OUT' | 'CASH_DIFFERENCE'
+
+export interface CashApprovalResult {
+  id: string
+  action: CashApprovalAction
+  approverName: string
+  amount: number
+  expiresAt?: string
 }
 
 /** Baris hitungan yang dikirim ke server: nilai uang selalu dihitung ulang server. */

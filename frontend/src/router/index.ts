@@ -39,6 +39,11 @@ export const routes: RouteRecordRaw[] = [
         meta: { requiresContext: true, title: 'Buka kasir', anyOf: [{ permission: 'cashier.open', scope: 'current' }] },
       },
       {
+        // pemilik menutup kasirnya sendiri; supervisor menutup laci kasir lain lewat ?session=<id>
+        path: 'cashier/close', name: 'cashier-close', component: () => import('@/modules/cashier/CloseCashierPage.vue'),
+        meta: { title: 'Tutup kasir', anyOf: [{ permission: 'cashier.close', scope: 'any' }] },
+      },
+      {
         path: 'cashier/sessions', name: 'cashier-sessions', component: () => import('@/modules/cashier/OutletCashierPage.vue'),
         meta: { title: 'Sesi kasir', anyOf: [{ permission: 'cashier.view', scope: 'any' }] },
       },

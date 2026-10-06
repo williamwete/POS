@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api } from '@/services'
-import type { CashCount, CashierSession, CountLine, Denomination } from '@/types/api'
+import type {
+  CashApprovalAction, CashApprovalResult, CashCount, CashierSession, CashMovement, ClosePreview, CloseRequest,
+  CountLine, Denomination,
+} from '@/types/api'
 
 /**
  * Cashier session milik user yang login. Semua angka uang (modal awal, total hitungan)
@@ -59,6 +62,54 @@ export const useCashierStore = defineStore('cashier', () => {
     current.value = null
   }
 
+  // ---- Phase 6: kas masuk/keluar, penyesuaian, tutup kasir
+
+  async function cashMovement(type: 'CASH_IN' | 'CASH_OUT' | 'PETTY_CASH', amount: number, reason: string,
+    approvalId: string | null, key: string) {
+    const s = requireCurrent()
+    return (await api().post<CashMovement>(`/api/cashier/sessions/${s.id}/cash-movements`,
+      { type, amount, reason, approvalId }, { idempotencyKey: key })).data
+  }
+
+  async function movements(sessionId: string) {
+    return (await api().get<CashMovement[]>(`/api/cashier/sessions/${sessionId}/movements`)).data
+      .map((m) => ({ ...m, amount: Number(m.amount) }))
+  }
+
+  async function adjustment(sessionId: string, amount: number, reason: string, key: string) {
+    return (await api().post<CashMovement>(`/api/cashier/sessions/${sessionId}/adjustments`,
+      { amount, reason }, { idempotencyKey: key })).data
+  }
+
+  async function get(sessionId: string) {
+    return (await api().get<CashierSession>(`/api/cashier/sessions/${sessionId}`)).data
+  }
+
+  async function closePreview(sessionId: string, counts: CountLine[]) {
+    const p = (await api().post<ClosePreview>(`/api/cashier/sessions/${sessionId}/close/preview`, { counts })).data
+    return {
+      ...p,
+      countedCash: Number(p.countedCash),
+      expectedCash: Number(p.expectedCash),
+      difference: Number(p.difference),
+      approvalThreshold: Number(p.approvalThreshold),
+    }
+  }
+
+  async function close(sessionId: string, req: CloseRequest, key: string) {
+    const closed = (await api().post<CashierSession>(`/api/cashier/sessions/${sessionId}/close`, req,
+      { idempotencyKey: key })).data
+    if (current.value?.id === sessionId) current.value = null
+    return closed
+  }
+
+  /** Approval supervisor (email + password approver; password tidak disimpan). */
+  async function approveCash(sessionId: string, action: CashApprovalAction, amount: number, email: string,
+    password: string) {
+    return (await api().post<CashApprovalResult>('/api/cashier/approvals',
+      { sessionId, action, amount, email, password })).data
+  }
+
   function requireCurrent(): CashierSession {
     if (!current.value) throw new Error('Tidak ada cashier session aktif')
     return current.value
@@ -72,6 +123,7 @@ export const useCashierStore = defineStore('cashier', () => {
   return {
     current, denominations, loaded, isOpen, isLocked,
     load, loadDenominations, open, cashCount, lock, unlock, cancel, reset,
+    cashMovement, movements, adjustment, get, closePreview, close, approveCash,
   }
 })
 

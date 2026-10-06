@@ -142,3 +142,20 @@ Error baru: `SALE_NOT_PAYABLE`, `SALE_ALREADY_PAID`, `SALE_NOT_FULLY_PAID`, `SAL
 `PAYMENT_CONFIRMATION_REQUIRED`, `PAYMENT_NOT_REVERSIBLE`, `PAYMENT_CANCEL_REASON_REQUIRED`, `PAYMENT_INVALID_TRANSITION`,
 `PAYMENT_GATEWAY_UNAVAILABLE`, `PAYMENT_CALLBACK_INVALID`.
 
+### Manajemen kas & tutup kasir (Phase 6)
+
+| Method | Path | Izin | Catatan |
+|---|---|---|---|
+| GET | `/api/cashier/sessions/{id}/movements` | pemilik atau `cashier.view` @outlet | mutasi kas; pemilik **tidak** melihat baris penjualan tunai (blind count) |
+| POST | `/api/cashier/sessions/{id}/cash-movements` | pemilik, session OPEN, `cash.cash_in`/`cash.cash_out` | `{type: CASH_IN\|CASH_OUT\|PETTY_CASH, amount (>0, rupiah bulat), reason (≥3), approvalId?}`; kas keluar > `cash_out_approval_threshold` wajib approval `CASH_OUT` dengan nominal sama; tidak boleh melebihi isi laci (`CASH_INSUFFICIENT`); idempotent |
+| POST | `/api/cashier/sessions/{id}/adjustments` | `cash.cash_adjustment` @outlet, **bukan laci sendiri** | `{amount (bertanda, ≠0), reason (≥5)}`; tercatat atas nama atasan; idempotent |
+| POST | `/api/cashier/sessions/{id}/close/preview` | pemilik (`cashier.close`) atau atasan (`cashier.close` + `cash.approve_difference`) | `{counts}` → `{countedCash, expectedCash, difference, approvalThreshold, reasonRequired, approvalRequired, openOrders, pendingPayments, allowCloseWithOpenOrders}`; tidak menulis data kas, dicatat di audit (`CLOSE_PREVIEW`) |
+| POST | `/api/cashier/sessions/{id}/close` | sama dengan preview | `{counts, differenceReason?: SHORTAGE\|OVERAGE\|WRONG_CHANGE\|COUNTING_ERROR\|OTHER, differenceNote?, approvalId?, note?}`; expected & selisih dihitung database; respons session `CLOSED` dengan `closingCash`, `expectedCash`, `difference`, `closedByName`, `differenceApprovedByName`; idempotent |
+| POST | `/api/cashier/approvals` | pemilik session (atau atasan yang menutup laci lain, khusus `CASH_DIFFERENCE`); **rate limit seperti login** | `{action: CASH_OUT\|CASH_DIFFERENCE, sessionId, amount, email, password}` → approval sekali pakai 2 menit; approver perlu `cash.approve_difference` & rank ≥ SUPERVISOR, bukan peminta |
+
+Session `CLOSED` menampilkan `expectedCash` hasil penutupan kepada pemilik juga; selama session aktif expected cash
+tetap hanya untuk `cashier.view`.
+
+Error baru: `OPEN_ORDER_EXISTS` (tutup kasir), `PAYMENT_PENDING`, `CLOSING_COUNT_REQUIRED`,
+`CASH_DIFFERENCE_REASON_REQUIRED`, `CASH_DIFFERENCE_REQUIRES_APPROVAL`, `CASH_INSUFFICIENT`, `CASH_MOVEMENT_REASON_REQUIRED`.
+

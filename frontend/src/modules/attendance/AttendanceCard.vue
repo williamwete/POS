@@ -4,7 +4,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import { formatDuration, useAttendanceStore, workedSeconds } from '@/stores/attendance'
 import { useApiAction } from '@/composables/useApiAction'
@@ -14,7 +14,7 @@ const session = useSessionStore()
 const attendance = useAttendanceStore()
 const confirm = useConfirm()
 const cashier = useCashierStore()
-const toast = useToast()
+const router = useRouter()
 const { busy, run } = useApiAction()
 
 const now = ref(new Date())
@@ -54,11 +54,13 @@ async function startBreak() {
 
 function clockOut() {
   if (cashier.current) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Kasir masih terbuka',
-      detail: `Anda masih memegang kasir ${cashier.current.terminalCode}. Tutup kasir (atau batalkan bila salah buka) sebelum clock out.`,
-      life: 6000,
+    const terminal = cashier.current.terminalCode
+    confirm.require({
+      header: 'Kasir masih terbuka',
+      message: `Anda masih memegang kasir ${terminal}. Tutup kasir dulu (hitung uang di laci), lalu clock out.`,
+      acceptLabel: 'Tutup kasir sekarang',
+      rejectLabel: 'Nanti',
+      accept: () => void router.push({ name: 'cashier-close' }),
     })
     return
   }

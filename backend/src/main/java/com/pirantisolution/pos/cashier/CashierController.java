@@ -1,6 +1,14 @@
 package com.pirantisolution.pos.cashier;
 
+import com.pirantisolution.pos.cashier.CashierDtos.AdjustmentRequest;
 import com.pirantisolution.pos.cashier.CashierDtos.CancelRequest;
+import com.pirantisolution.pos.cashier.CashierDtos.CashApprovalRequest;
+import com.pirantisolution.pos.cashier.CashierDtos.CashApprovalView;
+import com.pirantisolution.pos.cashier.CashierDtos.CashMovementRequest;
+import com.pirantisolution.pos.cashier.CashierDtos.ClosePreview;
+import com.pirantisolution.pos.cashier.CashierDtos.ClosePreviewRequest;
+import com.pirantisolution.pos.cashier.CashierDtos.CloseRequest;
+import com.pirantisolution.pos.cashier.CashierDtos.MovementView;
 import com.pirantisolution.pos.cashier.CashierDtos.CashCountRequest;
 import com.pirantisolution.pos.cashier.CashierDtos.DenominationView;
 import com.pirantisolution.pos.cashier.CashierDtos.LockRequest;
@@ -30,10 +38,12 @@ public class CashierController {
     private static final String BASE = "/api/cashier/sessions";
 
     private final CashierService service;
+    private final CashApprovalService approvals;
     private final IdempotencyService idempotency;
 
-    public CashierController(CashierService service, IdempotencyService idempotency) {
+    public CashierController(CashierService service, CashApprovalService approvals, IdempotencyService idempotency) {
         this.service = service;
+        this.approvals = approvals;
         this.idempotency = idempotency;
     }
 
@@ -81,6 +91,47 @@ public class CashierController {
             @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
         return idempotency.execute(key, "POST", BASE + "/" + id + "/cancel", req,
                 () -> Responses.ok(service.cancel(id, req.reason()), "Buka kasir dibatalkan"));
+    }
+
+    // ------------------------------------------------------------------ Phase 6: kas & tutup kasir
+
+    @GetMapping(BASE + "/{id}/movements")
+    public ResponseEntity<ApiResponse<List<MovementView>>> movements(@PathVariable UUID id) {
+        return Responses.ok(service.movements(id));
+    }
+
+    @PostMapping(BASE + "/{id}/cash-movements")
+    public ResponseEntity<?> cashMovement(@PathVariable UUID id, @Valid @RequestBody CashMovementRequest req,
+            @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
+        return idempotency.execute(key, "POST", BASE + "/" + id + "/cash-movements", req,
+                () -> Responses.created(service.cashMovement(id, req.type(), req.amount(), req.reason(), req.approvalId()),
+                        "CASH_IN".equals(req.type()) ? "Kas masuk tercatat" : "Kas keluar tercatat"));
+    }
+
+    @PostMapping(BASE + "/{id}/adjustments")
+    public ResponseEntity<?> adjustment(@PathVariable UUID id, @Valid @RequestBody AdjustmentRequest req,
+            @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
+        return idempotency.execute(key, "POST", BASE + "/" + id + "/adjustments", req,
+                () -> Responses.created(service.adjustment(id, req.amount(), req.reason()), "Penyesuaian kas tercatat"));
+    }
+
+    @PostMapping(BASE + "/{id}/close/preview")
+    public ResponseEntity<ApiResponse<ClosePreview>> closePreview(@PathVariable UUID id,
+            @Valid @RequestBody ClosePreviewRequest req) {
+        return Responses.ok(service.closePreview(id, req.counts()));
+    }
+
+    @PostMapping(BASE + "/{id}/close")
+    public ResponseEntity<?> close(@PathVariable UUID id, @Valid @RequestBody CloseRequest req,
+            @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
+        return idempotency.execute(key, "POST", BASE + "/" + id + "/close", req,
+                () -> Responses.ok(service.close(id, req), "Kasir ditutup"));
+    }
+
+    /** Approval supervisor kas (rate limit seperti login). Tanpa idempotency: password tidak di-hash/disimpan. */
+    @PostMapping("/api/cashier/approvals")
+    public ResponseEntity<ApiResponse<CashApprovalView>> approve(@Valid @RequestBody CashApprovalRequest req) {
+        return Responses.created(approvals.request(req), "Disetujui");
     }
 
     @GetMapping(BASE + "/{id}")

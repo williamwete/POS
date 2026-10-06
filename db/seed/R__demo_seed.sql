@@ -117,7 +117,8 @@ FROM (VALUES
     ('max_cashier_discount', '5'),
     ('max_supervisor_discount', '15'),
     ('max_manager_discount', '30'),
-    ('cash_difference_approval_threshold', '20000')
+    ('cash_difference_approval_threshold', '20000'),
+    ('cash_out_approval_threshold', '100000')
 ) AS v(key, value)
 ON CONFLICT DO NOTHING;
 

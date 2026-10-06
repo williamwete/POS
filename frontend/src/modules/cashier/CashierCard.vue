@@ -10,6 +10,7 @@ import { toCountLines, useCashierStore } from '@/stores/cashier'
 import { useApiAction } from '@/composables/useApiAction'
 import { formatRupiah } from '@/utils/money'
 import DenominationCounter from './DenominationCounter.vue'
+import CashMovementDialog from './CashMovementDialog.vue'
 
 const session = useSessionStore()
 const attendance = useAttendanceStore()
@@ -65,6 +66,11 @@ async function submitCount() {
   }
 }
 
+// ---- kas masuk / keluar (§25)
+const moveOpen = ref(false)
+const canMove = computed(() => !!s.value && (session.can('cash.cash_in', s.value.outletId) || session.can('cash.cash_out', s.value.outletId)))
+const canClose = computed(() => !!s.value && session.can('cashier.close', s.value.outletId))
+
 // ---- batal buka kasir
 const cancelOpen = ref(false)
 const cancelReason = ref('')
@@ -103,6 +109,7 @@ async function submitCancel() {
         />
         <template v-else-if="s.status === 'OPEN' && !otherTerminal">
           <Button v-if="session.can('sale.create')" label="Mulai transaksi" icon="pi pi-shopping-cart" @click="router.push({ name: 'pos' })" />
+          <Button v-if="canMove" label="Kas masuk/keluar" icon="pi pi-arrow-right-arrow-left" severity="secondary" @click="moveOpen = true" />
           <Button label="Hitung kas" icon="pi pi-calculator" severity="secondary" :loading="busy" @click="openCount" />
           <Button
             label="Kunci terminal"
@@ -112,6 +119,8 @@ async function submitCancel() {
             :loading="busy"
             @click="run((key) => cashier.lock('MANUAL', key))"
           />
+          <Button v-if="canClose" label="Tutup kasir" icon="pi pi-power-off" severity="danger" outlined
+            @click="router.push({ name: 'cashier-close' })" />
         </template>
       </div>
     </div>
@@ -150,6 +159,8 @@ async function submitCancel() {
         </div>
       </form>
     </Dialog>
+
+    <CashMovementDialog v-model:visible="moveOpen" />
 
     <Dialog v-model:visible="cancelOpen" header="Batalkan buka kasir" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="submitCancel">

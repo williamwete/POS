@@ -228,3 +228,74 @@ RETURNS void
 LANGUAGE sql
 AS $$ SELECT set_config('request.jwt.claims', '', true) $$;
 GRANT EXECUTE ON FUNCTION pos_test.as_system() TO PUBLIC;
+
+-- Hitungan kas akhir (CLOSING) + tutup kasir dalam satu transaksi, seperti backend.
+-- p_counts: pasangan (nilai pecahan NOTE, jumlah lembar).
+CREATE OR REPLACE FUNCTION pos_test.close_session(p_session uuid, p_counts numeric[],
+                                                  p_reason text DEFAULT NULL, p_note text DEFAULT NULL,
+                                                  p_approval uuid DEFAULT NULL)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_count uuid;
+    i       int;
+BEGIN
+    INSERT INTO pos.cash_counts (cashier_session_id, count_type, counted_by)
+    VALUES (p_session, 'CLOSING', pos.current_app_user_id()) RETURNING id INTO v_count;
+    IF p_counts IS NOT NULL THEN
+        FOR i IN 1 .. array_length(p_counts, 1) LOOP
+            INSERT INTO pos.cash_count_items (cash_count_id, denomination_id, value, kind, quantity)
+            SELECT v_count, d.id, 0, 'NOTE', p_counts[i][2]::int
+            FROM pos.cash_denominations d
+            WHERE d.organization_id = pos.current_org_id() AND d.value = p_counts[i][1] AND d.kind = 'NOTE';
+        END LOOP;
+    END IF;
+    PERFORM pos.finalize_cash_count(v_count);
+    UPDATE pos.cashier_sessions
+    SET status = 'CLOSED', closed_by = pos.current_app_user_id(), closing_count_id = v_count,
+        difference_reason = p_reason, difference_note = p_note, difference_approval_id = p_approval
+    WHERE id = p_session;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'close_session: session % not visible/updatable', p_session;
+    END IF;
+END
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.close_session(uuid, numeric[], text, text, uuid) TO PUBLIC;
+
+-- Kas masuk/keluar oleh pemegang laci.
+CREATE OR REPLACE FUNCTION pos_test.cash_move(p_session uuid, p_type text, p_amount numeric, p_reason text,
+                                              p_approval uuid DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+    INSERT INTO pos.cash_movements (organization_id, outlet_id, cashier_session_id, business_date, movement_type,
+                                    amount, reason, approval_id, created_by)
+    SELECT s.organization_id, s.outlet_id, s.id, s.business_date, p_type, p_amount, p_reason, p_approval,
+           pos.current_app_user_id()
+    FROM pos.cashier_sessions s WHERE s.id = p_session
+    RETURNING id
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.cash_move(uuid, text, numeric, text, uuid) TO PUBLIC;
+
+-- Approval kas (CASH_OUT / CASH_DIFFERENCE) dari approver lain, langsung dipakai.
+CREATE OR REPLACE FUNCTION pos_test.cash_approval(p_session uuid, p_action text, p_amount numeric, p_approver uuid,
+                                                  p_use boolean DEFAULT true)
+RETURNS uuid
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id uuid;
+BEGIN
+    INSERT INTO pos.approvals (organization_id, outlet_id, cashier_session_id, action, price, requested_by,
+                               approved_by, expires_at)
+    SELECT s.organization_id, s.outlet_id, s.id, p_action, p_amount, pos.current_app_user_id(), p_approver, now()
+    FROM pos.cashier_sessions s WHERE s.id = p_session
+    RETURNING id INTO v_id;
+    IF p_use THEN
+        UPDATE pos.approvals SET used_at = now() WHERE id = v_id;
+    END IF;
+    RETURN v_id;
+END
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.cash_approval(uuid, text, numeric, uuid, boolean) TO PUBLIC;

@@ -82,13 +82,13 @@ SELECT pos_test.throws($$
 SELECT pos_test.throws($$
     INSERT INTO pos.cash_movements (organization_id, outlet_id, cashier_session_id, business_date, movement_type, amount, created_by)
     SELECT organization_id, outlet_id, id, business_date, 'CASH_IN', 10000, pos.current_app_user_id()
-    FROM pos.cashier_sessions$$, 'row-level security', 'cash in belum tersedia di Phase 3');
+    FROM pos.cashier_sessions$$, 'CASH_MOVEMENT_REASON_REQUIRED', 'kas masuk wajib alasan');
 SELECT pos_test.throws($$UPDATE pos.cash_movements SET amount = 1$$, 'permission denied', 'movement tidak bisa diubah');
 SELECT pos_test.throws($$DELETE FROM pos.cashier_sessions$$, 'permission denied', 'session tidak bisa dihapus');
 SELECT pos_test.throws($$UPDATE pos.cashier_sessions SET terminal_id = '00000000-0000-4000-8000-000000000402'$$,
     'CASHIER_SESSION_IMMUTABLE_FIELD', 'terminal session tidak bisa dipindah');
 SELECT pos_test.throws($$UPDATE pos.cashier_sessions SET status = 'CLOSED', closed_by = pos.current_app_user_id()$$,
-    'CASHIER_SESSION_INVALID_TRANSITION|cashier_sessions', 'closing belum tersedia di Phase 3');
+    'CLOSING_COUNT_REQUIRED|cashier_sessions', 'tutup kasir wajib hitung kas akhir');
 ROLLBACK;
 
 -- Nilai denominasi diambil dari master, bukan dari client
@@ -171,8 +171,8 @@ UPDATE pos.cashier_sessions SET status = 'ON_BREAK', lock_reason = 'IDLE';
 RESET ROLE;
 SELECT pos_test.reauth('supervisor.jkt');
 SET LOCAL ROLE pos_app_user;
-SELECT pos_test.ok(pos_test.affected($$UPDATE pos.cashier_sessions SET status = 'OPEN', lock_reason = NULL, locked_at = NULL$$) = 0,
-    'supervisor tidak bisa membuka kunci session kasir');
+SELECT pos_test.throws($$UPDATE pos.cashier_sessions SET status = 'OPEN', lock_reason = NULL, locked_at = NULL$$,
+    'CASHIER_SESSION_NOT_OWNER|row-level security', 'supervisor tidak bisa membuka kunci session kasir');
 ROLLBACK;
 
 -- §55: clock out ditolak selama session aktif; break mengunci session

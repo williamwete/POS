@@ -6,18 +6,29 @@ import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import Button from 'primevue/button'
 import Drawer from 'primevue/drawer'
+import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import SelectButton from 'primevue/selectbutton'
+import Textarea from 'primevue/textarea'
+import { useRouter } from 'vue-router'
+import { useCashierStore } from '@/stores/cashier'
 import PageHeader from '@/components/PageHeader.vue'
 import { api } from '@/services'
 import { useApiAction } from '@/composables/useApiAction'
 import { useSessionStore } from '@/stores/session'
-import type { CashCount, CashierSession } from '@/types/api'
+import type { CashCount, CashierSession, CashMovement } from '@/types/api'
 import { formatDateTime } from '@/utils/format'
 import { formatNumber, formatRupiah } from '@/utils/money'
 import { clockTime } from '@/modules/attendance/attendanceFormat'
-import { COUNT_TYPE_LABEL, LOCK_REASON_LABEL, SESSION_STATUS_CLASS, SESSION_STATUS_LABEL } from './cashierFormat'
+import {
+  COUNT_TYPE_LABEL, DIFFERENCE_REASON_LABEL, LOCK_REASON_LABEL, MOVEMENT_TYPE_LABEL, SESSION_STATUS_CLASS,
+  SESSION_STATUS_LABEL, signedRupiah,
+} from './cashierFormat'
 
 const session = useSessionStore()
-const { run } = useApiAction()
+const cashier = useCashierStore()
+const router = useRouter()
+const { busy, run } = useApiAction()
 
 const outlets = computed(() => session.outlets.filter((o) => session.can('cashier.view', o.id)))
 const outletId = ref<string | null>(outlets.value.find((o) => o.id === session.outletId)?.id ?? outlets.value[0]?.id ?? null)
@@ -46,10 +57,44 @@ async function load() {
 watch([outletId, date], load)
 onMounted(load)
 
+const movements = ref<CashMovement[]>([])
+
 async function openDetail(row: CashierSession) {
   await run(async () => {
-    detail.value = (await api().get<CashierSession>(`/api/cashier/sessions/${row.id}`)).data
+    const [d, m] = await Promise.all([cashier.get(row.id), cashier.movements(row.id)])
+    detail.value = d
+    movements.value = m
   })
+}
+
+const isActive = (x: CashierSession) => ['OPEN', 'ON_BREAK'].includes(x.status)
+const isMine = (x: CashierSession) => x.employeeId === session.me?.employee?.id
+const canAdjust = computed(() => !!detail.value && isActive(detail.value) && !isMine(detail.value)
+  && session.can('cash.cash_adjustment', detail.value.outletId))
+const canCloseOther = computed(() => !!detail.value && isActive(detail.value) && !isMine(detail.value)
+  && session.can('cashier.close', detail.value.outletId) && session.can('cash.approve_difference', detail.value.outletId))
+
+// ---- penyesuaian kas (restricted)
+const adjustOpen = ref(false)
+const adjustDir = ref<1 | -1>(1)
+const adjustAmount = ref<number | null>(null)
+const adjustReason = ref('')
+function openAdjust() {
+  adjustDir.value = 1
+  adjustAmount.value = null
+  adjustReason.value = ''
+  adjustOpen.value = true
+}
+async function submitAdjust() {
+  const d = detail.value
+  if (!d || !adjustAmount.value) return
+  const ok = await run((key) => cashier.adjustment(d.id, adjustDir.value * adjustAmount.value!, adjustReason.value.trim(), key),
+    'Penyesuaian kas tercatat')
+  if (ok) {
+    adjustOpen.value = false
+    await openDetail(d)
+    await load()
+  }
 }
 
 function lastCount(s: CashierSession): CashCount | null {
@@ -62,11 +107,7 @@ function diffClass(n?: number | null) {
   return v === 0 ? 'text-jade-700' : 'text-alert-600 font-semibold'
 }
 
-function signed(n?: number | null) {
-  if (n === null || n === undefined) return '—'
-  const v = Number(n)
-  return (v > 0 ? '+' : '') + formatRupiah(v)
-}
+const signed = signedRupiah
 </script>
 
 <template>
@@ -141,6 +182,42 @@ function signed(n?: number | null) {
         </dl>
         <p v-if="detail.cancelReason" class="mt-3 rounded-md bg-alert-50 p-3 text-sm text-alert-600">Dibatalkan: {{ detail.cancelReason }}</p>
 
+        <div v-if="detail.status === 'CLOSED'" class="mt-3 rounded-lg border border-line p-3 text-sm">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-semibold">Tutup kasir</span>
+            <span class="tabular text-xs text-ink-soft">{{ formatDateTime(detail.closedAt) }} · {{ detail.closedByName }}</span>
+          </div>
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <div><div class="text-xs text-ink-soft">Uang dihitung</div><div class="tabular font-semibold">{{ formatRupiah(detail.closingCash) }}</div></div>
+            <div><div class="text-xs text-ink-soft">Selisih</div><div :class="['tabular', diffClass(detail.difference)]">{{ signedRupiah(detail.difference) }}</div></div>
+          </div>
+          <p v-if="detail.differenceReason" class="mt-2 text-xs text-ink-soft">
+            {{ DIFFERENCE_REASON_LABEL[detail.differenceReason] }}<template v-if="detail.differenceNote"> — {{ detail.differenceNote }}</template>
+            <template v-if="detail.differenceApprovedByName"> · disetujui {{ detail.differenceApprovedByName }}</template>
+          </p>
+        </div>
+
+        <div v-if="canAdjust || canCloseOther" class="mt-4 flex flex-wrap gap-2">
+          <Button v-if="canAdjust" label="Penyesuaian kas" icon="pi pi-sliders-h" severity="secondary" size="small" @click="openAdjust" />
+          <Button v-if="canCloseOther" label="Tutup laci ini" icon="pi pi-power-off" severity="danger" outlined size="small"
+            @click="router.push({ name: 'cashier-close', query: { session: detail.id } })" />
+        </div>
+
+        <h3 class="mt-6 text-sm font-semibold text-ink-soft">Mutasi kas</h3>
+        <ul class="mt-2 divide-y divide-line rounded-lg border border-line text-sm">
+          <li v-for="m in movements" :key="m.id" class="flex items-start justify-between gap-3 p-3">
+            <div class="min-w-0">
+              <div class="font-medium">{{ MOVEMENT_TYPE_LABEL[m.movementType] ?? m.movementType }}</div>
+              <div v-if="m.reason" class="truncate text-xs text-ink-soft">{{ m.reason }}</div>
+              <div class="tabular text-xs text-ink-faint">
+                {{ clockTime(m.createdAt) }} · {{ m.createdByName }}<template v-if="m.approvedByName"> · disetujui {{ m.approvedByName }}</template>
+              </div>
+            </div>
+            <span :class="['tabular whitespace-nowrap font-semibold', m.amount < 0 ? 'text-alert-600' : 'text-ink']">{{ signedRupiah(m.amount) }}</span>
+          </li>
+          <li v-if="!movements.length" class="p-3 text-ink-soft">Belum ada mutasi.</li>
+        </ul>
+
         <h3 class="mt-6 text-sm font-semibold text-ink-soft">Hitungan kas</h3>
         <ol class="mt-2 space-y-3">
           <li v-for="c in detail.counts" :key="c.id" class="rounded-lg border border-line p-3">
@@ -171,5 +248,30 @@ function signed(n?: number | null) {
         <p v-if="lastCount(detail) === null" class="text-sm text-ink-soft">Belum ada hitungan.</p>
       </template>
     </Drawer>
+
+    <Dialog v-model:visible="adjustOpen" header="Penyesuaian kas" modal class="w-full max-w-md">
+      <form class="space-y-4" @submit.prevent="submitAdjust">
+        <p class="text-sm text-ink-soft">
+          Koreksi catatan laci {{ detail?.employeeName }} (mis. salah catat). Tercatat atas nama Anda dan masuk audit log.
+        </p>
+        <SelectButton v-model="adjustDir" :options="[{ v: 1, l: 'Tambah' }, { v: -1, l: 'Kurangi' }]" option-label="l"
+          option-value="v" :allow-empty="false" aria-label="Arah penyesuaian" />
+        <div>
+          <label for="adj-amount" class="mb-1 block text-sm font-medium">Nominal</label>
+          <InputNumber v-model="adjustAmount" input-id="adj-amount" mode="currency" currency="IDR" locale="id-ID"
+            :min-fraction-digits="0" :max-fraction-digits="0" :min="0" class="w-full" input-class="w-full tabular" />
+        </div>
+        <div>
+          <label for="adj-reason" class="mb-1 block text-sm font-medium">Alasan</label>
+          <Textarea id="adj-reason" v-model="adjustReason" rows="2" maxlength="500" class="w-full" />
+          <p class="mt-1 text-xs text-ink-faint">Minimal 5 karakter.</p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button label="Batal" text severity="secondary" type="button" @click="adjustOpen = false" />
+          <Button label="Simpan penyesuaian" type="submit" :loading="busy"
+            :disabled="!adjustAmount || adjustReason.trim().length < 5" />
+        </div>
+      </form>
+    </Dialog>
   </div>
 </template>
