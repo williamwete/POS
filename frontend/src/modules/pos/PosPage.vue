@@ -358,23 +358,20 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
 
       <!-- ============================ pesanan (kanan) -->
       <aside class="flex flex-col gap-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
-        <section class="flex flex-col rounded-2xl border border-line bg-surface" aria-labelledby="cart-title">
-          <header class="flex items-start justify-between gap-2 px-5 pb-3 pt-4">
-            <div class="min-w-0">
-              <h1 id="cart-title" class="text-lg font-bold">Pesanan</h1>
-              <p class="truncate text-xs text-ink-soft">
-                <template v-if="s?.receiptNo">Struk <span class="tabular font-semibold text-ink">{{ s.receiptNo }}</span></template>
-                <template v-else>{{ session.terminal?.code }} · transaksi baru</template>
-              </p>
+        <section class="flex flex-col rounded-xl border border-line bg-field" aria-labelledby="cart-title">
+          <header class="px-5 pb-3 pt-4">
+            <div class="flex items-start justify-between gap-2">
+              <h1 id="cart-title" class="text-xl font-semibold">
+                Order No.<span class="tabular">{{ s?.receiptNo ?? '—' }}</span>
+              </h1>
+              <Button :label="`Ditahan (${sales.held.length})`" icon="pi pi-inbox" severity="secondary" size="small" text
+                :disabled="busy" @click="openHeld" />
             </div>
-            <Button :label="`Ditahan (${sales.held.length})`" icon="pi pi-inbox" severity="secondary" size="small" text
-              :disabled="busy" @click="openHeld" />
+            <p class="text-right text-sm text-ink-faint">{{ new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) }}</p>
+            <p class="mt-1 text-right text-lg font-medium">Cashier: {{ session.me?.user.displayName }}</p>
           </header>
 
-          <div class="flex items-center justify-between border-y border-dashed border-line px-5 py-2 text-sm">
-            <span class="font-semibold">Item dipesan</span>
-            <span class="tabular text-ink-soft">{{ items.length }} baris · {{ qtyText(s?.itemCount ?? 0) }} item</span>
-          </div>
+          
 
           <div v-if="items.length === 0" class="flex flex-col items-center px-6 py-10 text-center text-ink-soft">
             <i class="pi pi-shopping-cart text-3xl text-ink-faint" aria-hidden="true" />
@@ -387,7 +384,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
               <div class="flex items-start gap-3">
                 <span class="tabular mt-0.5 shrink-0 text-sm text-ink-soft">{{ qtyText(item.quantity) }}×</span>
                 <div class="min-w-0 flex-1">
-                  <div class="truncate text-sm font-semibold">{{ item.productName }}</div>
+                  <div class="truncate text-base font-semibold">{{ item.productName }}</div>
                   <div class="text-xs text-ink-soft">
                     <span class="tabular">{{ formatRupiah(item.unitPrice) }}</span>{{ unitLabel(item) }}
                     <s v-if="item.unitPrice !== item.listPrice" class="tabular text-ink-faint">{{ formatRupiah(item.listPrice) }}</s>
@@ -432,14 +429,14 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
 
           <dl class="space-y-1.5 border-t border-dashed border-line px-5 py-4 text-sm">
             <div class="flex justify-between"><dt class="text-ink-soft">Subtotal</dt><dd class="tabular">{{ formatRupiah(s?.subtotal ?? 0) }}</dd></div>
-            <div class="flex justify-between"><dt class="text-ink-soft">Diskon</dt><dd class="tabular">−{{ formatRupiah(s?.discountTotal ?? 0) }}</dd></div>
+            <div class="flex justify-between"><dt class="text-ink-soft">Diskon</dt><dd class="tabular">{{ formatRupiah(s?.discountTotal ?? 0) }}</dd></div>
             <div class="flex justify-between">
-              <dt class="text-ink-soft">PPN{{ s?.pricesIncludeTax !== false ? ' (termasuk harga)' : '' }}</dt>
+              <dt class="text-ink-soft">PPN{{ s?.pricesIncludeTax !== false ? ' (termasuk harga)' : ' 11%' }}</dt>
               <dd class="tabular">{{ formatRupiah(s?.taxTotal ?? 0) }}</dd>
             </div>
             <div class="flex items-end justify-between border-t border-dashed border-line pt-3">
-              <dt class="font-semibold">Total bayar</dt>
-              <dd class="tabular text-2xl font-bold tracking-tight" aria-live="polite">{{ formatRupiah(s?.grandTotal ?? 0) }}</dd>
+              <dt class="text-lg font-bold">Total</dt>
+              <dd class="tabular text-xl font-bold" aria-live="polite">{{ formatRupiah(s?.grandTotal ?? 0) }}</dd>
             </div>
           </dl>
         </section>
@@ -454,7 +451,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
             size="small" :disabled="busy" @click="cancelEmpty" />
           <Button v-else label="Void" icon="pi pi-ban" severity="danger" outlined size="small"
             :disabled="busy || !s || !sales.isDraft" @click="voidSaleVisible = true" />
-          <Button :label="`Checkout ${items.length ? formatRupiah(s?.grandTotal ?? 0) : ''} (F9)`" icon="pi pi-arrow-right" icon-pos="right"
+          <Button label="Pay (F9)"
             size="large" class="col-span-3" :disabled="busy || !sales.isDraft || items.length === 0" :loading="busy" @click="checkout" />
         </div>
 

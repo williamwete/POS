@@ -76,21 +76,21 @@ async function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-field text-ink lg:flex">
+  <div class="min-h-screen bg-field text-ink">
     <!-- ================= sidebar -->
     <nav
       id="side-nav"
       :class="[
-        'fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-line bg-surface transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-line bg-surface shadow-xl transition-transform',
         navOpen ? 'translate-x-0' : '-translate-x-full',
       ]"
       aria-label="Navigasi utama"
     >
       <RouterLink :to="{ name: 'home' }" class="flex items-center gap-3 px-6 py-5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-jade-600 text-base font-bold text-white">P</span>
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-jade-500 text-base font-bold text-white">C</span>
         <span class="min-w-0 leading-tight">
           <span class="block truncate text-sm font-bold">{{ session.me?.organization.name }}</span>
-          <span class="block text-xs text-ink-faint">Point of Sale</span>
+          <span class="block text-xs text-ink-faint">CuanRena POS</span>
         </span>
       </RouterLink>
 
@@ -148,16 +148,13 @@ async function logout() {
         <button type="button" class="nav-link w-full" @click="logout"><i class="pi pi-sign-out" /> Keluar</button>
       </div>
     </nav>
-    <div v-if="navOpen" class="fixed inset-0 z-30 bg-ink/30 lg:hidden" @click="navOpen = false" />
+    <div v-if="navOpen" class="fixed inset-0 z-30 bg-ink/30" @click="navOpen = false" />
 
     <!-- ================= konten -->
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-h-screen min-w-0 flex-col">
       <!-- bar konteks: selalu menunjukkan DI MANA dan KAPAN (business date) user bekerja -->
-      <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur sm:px-6">
-        <button class="grid h-9 w-9 place-items-center rounded-lg hover:bg-field lg:hidden" :aria-expanded="navOpen"
-          aria-controls="side-nav" aria-label="Buka menu" @click="navOpen = !navOpen">
-          <i class="pi pi-bars" />
-        </button>
+      <header class="sticky top-0 z-20 flex h-16 items-center gap-3 bg-jade-100 px-4 sm:px-6">
+        <span class="text-2xl font-bold tracking-tight">CuanRena</span>
 
         <div class="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
           <template v-if="outlet">
@@ -186,7 +183,7 @@ async function logout() {
 
         <Button v-if="outlet" icon="pi pi-sync" text rounded severity="secondary" aria-label="Ganti outlet atau terminal"
           v-tooltip.bottom="'Ganti outlet / terminal'" @click="router.push({ name: 'context' })" />
-        <div class="flex shrink-0 items-center gap-3 border-l border-line pl-3">
+        <div class="flex shrink-0 items-center gap-3 border-l border-ink/10 pl-3">
           <span class="grid h-9 w-9 place-items-center rounded-full bg-jade-50 text-sm font-bold text-jade-700" aria-hidden="true">
             {{ initials }}
           </span>
@@ -194,12 +191,25 @@ async function logout() {
             <div class="text-sm font-semibold">{{ session.me?.user.displayName }}</div>
             <div class="max-w-[14rem] truncate text-xs text-ink-faint">{{ session.roleSummary.join(', ') }}</div>
           </div>
+          <button type="button" class="grid h-9 w-9 place-items-center rounded-lg hover:bg-white/60" aria-label="Keluar"
+            v-tooltip.bottom="'Keluar'" @click="logout"><i class="pi pi-sign-out text-lg" /></button>
         </div>
       </header>
 
-      <main class="min-w-0 flex-1 p-4 sm:p-6">
-        <RouterView />
-      </main>
+      <div class="flex min-w-0 flex-1">
+        <aside class="sticky top-16 hidden h-[calc(100vh-4rem)] w-14 shrink-0 flex-col items-center border-r border-line bg-jade-100 pt-4 sm:flex">
+          <button class="grid h-10 w-10 place-items-center rounded-lg hover:bg-white/60" :aria-expanded="navOpen"
+            aria-controls="side-nav" aria-label="Buka menu" @click="navOpen = !navOpen">
+            <i class="pi pi-bars text-lg" />
+          </button>
+        </aside>
+        <main class="min-w-0 flex-1 p-4 sm:p-6">
+          <button class="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-jade-100 sm:hidden" aria-label="Buka menu" @click="navOpen = !navOpen">
+            <i class="pi pi-bars" />
+          </button>
+          <RouterView />
+        </main>
+      </div>
     </div>
     <BreakLockScreen />
     <TerminalLockScreen />
@@ -217,6 +227,6 @@ async function logout() {
   @apply bg-jade-50 font-semibold text-jade-700;
 }
 .ctx-chip {
-  @apply inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink;
+  @apply inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-white/70 px-3 py-1.5 text-xs text-ink;
 }
 </style>

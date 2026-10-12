@@ -6,16 +6,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        field: '#F4F6F5',
+        field: '#F7FAFC',
         surface: '#FFFFFF',
-        ink: { DEFAULT: '#15302B', soft: '#4A5F5A', faint: '#8A9B97' },
-        jade: { 50: '#E8F3F0', 100: '#CDE6DF', 500: '#16876F', 600: '#0F6E5A', 700: '#0B5747', 900: '#08352C' },
+        ink: { DEFAULT: '#111111', soft: '#4B5563', faint: '#9CA3AF' },
+        jade: { 50: '#EAF2FA', 100: '#D6E6F2', 500: '#78A0CF', 600: '#5E8BC0', 700: '#3F6A9E', 900: '#1F3B5E' },
         amber: { 100: '#FBEBCF', 500: '#E8A33D', 700: '#9A6414' },
-        alert: { 50: '#FBEAE6', 600: '#C2412D' },
-        line: '#D5DEDA',
+        alert: { 50: '#FDECEC', 600: '#E5392D' },
+        teal: { 100: '#DDF0EE', 500: '#338C84', 700: '#0F7A6B' },
+        line: '#D4DEE8',
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         // skala modular 1.2

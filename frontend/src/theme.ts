@@ -1,37 +1,28 @@
 import { definePreset } from '@primeuix/themes'
 import Aura from '@primeuix/themes/aura'
 
-/** Preset PrimeVue dengan palet jade POS (lihat tailwind.config.ts). */
+/** Preset PrimeVue dengan palet biru CuanRena (lihat tailwind.config.ts). */
 export const PosPreset = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '#E8F3F0',
-      100: '#CDE6DF',
-      200: '#A3D2C5',
-      300: '#6FB8A6',
-      400: '#3C9D86',
-      500: '#16876F',
-      600: '#0F6E5A',
-      700: '#0B5747',
-      800: '#094538',
-      900: '#08352C',
-      950: '#04201A',
+      50: '#EAF2FA', 100: '#D6E6F2', 200: '#B5D3EA', 300: '#97BADD', 400: '#86AAD6',
+      500: '#78A0CF', 600: '#5E8BC0', 700: '#3F6A9E', 800: '#2E5282', 900: '#1F3B5E', 950: '#142A45',
     },
     colorScheme: {
       light: {
         surface: {
           0: '#ffffff',
-          50: '#F6F8F7',
-          100: '#EEF2F0',
-          200: '#D5DEDA',
-          300: '#B7C4BF',
-          400: '#8A9B97',
-          500: '#6A7D78',
-          600: '#4A5F5A',
-          700: '#344944',
-          800: '#233833',
-          900: '#15302B',
-          950: '#0C1E1A',
+          50: '#F7FAFC',
+          100: '#EDF2F7',
+          200: '#D4DEE8',
+          300: '#B5C3D1',
+          400: '#9CA3AF',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
+          800: '#1F2937',
+          900: '#111111',
+          950: '#0A0A0A',
         },
       },
     },
