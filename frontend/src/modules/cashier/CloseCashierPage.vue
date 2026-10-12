@@ -12,9 +12,9 @@ import { useAttendanceStore } from '@/stores/attendance'
 import { toCountLines, useCashierStore } from '@/stores/cashier'
 import { useApiAction } from '@/composables/useApiAction'
 import type { CashierSession, ClosePreview, DifferenceReason } from '@/types/api'
-import { countTotal, formatRupiah } from '@/utils/money'
+import { formatRupiah, splitIntoDenominations } from '@/utils/money'
 import { formatDateTime } from '@/utils/format'
-import DenominationCounter from './DenominationCounter.vue'
+import InputNumber from 'primevue/inputnumber'
 import CashApprovalDialog from './CashApprovalDialog.vue'
 import ShiftReportDialog from './ShiftReportDialog.vue'
 import { DIFFERENCE_REASON_LABEL, signedRupiah } from './cashierFormat'
@@ -36,7 +36,12 @@ type Step = 'count' | 'review' | 'done'
 const step = ref<Step>('count')
 const loading = ref(true)
 const target = ref<CashierSession | null>(null)
-const quantities = ref<Record<string, number | null>>({})
+/** Figma Closing: satu kolom uang di laci; dipecah ke pecahan otomatis untuk server. */
+const counted = ref<number | null>(null)
+const quantities = computed<Record<string, number>>(() =>
+  counted.value === null ? {} : (splitIntoDenominations(counted.value, cashier.denominations) ?? {}))
+const splittable = computed(() => counted.value !== null && splitIntoDenominations(counted.value, cashier.denominations) !== null)
+const smallest = computed(() => Math.min(...cashier.denominations.map((d) => d.value)))
 const preview = ref<ClosePreview | null>(null)
 const reason = ref<DifferenceReason | null>(null)
 const diffNote = ref('')
@@ -62,8 +67,7 @@ onMounted(async () => {
 })
 
 const isOwner = computed(() => !!target.value && target.value.employeeId === session.me?.employee?.id)
-const values = computed(() => new Map(cashier.denominations.map((d) => [d.id, d.value])))
-const total = computed(() => countTotal(values.value, quantities.value))
+const total = computed(() => counted.value ?? 0)
 const active = computed(() => !!target.value && ['OPEN', 'ON_BREAK'].includes(target.value.status))
 
 const REASONS = (Object.keys(DIFFERENCE_REASON_LABEL) as DifferenceReason[]).map((value) => ({
@@ -164,7 +168,7 @@ async function clockOut() {
       <div>
         <h1 class="text-2xl font-bold">Tutup kasir</h1>
         <p class="mt-1 text-ink-soft">
-          <template v-if="step === 'count'">Hitung semua uang di laci per pecahan, tanpa melihat catatan sistem.</template>
+          <template v-if="step === 'count'">Hitung semua uang di laci, tanpa melihat catatan sistem.</template>
           <template v-else-if="step === 'review'">Periksa hasil hitungan sebelum laci ditutup.</template>
           <template v-else>Laci kas sudah ditutup dan tercatat.</template>
         </p>
@@ -202,11 +206,17 @@ async function clockOut() {
         <Message v-else-if="target.status === 'ON_BREAK'" severity="warn" :closable="false">
           Terminal sedang terkunci. Buka kunci terminal terlebih dahulu.
         </Message>
-        <DenominationCounter v-model="quantities" :denominations="cashier.denominations" id-prefix="close" />
+        <div class="rounded-xl border border-line bg-field p-5">
+          <label for="close-counted" class="mb-1 block text-base">Cash in the drawer</label>
+          <InputNumber v-model="counted" input-id="close-counted" prefix="Rp " locale="id-ID" :min="0" :max-fraction-digits="0"
+            class="w-full" input-class="w-full" placeholder="Rp" />
+          <small v-if="counted !== null && !splittable" class="mt-1 block text-alert-600">Nominal harus kelipatan {{ formatRupiah(smallest) }}.</small>
+          <p class="mt-2 text-sm text-ink-soft">Hitung uang fisik di laci. Catatan sistem baru ditampilkan setelah Anda melanjutkan.</p>
+        </div>
         <div class="flex flex-wrap justify-end gap-2">
           <Button label="Batal" severity="secondary" text type="button" @click="router.back()" />
           <Button :label="`Lanjut periksa · ${formatRupiah(total)}`" icon="pi pi-arrow-right" icon-pos="right"
-            type="submit" :loading="busy" :disabled="isOwner && target.status === 'ON_BREAK'" />
+            type="submit" :loading="busy" :disabled="counted === null || !splittable || (isOwner && target.status === 'ON_BREAK')" />
         </div>
       </form>
 

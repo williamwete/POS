@@ -9,7 +9,7 @@ import { useSessionStore } from '@/stores/session'
 import { useAttendanceStore } from '@/stores/attendance'
 import { toCountLines, useCashierStore } from '@/stores/cashier'
 import { useApiAction } from '@/composables/useApiAction'
-import { formatRupiah } from '@/utils/money'
+import { formatRupiah, splitIntoDenominations } from '@/utils/money'
 
 /**
  * Figma "Beginning cash balance": satu kolom "Cash in the drawer". Server tetap menyimpan rincian
@@ -36,18 +36,7 @@ onMounted(async () => {
 const att = computed(() => attendance.current)
 const canOpen = computed(() => session.can('cashier.open'))
 
-/** Pecah nominal menjadi jumlah per pecahan (greedy). null bila tidak bisa dipecah persis. */
-function split(total: number) {
-  const q: Record<string, number> = {}
-  let rest = total
-  for (const d of [...cashier.denominations].sort((x, y) => y.value - x.value)) {
-    const n = Math.floor(rest / d.value)
-    q[d.id] = n
-    rest -= n * d.value
-  }
-  return rest === 0 ? q : null
-}
-const parts = computed(() => (amount.value === null ? null : split(Math.round(amount.value))))
+const parts = computed(() => (amount.value === null ? null : splitIntoDenominations(amount.value, cashier.denominations)))
 const smallest = computed(() => Math.min(...cashier.denominations.map((d) => d.value)))
 
 async function save() {

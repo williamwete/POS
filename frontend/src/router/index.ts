@@ -105,6 +105,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'admin/audit', name: 'audit', component: () => import('@/modules/admin/AuditLogPage.vue'),
         meta: { title: 'Audit log', anyOf: [{ permission: 'audit.view', scope: 'any' }] },
       },
+      {
+        path: 'manage/cashier', name: 'manage-cashier', component: () => import('@/modules/admin/EmployeesPage.vue'),
+        meta: { title: 'Manage Cashier', anyOf: [{ permission: 'employee.view', scope: 'any' }, { permission: 'employee.manage', scope: 'any' }] },
+      },
+      {
+        path: 'admin/menu-access', name: 'menu-access', component: () => import('@/modules/admin/MenuAccessPage.vue'),
+        meta: { title: 'Akses menu', anyOf: [{ permission: 'menu.configure', scope: 'org' }] },
+      },
       { path: 'forbidden', name: 'forbidden', component: () => import('@/modules/home/ForbiddenPage.vue'), meta: { title: 'Akses ditolak' } },
     ],
   },

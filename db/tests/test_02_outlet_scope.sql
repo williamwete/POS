@@ -74,8 +74,8 @@ SELECT pos_test.login('auditor');
 SET LOCAL ROLE pos_app_user;
 SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.outlets') = 2, 'auditor melihat semua outlet');
 SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.terminals') = 3, 'auditor melihat semua terminal');
-SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.users') = 7, 'auditor melihat semua user');
-SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.employees') = 7, 'auditor melihat semua karyawan');
+SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.users') = 8, 'auditor melihat semua user');
+SELECT pos_test.ok(pos_test.rows('SELECT 1 FROM pos.employees') = 8, 'auditor melihat semua karyawan');
 SELECT pos_test.ok(NOT EXISTS (
     SELECT 1 FROM pos.effective_permissions(NULL) p
     WHERE p NOT LIKE '%.view'

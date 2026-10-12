@@ -49,7 +49,8 @@ public abstract class IntegrationTestBase {
             "supervisor.jkt", UUID.fromString("00000000-0000-4000-8000-000000000604"),
             "cashier.jkt", UUID.fromString("00000000-0000-4000-8000-000000000605"),
             "cashier.bdg", UUID.fromString("00000000-0000-4000-8000-000000000606"),
-            "auditor", UUID.fromString("00000000-0000-4000-8000-000000000607"));
+            "auditor", UUID.fromString("00000000-0000-4000-8000-000000000607"),
+            "owner", UUID.fromString("00000000-0000-4000-8000-000000000608"));
 
     @Autowired
     protected MockMvc mvc;

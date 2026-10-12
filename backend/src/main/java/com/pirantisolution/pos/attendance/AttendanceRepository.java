@@ -145,4 +145,20 @@ public class AttendanceRepository {
         return jdbc.sql("SELECT active FROM pos.employees WHERE id = :e")
                 .param("e", employeeId).query(Boolean.class).optional().orElse(false);
     }
+
+    public void attachPhoto(UUID attendanceId, String kind, String contentType, byte[] image) {
+        jdbc.sql("SELECT pos.attach_attendance_photo(:a, :k, :t, :i)")
+                .param("a", attendanceId).param("k", kind).param("t", contentType).param("i", image)
+                .query().singleRow();
+    }
+
+    public record PhotoRow(String contentType, byte[] image) {
+    }
+
+    public Optional<PhotoRow> findPhoto(UUID attendanceId, String kind) {
+        return jdbc.sql("SELECT content_type, image FROM pos.get_attendance_photo(:a, :k)")
+                .param("a", attendanceId).param("k", kind)
+                .query((rs, n) -> new PhotoRow(rs.getString("content_type"), rs.getBytes("image")))
+                .optional();
+    }
 }

@@ -760,3 +760,20 @@ export interface OpenbravoMapping {
   updatedAt?: string | null
   updatedByName?: string | null
 }
+
+// ---- Phase 10a: menu per role, PIN & foto kehadiran
+export interface MenuItem {
+  code: string
+  label: string
+  routeName: string
+  sortOrder: number
+}
+
+export interface MenuMatrixCell {
+  menuCode: string
+  label: string
+  roleCode: string
+  enabled: boolean
+  defaultEnabled: boolean
+  sortOrder: number
+}

@@ -36,9 +36,11 @@ public class AttendanceService {
     private final AuditService audit;
     private final JdbcClient jdbc;
     private final CashierRepository cashier;
+    private final PresenceVerifier presence;
 
     public AttendanceService(AttendanceRepository repo, AccessService access, AuditService audit, JdbcClient jdbc,
-            CashierRepository cashier) {
+            CashierRepository cashier, PresenceVerifier presence) {
+        this.presence = presence;
         this.repo = repo;
         this.access = access;
         this.audit = audit;
@@ -56,7 +58,7 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceView clockIn(UUID outletId) {
+    public AttendanceView clockIn(UUID outletId, String pin, String photo) {
         CurrentUser cu = requireEmployee();
         access.requireOutlet("attendance.clock_in", outletId);
         if (!repo.employeeActive(cu.employeeId())) {
@@ -65,8 +67,11 @@ public class AttendanceService {
         if (repo.findOpenForEmployee(cu.employeeId()).isPresent()) {
             throw new ApiException(ErrorCode.ATTENDANCE_ALREADY_OPEN);
         }
+        // PIN + foto (bila diwajibkan outlet) dicek SEBELUM attendance dibuat
+        Optional<PresenceVerifier.Photo> proof = presence.verify(cu.employeeId(), outletId, pin, photo);
         // unique index tetap menjadi penjaga terakhir untuk request paralel
         UUID id = repo.insert(cu.employeeId(), outletId, cu.userId(), RequestContext.deviceId());
+        proof.ifPresent(p -> repo.attachPhoto(id, "CLOCK_IN", p.contentType(), p.image()));
         AttendanceView a = repo.findById(id).orElseThrow();
         audit.record(AuditEvent.of("CLOCK_IN", "ATTENDANCE", id).outlet(outletId)
                 .change(null, summary(a)));
@@ -117,7 +122,7 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceView clockOut() {
+    public AttendanceView clockOut(String pin, String photo) {
         CurrentUser cu = requireEmployee();
         AttendanceView a = openAttendance(cu);
         if ("ON_BREAK".equals(a.status())) {
@@ -127,6 +132,8 @@ public class AttendanceService {
         if (cashier.findActiveForEmployee(cu.employeeId()).isPresent()) {
             throw new ApiException(ErrorCode.CASHIER_SESSION_OPEN);
         }
+        Optional<PresenceVerifier.Photo> proof = presence.verify(cu.employeeId(), a.outletId(), pin, photo);
+        proof.ifPresent(p -> repo.attachPhoto(a.id(), "CLOCK_OUT", p.contentType(), p.image()));
         if (!repo.transition(a.id(), "WORKING", "COMPLETED", cu.userId(), null)) {
             throw new ApiException(ErrorCode.CONCURRENT_MODIFICATION);
         }
@@ -134,6 +141,14 @@ public class AttendanceService {
         audit.record(AuditEvent.of("CLOCK_OUT", "ATTENDANCE", a.id()).outlet(a.outletId())
                 .change(summary(a), summary(after)));
         return after;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AttendanceRepository.PhotoRow> photo(UUID attendanceId, String kind) {
+        if (!"CLOCK_IN".equals(kind) && !"CLOCK_OUT".equals(kind)) {
+            return Optional.empty();
+        }
+        return repo.findPhoto(attendanceId, kind);
     }
 
     /** Supervisor menutup kehadiran karyawan lain yang lupa clock out (§55). */

@@ -42,7 +42,11 @@ public final class AttendanceDtos {
             String reason) {
     }
 
-    public record ClockInRequest(@NotNull UUID outletId) {
+    /** pin & photo wajib bila verifikasi kehadiran aktif (setting attendance_verification_required). */
+    public record ClockInRequest(@NotNull UUID outletId, @Size(max = 12) String pin, @Size(max = 800_000) String photo) {
+    }
+
+    public record ClockOutRequest(@Size(max = 12) String pin, @Size(max = 800_000) String photo) {
     }
 
     public record BreakStartRequest(@Size(max = 200) String reason) {

@@ -59,7 +59,8 @@ INSERT INTO pos.employees (id, organization_id, employee_code, full_name, positi
     ('00000000-0000-4000-8000-000000000504', '00000000-0000-4000-8000-000000000001', 'EMP004', 'Agus Prasetyo',   'Supervisor',       '00000000-0000-4000-8000-000000000101', 'supervisor.jkt@demo.local'),
     ('00000000-0000-4000-8000-000000000505', '00000000-0000-4000-8000-000000000001', 'EMP005', 'Dewi Lestari',    'Kasir',            '00000000-0000-4000-8000-000000000101', 'cashier.jkt@demo.local'),
     ('00000000-0000-4000-8000-000000000506', '00000000-0000-4000-8000-000000000001', 'EMP006', 'Yusuf Hidayat',   'Kasir',            '00000000-0000-4000-8000-000000000102', 'cashier.bdg@demo.local'),
-    ('00000000-0000-4000-8000-000000000507', '00000000-0000-4000-8000-000000000001', 'EMP007', 'Maya Anggraini',  'Internal Auditor', NULL, 'auditor@demo.local')
+    ('00000000-0000-4000-8000-000000000507', '00000000-0000-4000-8000-000000000001', 'EMP007', 'Maya Anggraini',  'Internal Auditor', NULL, 'auditor@demo.local'),
+    ('00000000-0000-4000-8000-000000000508', '00000000-0000-4000-8000-000000000001', 'EMP008', 'Hendra Wijaya',   'Owner',            NULL, 'owner@demo.local')
 ON CONFLICT (id) DO NOTHING;
 
 -- Auth users (shim lokal) & profil aplikasi
@@ -72,7 +73,8 @@ FROM (VALUES
     ('00000000-0000-4000-8000-000000000604', 'supervisor.jkt@demo.local'),
     ('00000000-0000-4000-8000-000000000605', 'cashier.jkt@demo.local'),
     ('00000000-0000-4000-8000-000000000606', 'cashier.bdg@demo.local'),
-    ('00000000-0000-4000-8000-000000000607', 'auditor@demo.local')
+    ('00000000-0000-4000-8000-000000000607', 'auditor@demo.local'),
+    ('00000000-0000-4000-8000-000000000608', 'owner@demo.local')
 ) AS v(id, email)
 ON CONFLICT (id) DO NOTHING;
 
@@ -83,7 +85,8 @@ INSERT INTO pos.users (id, auth_user_id, organization_id, employee_id, username,
     ('00000000-0000-4000-8000-000000000704', '00000000-0000-4000-8000-000000000604', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000504', 'supervisor.jkt', 'supervisor.jkt@demo.local', 'Agus Prasetyo'),
     ('00000000-0000-4000-8000-000000000705', '00000000-0000-4000-8000-000000000605', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000505', 'cashier.jkt',    'cashier.jkt@demo.local',    'Dewi Lestari'),
     ('00000000-0000-4000-8000-000000000706', '00000000-0000-4000-8000-000000000606', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000506', 'cashier.bdg',    'cashier.bdg@demo.local',    'Yusuf Hidayat'),
-    ('00000000-0000-4000-8000-000000000707', '00000000-0000-4000-8000-000000000607', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000507', 'auditor',        'auditor@demo.local',        'Maya Anggraini')
+    ('00000000-0000-4000-8000-000000000707', '00000000-0000-4000-8000-000000000607', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000507', 'auditor',        'auditor@demo.local',        'Maya Anggraini'),
+    ('00000000-0000-4000-8000-000000000708', '00000000-0000-4000-8000-000000000608', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000508', 'owner',          'owner@demo.local',          'Hendra Wijaya')
 ON CONFLICT (id) DO NOTHING;
 
 -- Role assignment
@@ -97,7 +100,8 @@ FROM (VALUES
     ('00000000-0000-4000-8000-000000000704', 'SUPERVISOR',    '00000000-0000-4000-8000-000000000101'),
     ('00000000-0000-4000-8000-000000000705', 'CASHIER',       '00000000-0000-4000-8000-000000000101'),
     ('00000000-0000-4000-8000-000000000706', 'CASHIER',       '00000000-0000-4000-8000-000000000102'),
-    ('00000000-0000-4000-8000-000000000707', 'AUDITOR',       NULL)
+    ('00000000-0000-4000-8000-000000000707', 'AUDITOR',       NULL),
+    ('00000000-0000-4000-8000-000000000708', 'OWNER',         NULL)
 ) AS v(user_id, role_code, outlet_id)
 JOIN pos.roles r ON r.code = v.role_code
 ON CONFLICT DO NOTHING;
@@ -109,6 +113,12 @@ INSERT INTO pos.user_outlets (user_id, outlet_id) VALUES
     ('00000000-0000-4000-8000-000000000705', '00000000-0000-4000-8000-000000000101'),
     ('00000000-0000-4000-8000-000000000706', '00000000-0000-4000-8000-000000000102')
 ON CONFLICT DO NOTHING;
+
+-- PIN demo (123456) untuk semua karyawan demo: hanya lokal/test.
+INSERT INTO pos.employee_pins (employee_id, organization_id, pin_hash)
+SELECT e.id, e.organization_id, crypt('123456', gen_salt('bf', 10))
+FROM pos.employees e WHERE e.organization_id = '00000000-0000-4000-8000-000000000001'
+ON CONFLICT (employee_id) DO NOTHING;
 
 -- Konfigurasi demo
 INSERT INTO pos.settings (organization_id, outlet_id, key, value)

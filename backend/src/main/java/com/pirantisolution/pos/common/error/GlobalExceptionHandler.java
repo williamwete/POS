@@ -185,7 +185,11 @@ public class GlobalExceptionHandler {
         return switch (dbCode) {
             case "SYSTEM_ROLE_PROTECTED" -> ErrorCode.SYSTEM_ROLE_PROTECTED;
             case "SETTING_VALUE_INVALID", "SETTING_SCOPE_INVALID", "SETTING_UNKNOWN" -> ErrorCode.SETTING_INVALID;
-            case "OUTLET_NOT_FOUND" -> ErrorCode.NOT_FOUND;
+            case "OUTLET_NOT_FOUND", "EMPLOYEE_NOT_FOUND" -> ErrorCode.NOT_FOUND;
+            case "PIN_FORMAT_INVALID" -> ErrorCode.PIN_FORMAT_INVALID;
+            case "MENU_ROLE_NOT_CONFIGURABLE" -> ErrorCode.MENU_ROLE_NOT_CONFIGURABLE;
+            case "MENU_NOT_FOUND" -> ErrorCode.MENU_NOT_FOUND;
+            case "ATTENDANCE_NOT_FOUND" -> ErrorCode.NOT_FOUND;
             case "APPEND_ONLY_VIOLATION" -> ErrorCode.USER_NOT_AUTHORIZED;
             case "BREAK_IN_PROGRESS" -> ErrorCode.BREAK_IN_PROGRESS;
             case "ATTENDANCE_CLOSED", "BREAK_CLOSED" -> ErrorCode.ATTENDANCE_CLOSED;

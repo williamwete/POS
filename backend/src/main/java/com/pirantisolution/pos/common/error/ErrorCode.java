@@ -38,6 +38,17 @@ public enum ErrorCode {
     INVALID_DEVICE(HttpStatus.UNPROCESSABLE_ENTITY, "Device tidak valid untuk terminal ini"),
     SETTING_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Nilai konfigurasi tidak valid"),
 
+    // verifikasi kehadiran & menu (Phase 10a)
+    PIN_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "PIN wajib diisi"),
+    PIN_NOT_SET(HttpStatus.UNPROCESSABLE_ENTITY, "PIN Anda belum diatur. Minta supervisor atau admin mengatur PIN"),
+    PIN_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "PIN salah"),
+    PIN_LOCKED(HttpStatus.LOCKED, "PIN terkunci karena terlalu banyak percobaan. Coba lagi beberapa menit lagi"),
+    PIN_FORMAT_INVALID(HttpStatus.BAD_REQUEST, "PIN harus 6 digit angka"),
+    PHOTO_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "Foto wajib diambil untuk clock in/out"),
+    PHOTO_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Foto tidak valid (JPEG, maksimal 500 KB)"),
+    MENU_ROLE_NOT_CONFIGURABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Role ini tidak dapat diatur dari layar menu"),
+    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "Menu tidak ditemukan"),
+
     // attendance (Phase 2)
     EMPLOYEE_NOT_LINKED(HttpStatus.UNPROCESSABLE_ENTITY, "Akun Anda belum terhubung ke data karyawan"),
     EMPLOYEE_INACTIVE(HttpStatus.UNPROCESSABLE_ENTITY, "Data karyawan Anda tidak aktif"),

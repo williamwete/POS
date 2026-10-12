@@ -56,6 +56,19 @@ watch(() => filter.q, () => {
 })
 onMounted(load)
 
+// ---------------------------------------------------------------- PIN verifikasi clock in/out
+const canPin = (e: Employee) => session.can('employee.reset_pin', e.homeOutletId ?? 'org')
+const pinTarget = ref<Employee | null>(null)
+const pinValue = ref('')
+async function savePin() {
+  if (!pinTarget.value || !/^\d{6}$/.test(pinValue.value)) return
+  const ok = await run(() => api().put(`/api/employees/${pinTarget.value!.id}/pin`, { pin: pinValue.value }), 'PIN diatur')
+  if (ok !== null) {
+    pinTarget.value = null
+    pinValue.value = ''
+  }
+}
+
 // ---------------------------------------------------------------- dialog
 const open = ref(false)
 const editing = ref<Employee | null>(null)
@@ -131,12 +144,25 @@ async function save() {
       <Column header="Outlet"><template #body="{ data }">{{ data.homeOutletCode ?? 'Kantor pusat' }}</template></Column>
       <Column header="Akun"><template #body="{ data }"><span class="text-sm">{{ data.linkedUsername ?? '—' }}</span></template></Column>
       <Column header="Status"><template #body="{ data }"><StatusBadge :active="data.active" /></template></Column>
-      <Column class="w-16">
+      <Column class="w-28">
         <template #body="{ data }">
+          <Button v-if="canPin(data) && data.active" icon="pi pi-key" text rounded :aria-label="`Atur PIN ${data.fullName}`" v-tooltip.top="'Atur / reset PIN'" @click="pinTarget = data; pinValue = ''" />
           <Button v-if="canEdit(data)" icon="pi pi-pencil" text rounded :aria-label="`Ubah ${data.fullName}`" @click="openDialog(data)" />
         </template>
       </Column>
     </DataTable>
+
+    <Dialog :visible="!!pinTarget" modal header="Atur PIN" class="w-full max-w-sm" @update:visible="(v: boolean) => { if (!v) pinTarget = null }">
+      <form class="space-y-4" @submit.prevent="savePin">
+        <p class="text-sm text-ink-soft">PIN 6 digit untuk <strong>{{ pinTarget?.fullName }}</strong>. Dipakai saat clock in/out bersama foto. Memasang PIN baru juga membuka PIN yang terkunci.</p>
+        <InputText v-model="pinValue" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" aria-label="PIN baru"
+          class="tabular w-full text-center text-xl tracking-[0.5em]" placeholder="••••••" />
+        <div class="flex justify-end gap-2">
+          <Button label="Batal" severity="secondary" text type="button" @click="pinTarget = null" />
+          <Button label="Simpan PIN" type="submit" :loading="busy" :disabled="!/^\d{6}$/.test(pinValue)" />
+        </div>
+      </form>
+    </Dialog>
 
     <Dialog v-model:visible="open" :header="editing ? `Ubah ${editing.employeeCode}` : 'Tambah karyawan'" modal class="w-full max-w-lg">
       <form class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">

@@ -11,6 +11,7 @@ import TerminalLockScreen from '@/modules/cashier/TerminalLockScreen.vue'
 import { useCashierStore } from '@/stores/cashier'
 import { useSaleStore } from '@/stores/sale'
 import { useIdleLock } from '@/composables/useIdleLock'
+import { useMenuStore } from '@/stores/menu'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -19,6 +20,7 @@ const navOpen = ref(false)
 const attendance = useAttendanceStore()
 const cashier = useCashierStore()
 const saleStore = useSaleStore()
+const menus = useMenuStore()
 
 // Status kehadiran & kasir dibutuhkan di semua halaman (layar kunci istirahat / terminal).
 // Kasir dimuat ulang berkala agar kunci dari tempat lain (mis. force clock out) ikut terlihat.
@@ -36,6 +38,16 @@ useIdleLock()
 
 watch(() => route.fullPath, () => (navOpen.value = false))
 
+// Menu samping mengikuti role (dan pengaturan Owner/Admin); dimuat ulang saat outlet berganti.
+watch(() => session.outletId, (id) => void menus.load(id), { immediate: true })
+const MENU_ICON: Record<string, string> = {
+  pos: 'pi pi-th-large', clock: 'pi pi-clock', 'beginning-cash': 'pi pi-wallet', 'product-list': 'pi pi-box',
+  history: 'pi pi-history', 'manage-categories': 'pi pi-tags', 'manage-discount': 'pi pi-percentage',
+  'manage-cashier': 'pi pi-users', 'manage-receipt': 'pi pi-print', closing: 'pi pi-lock', dashboard: 'pi pi-chart-bar',
+}
+// hanya menu yang halamannya sudah ada; menu beranda tidak dobel dengan Dashboard
+const menuNav = computed(() => menus.items.filter((m) => router.hasRoute(m.routeName)))
+
 interface NavItem {
   name: string
   label: string
@@ -43,6 +55,7 @@ interface NavItem {
 }
 
 const ADMIN_NAV: NavItem[] = [
+  { name: 'menu-access', label: 'Akses menu', icon: 'pi pi-sliders-h' },
   { name: 'outlets', label: 'Outlet', icon: 'pi pi-building' },
   { name: 'terminals', label: 'Terminal & device', icon: 'pi pi-desktop' },
   { name: 'employees', label: 'Karyawan', icon: 'pi pi-id-card' },
@@ -68,6 +81,7 @@ const initials = computed(() =>
 
 async function logout() {
   attendance.reset()
+  menus.reset()
   cashier.reset()
   saleStore.reset()
   await session.logout()
@@ -96,30 +110,13 @@ async function logout() {
 
       <div class="flex-1 overflow-y-auto px-3 pb-4">
         <ul class="space-y-1">
-          <li v-if="session.me?.employee && allowed('pos')">
-            <RouterLink :to="{ name: 'pos' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-th-large" /> Menu</RouterLink>
+          <li v-for="m in menuNav" :key="m.code">
+            <RouterLink :to="{ name: m.routeName }" class="nav-link" active-class="nav-link-active" :exact-active-class="m.routeName === 'home' ? 'nav-link-active' : undefined">
+              <i :class="MENU_ICON[m.code] ?? 'pi pi-circle'" /> {{ m.label }}
+            </RouterLink>
           </li>
-          <li v-else>
+          <li v-if="!menus.items.length">
             <RouterLink :to="{ name: 'home' }" class="nav-link" exact-active-class="nav-link-active"><i class="pi pi-th-large" /> Beranda</RouterLink>
-          </li>
-          <li v-if="session.me?.employee">
-            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-clock" /> Clock in/Clock out
-            </RouterLink>
-          </li>
-          <li v-if="session.me?.employee && session.can('cashier.open') && !cashier.current">
-            <RouterLink :to="{ name: 'cashier-open' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-wallet" /> Beginning cash balance
-            </RouterLink>
-          </li>
-          <li v-if="session.me?.employee && cashier.current">
-            <RouterLink :to="{ name: 'history' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-history" /> History</RouterLink>
-          </li>
-          <li v-if="allowed('returns')">
-            <RouterLink :to="{ name: 'returns' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-replay" /> Retur</RouterLink>
-          </li>
-          <li v-if="session.me?.employee && cashier.current && session.can('cashier.close', 'any')">
-            <RouterLink :to="{ name: 'cashier-close' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-lock" /> Closing</RouterLink>
           </li>
           <li v-if="allowed('cashier-sessions')">
             <RouterLink :to="{ name: 'cashier-sessions' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-inbox" /> Sesi kasir</RouterLink>

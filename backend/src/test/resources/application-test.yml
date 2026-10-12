@@ -20,6 +20,9 @@ pos:
     allowed-origins: http://localhost:5173
   rate-limit:
     enabled: false
+  attendance:
+    # test lama tidak membawa PIN/foto; PresenceIT menyalakannya kembali
+    enforce-verification: false
   payment:
     gateway: SIMULATOR
     callback-secret: test-payment-callback-secret-0123456789

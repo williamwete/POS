@@ -20,8 +20,17 @@ export const useAttendanceStore = defineStore('attendance', () => {
     loaded.value = true
   }
 
-  async function clockIn(outletId: string, key: string) {
-    current.value = (await api().post<Attendance>('/api/attendance/clock-in', { outletId }, { idempotencyKey: key })).data
+  /** Verifikasi PIN + foto diminta bila outlet mewajibkannya (GET /api/attendance/verification). */
+  async function verificationRequired(outletId: string) {
+    try {
+      return (await api().get<{ required: boolean }>('/api/attendance/verification', { query: { outletId } })).data.required
+    } catch {
+      return true
+    }
+  }
+
+  async function clockIn(outletId: string, key: string, proof?: { pin: string; photo: string }) {
+    current.value = (await api().post<Attendance>('/api/attendance/clock-in', { outletId, ...proof }, { idempotencyKey: key })).data
   }
 
   async function startBreak(reason: string | null, key: string) {
@@ -32,8 +41,8 @@ export const useAttendanceStore = defineStore('attendance', () => {
     current.value = (await api().post<Attendance>('/api/attendance/break/end', {}, { idempotencyKey: key })).data
   }
 
-  async function clockOut(key: string) {
-    await api().post<Attendance>('/api/attendance/clock-out', {}, { idempotencyKey: key })
+  async function clockOut(key: string, proof?: { pin: string; photo: string }) {
+    await api().post<Attendance>('/api/attendance/clock-out', proof ?? {}, { idempotencyKey: key })
     current.value = null
   }
 
@@ -42,7 +51,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     loaded.value = false
   }
 
-  return { current, loaded, isWorking, isOnBreak, openBreak, load, clockIn, startBreak, endBreak, clockOut, reset }
+  return { current, loaded, isWorking, isOnBreak, openBreak, load, verificationRequired, clockIn, startBreak, endBreak, clockOut, reset }
 })
 
 /** Detik kerja bersih: sekarang/clock out − clock in − total break (termasuk break berjalan). */

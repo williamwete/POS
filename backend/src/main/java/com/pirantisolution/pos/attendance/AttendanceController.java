@@ -3,6 +3,7 @@ package com.pirantisolution.pos.attendance;
 import com.pirantisolution.pos.attendance.AttendanceDtos.AttendanceView;
 import com.pirantisolution.pos.attendance.AttendanceDtos.BreakStartRequest;
 import com.pirantisolution.pos.attendance.AttendanceDtos.ClockInRequest;
+import com.pirantisolution.pos.attendance.AttendanceDtos.ClockOutRequest;
 import com.pirantisolution.pos.attendance.AttendanceDtos.ForceClockOutRequest;
 import com.pirantisolution.pos.common.api.ApiResponse;
 import com.pirantisolution.pos.common.api.Responses;
@@ -27,8 +28,10 @@ public class AttendanceController {
 
     private final AttendanceService service;
     private final IdempotencyService idempotency;
+    private final PresenceVerifier presence;
 
-    public AttendanceController(AttendanceService service, IdempotencyService idempotency) {
+    public AttendanceController(AttendanceService service, IdempotencyService idempotency, PresenceVerifier presence) {
+        this.presence = presence;
         this.service = service;
         this.idempotency = idempotency;
     }
@@ -39,11 +42,18 @@ public class AttendanceController {
         return Responses.ok(service.current().orElse(null));
     }
 
+    /** Apakah outlet mewajibkan PIN + foto saat clock in/out (agar UI menampilkan kamera). */
+    @GetMapping("/api/attendance/verification")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> verification(@RequestParam UUID outletId) {
+        return Responses.ok(Map.of("required", presence.required(outletId)));
+    }
+
     @PostMapping("/api/attendance/clock-in")
     public ResponseEntity<?> clockIn(@Valid @RequestBody ClockInRequest req,
             @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
         return idempotency.execute(key, "POST", "/api/attendance/clock-in", req,
-                () -> Responses.created(service.clockIn(req.outletId()), "Clock in berhasil"));
+                () -> Responses.created(service.clockIn(req.outletId(), req.pin(), req.photo()), "Clock in berhasil"));
     }
 
     @PostMapping("/api/attendance/break/start")
@@ -62,10 +72,21 @@ public class AttendanceController {
     }
 
     @PostMapping("/api/attendance/clock-out")
-    public ResponseEntity<?> clockOut(
+    public ResponseEntity<?> clockOut(@Valid @RequestBody(required = false) ClockOutRequest req,
             @RequestHeader(name = IdempotencyService.HEADER, required = false) String key) {
-        return idempotency.execute(key, "POST", "/api/attendance/clock-out", Map.of(),
-                () -> Responses.ok(service.clockOut(), "Clock out berhasil"));
+        String pin = req == null ? null : req.pin();
+        String photo = req == null ? null : req.photo();
+        return idempotency.execute(key, "POST", "/api/attendance/clock-out", req == null ? Map.of() : req,
+                () -> Responses.ok(service.clockOut(pin, photo), "Clock out berhasil"));
+    }
+
+    /** Foto verifikasi (kind = CLOCK_IN | CLOCK_OUT): pemilik, atau role dengan attendance.view_photo. */
+    @GetMapping("/api/attendance/{id}/photo/{kind}")
+    public ResponseEntity<byte[]> photo(@PathVariable UUID id, @PathVariable String kind) {
+        return service.photo(id, kind)
+                .map(p -> ResponseEntity.ok().contentType(org.springframework.http.MediaType.parseMediaType(p.contentType()))
+                        .header("Cache-Control", "private, max-age=300").body(p.image()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/api/attendance/{id}/force-clock-out")

@@ -9,6 +9,10 @@ import { useSessionStore } from '@/stores/session'
 import { formatDuration, useAttendanceStore, workedSeconds } from '@/stores/attendance'
 import { useApiAction } from '@/composables/useApiAction'
 import { useCashierStore } from '@/stores/cashier'
+import { ApiError } from '@/services/apiClient'
+import { newIdempotencyKey } from '@/utils/device'
+import { useToast } from 'primevue/usetoast'
+import PresenceDialog from './PresenceDialog.vue'
 
 const session = useSessionStore()
 const attendance = useAttendanceStore()
@@ -37,9 +41,45 @@ const worked = computed(() => (current.value ? formatDuration(workedSeconds(curr
 const breakOpen = ref(false)
 const breakReason = ref('')
 
-async function clockIn() {
+// ---- verifikasi PIN + foto (Figma Clock in/Clock out)
+const toast = useToast()
+const presenceOpen = ref(false)
+const presenceMode = ref<'in' | 'out'>('in')
+const presenceBusy = ref(false)
+const presenceError = ref<string | null>(null)
+const photoRequired = ref(true)
+// key dipertahankan selama proof yang sama dikirim ulang (jaringan putus) dan diganti bila isinya berubah
+let presenceKey: string | null = null
+
+async function openPresence(mode: 'in' | 'out') {
   if (!session.outletId) return
-  await run((key) => attendance.clockIn(session.outletId!, key), 'Clock in tercatat')
+  presenceMode.value = mode
+  presenceError.value = null
+  photoRequired.value = await attendance.verificationRequired(current.value?.outletId ?? session.outletId)
+  presenceOpen.value = true
+}
+
+async function confirmPresence(proof: { pin: string; photo: string }) {
+  presenceBusy.value = true
+  presenceError.value = null
+  presenceKey ??= newIdempotencyKey()
+  try {
+    const p = photoRequired.value ? proof : undefined
+    if (presenceMode.value === 'in') await attendance.clockIn(session.outletId!, presenceKey, p)
+    else await attendance.clockOut(presenceKey, p)
+    presenceKey = null
+    presenceOpen.value = false
+    toast.add({ severity: 'success', summary: presenceMode.value === 'in' ? 'Clock in tercatat' : 'Clock out tercatat', life: 2500 })
+  } catch (e) {
+    if (e instanceof ApiError && e.status >= 400 && e.status < 500) presenceKey = null
+    presenceError.value = e instanceof ApiError ? e.message : 'Gagal menghubungi server. Coba lagi.'
+  } finally {
+    presenceBusy.value = false
+  }
+}
+
+function clockIn() {
+  void openPresence('in')
 }
 
 async function startBreak() {
@@ -69,7 +109,7 @@ function clockOut() {
     message: `Jam kerja hari ini ${worked.value}. Setelah clock out Anda perlu clock in lagi untuk mulai bekerja.`,
     acceptLabel: 'Clock out',
     rejectLabel: 'Batal',
-    accept: () => void run((key) => attendance.clockOut(key), 'Clock out tercatat'),
+    accept: () => void openPresence('out'),
   })
 }
 </script>
@@ -108,6 +148,9 @@ function clockOut() {
     <p v-if="!current && !canClockIn" class="mt-3 text-xs text-ink-faint">
       Role Anda tidak memiliki izin clock in di outlet ini.
     </p>
+
+    <PresenceDialog v-model:visible="presenceOpen" :mode="presenceMode" :busy="presenceBusy" :error="presenceError"
+      :photo-required="photoRequired" @confirm="confirmPresence" />
 
     <Dialog v-model:visible="breakOpen" header="Mulai istirahat" modal class="w-full max-w-sm">
       <form class="space-y-4" @submit.prevent="startBreak">

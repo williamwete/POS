@@ -27,3 +27,21 @@ export function countTotal(values: Map<string, number>, quantities: Record<strin
   }
   return total
 }
+
+/**
+ * Pecah nominal ke jumlah per pecahan (greedy dari yang terbesar). null bila tidak habis dibagi
+ * pecahan terkecil. Dipakai agar layar cukup satu kolom nominal sementara server tetap menyimpan rincian.
+ */
+export function splitIntoDenominations(
+  total: number,
+  denominations: { id: string; value: number }[],
+): Record<string, number> | null {
+  const q: Record<string, number> = {}
+  let rest = Math.round(total)
+  for (const d of [...denominations].sort((a, b) => b.value - a.value)) {
+    const n = Math.floor(rest / d.value)
+    q[d.id] = n
+    rest -= n * d.value
+  }
+  return rest === 0 ? q : null
+}
