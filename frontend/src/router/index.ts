@@ -39,6 +39,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { requiresContext: true, title: 'Buka kasir', anyOf: [{ permission: 'cashier.open', scope: 'current' }] },
       },
       {
+        path: 'history', name: 'history', component: () => import('@/modules/pos/HistoryPage.vue'),
+        meta: { requiresContext: true, title: 'History', anyOf: [{ permission: 'sale.create', scope: 'current' }] },
+      },
+      {
         path: 'returns', name: 'returns', component: () => import('@/modules/returns/ReturnsPage.vue'),
         meta: {
           title: 'Retur & refund',
@@ -118,6 +122,10 @@ export function guard(to: RouteLocationNormalized) {
   }
   if (to.meta.requiresContext && (!session.outletId || !session.terminal)) {
     return { name: 'context' }
+  }
+  // Alur Figma: halaman awal kasir adalah katalog penjualan.
+  if (to.name === 'home' && session.me?.employee && session.can('sale.create', 'current')) {
+    return { name: 'pos' }
   }
   const reqs = to.meta.anyOf
   if (reqs && !reqs.some((r) => session.can(r.permission, r.scope))) {

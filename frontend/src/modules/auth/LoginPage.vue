@@ -8,6 +8,7 @@ import Message from 'primevue/message'
 import { useSessionStore } from '@/stores/session'
 import { ApiError } from '@/services/apiClient'
 import { fieldErrorsOf, loginSchema } from '@/utils/validation'
+import { autoSelectContext } from '@/utils/autoContext'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -38,7 +39,9 @@ async function submit() {
     form.password = ''
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
       ? route.query.redirect : null
-    await router.replace(redirect ?? { name: 'context' })
+    // Alur Figma: login langsung masuk ke kasir; outlet/terminal dipilih otomatis bila hanya satu pilihan.
+    const ready = await autoSelectContext()
+    await router.replace(redirect ?? (ready ? { name: 'home' } : { name: 'context' }))
   } catch (e) {
     form.password = ''
     formError.value = e instanceof ApiError ? e.message : 'Login gagal. Coba lagi.'

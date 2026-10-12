@@ -96,40 +96,36 @@ async function logout() {
 
       <div class="flex-1 overflow-y-auto px-3 pb-4">
         <ul class="space-y-1">
-          <li>
-            <RouterLink :to="{ name: 'home' }" class="nav-link" active-class="nav-link-active" exact-active-class="nav-link-active">
-              <i class="pi pi-th-large" /> Beranda
-            </RouterLink>
+          <li v-if="session.me?.employee && allowed('pos')">
+            <RouterLink :to="{ name: 'pos' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-th-large" /> Menu</RouterLink>
           </li>
-          <li v-if="session.me?.employee && cashier.current && allowed('pos')">
-            <RouterLink :to="{ name: 'pos' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-shopping-cart" /> Transaksi
-            </RouterLink>
+          <li v-else>
+            <RouterLink :to="{ name: 'home' }" class="nav-link" exact-active-class="nav-link-active"><i class="pi pi-th-large" /> Beranda</RouterLink>
           </li>
-          <li v-if="allowed('returns')">
-            <RouterLink :to="{ name: 'returns' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-replay" /> Retur
+          <li v-if="session.me?.employee">
+            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
+              <i class="pi pi-clock" /> Clock in/Clock out
             </RouterLink>
           </li>
           <li v-if="session.me?.employee && session.can('cashier.open') && !cashier.current">
             <RouterLink :to="{ name: 'cashier-open' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-wallet" /> Buka kasir
+              <i class="pi pi-wallet" /> Beginning cash balance
             </RouterLink>
           </li>
-          <li v-if="session.me?.employee">
-            <RouterLink :to="{ name: 'my-attendance' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-clock" /> Kehadiran saya
-            </RouterLink>
+          <li v-if="session.me?.employee && cashier.current">
+            <RouterLink :to="{ name: 'history' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-history" /> History</RouterLink>
+          </li>
+          <li v-if="allowed('returns')">
+            <RouterLink :to="{ name: 'returns' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-replay" /> Retur</RouterLink>
+          </li>
+          <li v-if="session.me?.employee && cashier.current && session.can('cashier.close', 'any')">
+            <RouterLink :to="{ name: 'cashier-close' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-lock" /> Closing</RouterLink>
           </li>
           <li v-if="allowed('cashier-sessions')">
-            <RouterLink :to="{ name: 'cashier-sessions' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-inbox" /> Sesi kasir
-            </RouterLink>
+            <RouterLink :to="{ name: 'cashier-sessions' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-inbox" /> Sesi kasir</RouterLink>
           </li>
           <li v-if="allowed('outlet-attendance')">
-            <RouterLink :to="{ name: 'outlet-attendance' }" class="nav-link" active-class="nav-link-active">
-              <i class="pi pi-calendar" /> Kehadiran outlet
-            </RouterLink>
+            <RouterLink :to="{ name: 'outlet-attendance' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-calendar" /> Kehadiran outlet</RouterLink>
           </li>
         </ul>
         <template v-if="adminNav.length">

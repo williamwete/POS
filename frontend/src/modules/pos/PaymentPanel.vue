@@ -5,13 +5,13 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast'
 import { useSaleStore } from '@/stores/sale'
-import { newClientPaymentId, quickCashAmounts, usePaymentStore } from '@/stores/payment'
+import { newClientPaymentId, usePaymentStore } from '@/stores/payment'
 import { ApiError } from '@/services/apiClient'
 import { newIdempotencyKey } from '@/utils/device'
 import { formatRupiah } from '@/utils/money'
 import type { Payment, PaymentMethod } from '@/types/api'
 import { useApprovalPrompt } from './approvalPrompt'
-import { KIND_ICON, PAYMENT_STATUS_CLASS, PAYMENT_STATUS_LABEL, referenceLabel } from './paymentFormat'
+import { PAYMENT_STATUS_CLASS, PAYMENT_STATUS_LABEL, referenceLabel } from './paymentFormat'
 import QrPaymentDialog from './QrPaymentDialog.vue'
 import ReasonDialog from './ReasonDialog.vue'
 
@@ -39,7 +39,6 @@ const remaining = computed(() => Math.max(0, s.value.grandTotal - s.value.paidAm
 const usable = computed(() => payments.methods.filter((m) => m.available))
 const isCash = computed(() => method.value?.kind === 'CASH')
 const change = computed(() => (isCash.value && received.value ? Math.max(0, received.value - remaining.value) : 0))
-const quick = computed(() => quickCashAmounts(remaining.value))
 const visiblePayments = computed(() => payments.payments.filter((p) => p.status !== 'CANCELLED' || p.paidAt))
 const canSubmit = computed(() => {
   if (!method.value || remaining.value <= 0 || busy.value) return false
@@ -132,89 +131,71 @@ async function confirmCancel(reason: string) {
 }
 const canReverse = (p: Payment) =>
   p.status === 'PENDING' || (p.status === 'PAID' && p.confirmation !== 'GATEWAY' && s.value.status !== 'PAID')
+const cashMethod = computed(() => usable.value.find((m) => m.kind === 'CASH') ?? null)
+const cashless = computed(() => usable.value.filter((m) => m.kind !== 'CASH'))
+const tab = computed<'cash' | 'cashless'>(() => (isCash.value ? 'cash' : 'cashless'))
+function setTab(t: 'cash' | 'cashless') {
+  if (t === 'cash' && cashMethod.value) select(cashMethod.value)
+  else if (t === 'cashless' && cashless.value.length) select(cashless.value[0]!)
+}
 const hasPayments = computed(() => payments.payments.some((p) => p.status === 'PAID' || p.status === 'PENDING'))
 </script>
 
 <template>
-  <section class="rounded-lg border-2 border-jade-600 bg-surface" aria-labelledby="pay-title">
-    <header class="border-b border-line px-4 py-3">
-      <h2 id="pay-title" class="text-lg font-bold">Pembayaran</h2>
-      <p class="text-xs text-ink-soft">Struk <span class="tabular font-semibold text-ink">{{ s.receiptNo }}</span></p>
-    </header>
+  <section class="px-2 pb-2" aria-labelledby="pay-title">
+    <h2 id="pay-title" class="text-center text-xl font-semibold">Payment Method</h2>
+    <p class="mt-5 text-sm">Order No : <span class="tabular">{{ s.receiptNo?.split('-').pop() }}</span></p>
+    <p class="text-sm">Item <span class="ml-6">: {{ s.itemCount }}</span></p>
+    <p class="tabular my-2 text-center text-3xl font-bold" aria-live="polite">{{ formatRupiah(remaining) }}</p>
+    <p v-if="s.paidAmount > 0" class="mb-2 text-center text-xs text-ink-soft">Sudah dibayar {{ formatRupiah(s.paidAmount) }} dari {{ formatRupiah(s.grandTotal) }}</p>
 
-    <dl class="grid grid-cols-2 gap-px bg-line text-sm">
-      <div class="bg-surface px-4 py-2"><dt class="text-xs text-ink-soft">Dibayar</dt><dd class="tabular font-semibold">{{ formatRupiah(s.paidAmount) }}</dd></div>
-      <div class="bg-amber-100 px-4 py-2">
-        <dt class="text-xs text-amber-700">Sisa tagihan</dt>
-        <dd class="tabular text-lg font-bold" aria-live="polite">{{ formatRupiah(remaining) }}</dd>
-      </div>
-    </dl>
-
-    <div v-if="remaining > 0" class="space-y-4 p-4">
-      <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Metode pembayaran">
-        <button
-          v-for="m in usable"
-          :key="m.id"
-          type="button"
-          role="radio"
-          :aria-checked="method?.id === m.id"
-          :class="[
-            'flex flex-col items-center gap-1 rounded-md border px-1 py-2 text-xs font-semibold',
-            method?.id === m.id ? 'border-jade-600 bg-jade-50 text-jade-700' : 'border-line hover:border-jade-500',
-          ]"
-          :disabled="busy"
-          @click="select(m)"
-        >
-          <i :class="[KIND_ICON[m.kind] ?? 'pi pi-wallet', 'text-lg']" aria-hidden="true" />
-          {{ m.name }}
-        </button>
+    <div v-if="remaining > 0">
+      <div class="grid grid-cols-2 overflow-hidden rounded-lg border border-line text-sm font-medium" role="tablist">
+        <button type="button" role="tab" :aria-selected="tab === 'cash'" :disabled="busy || !cashMethod"
+          :class="['py-2', tab === 'cash' ? 'bg-jade-100' : 'bg-white']" @click="setTab('cash')">Cash</button>
+        <button type="button" role="tab" :aria-selected="tab === 'cashless'" :disabled="busy || !cashless.length"
+          :class="['py-2', tab === 'cashless' ? 'bg-jade-100' : 'bg-white']" @click="setTab('cashless')">Cashless</button>
       </div>
 
-      <form v-if="method" class="space-y-3" @submit.prevent="submit">
+      <form v-if="method" class="mt-4 space-y-3" @submit.prevent="submit">
         <template v-if="isCash">
+          <Button type="button" label="Exact Change" severity="secondary" size="small" @click="received = remaining" />
           <div>
-            <label for="cash-received" class="mb-1 block text-sm font-medium">Uang diterima</label>
+            <label for="cash-received" class="mb-1 block text-sm">Money Received</label>
             <InputNumber ref="cashInput" v-model="received" input-id="cash-received" :min="1" :max="999999999"
-              locale="id-ID" prefix="Rp " class="w-full" input-class="tabular w-full text-xl font-bold" />
+              locale="id-ID" prefix="Rp " class="w-full" input-class="tabular w-full" placeholder="Rp" />
           </div>
-          <div class="flex flex-wrap gap-2">
-            <Button v-for="q in quick" :key="q" type="button" size="small" severity="secondary" outlined
-              :label="q === remaining ? 'Uang pas' : formatRupiah(q)" @click="received = q" />
-          </div>
-          <div class="flex items-end justify-between rounded-md bg-field px-3 py-2">
-            <span class="text-sm text-ink-soft">Kembalian</span>
-            <span class="tabular text-2xl font-bold" :class="change > 0 ? 'text-jade-700' : 'text-ink'">{{ formatRupiah(change) }}</span>
-          </div>
+          <div class="flex justify-between text-sm"><span>Change</span>
+            <span class="tabular font-bold">{{ formatRupiah(change) }}</span></div>
           <p v-if="received && received < remaining" class="text-xs text-amber-700">
             Kurang {{ formatRupiah(remaining - received) }} — sisanya bisa dibayar dengan metode lain (split).
           </p>
         </template>
         <template v-else>
-          <div>
-            <label for="pay-amount" class="mb-1 block text-sm font-medium">Jumlah</label>
-            <InputNumber v-model="amount" input-id="pay-amount" :min="1" :max="remaining" locale="id-ID" prefix="Rp "
-              class="w-full" input-class="tabular w-full text-lg font-semibold" />
-            <p class="mt-1 text-xs text-ink-faint">Non-tunai maksimal sebesar sisa tagihan.</p>
+          <div v-if="cashless.length > 1" class="flex flex-wrap gap-2">
+            <button v-for="m in cashless" :key="m.id" type="button"
+              :class="['rounded-lg border px-3 py-1 text-sm', method.id === m.id ? 'border-jade-500 bg-jade-100' : 'border-line']"
+              @click="select(m)">{{ m.name }}</button>
           </div>
+          <p class="text-center text-sm text-ink-soft">{{ method.name }} · {{ formatRupiah(amount ?? 0) }}</p>
           <div v-if="method.requiresReference">
-            <label for="pay-ref" class="mb-1 block text-sm font-medium">{{ referenceLabel(method.kind) }}</label>
+            <label for="pay-ref" class="mb-1 block text-sm">{{ referenceLabel(method.kind) }}</label>
             <InputText id="pay-ref" v-model="reference" class="tabular w-full" maxlength="64" autocomplete="off" />
           </div>
           <p v-if="method.requiresApproval && method.confirmation === 'MANUAL'" class="text-xs text-amber-700">
             Pembayaran ini memerlukan konfirmasi supervisor.
           </p>
         </template>
-        <Button type="submit" class="w-full" size="large" :disabled="!canSubmit" :loading="busy"
-          :icon="method.confirmation === 'GATEWAY' ? 'pi pi-qrcode' : 'pi pi-check'"
-          :label="method.confirmation === 'GATEWAY' ? `Tampilkan QR ${formatRupiah(amount ?? 0)}`
-            : isCash ? (received ? `Terima ${formatRupiah(received)}` : 'Terima tunai') : `Catat ${method.name} ${formatRupiah(amount ?? 0)}`" />
+        <div class="grid gap-3 pt-2">
+          <Button type="submit" label="Confirm" :disabled="!canSubmit" :loading="busy" />
+          <Button type="button" label="Cancel" severity="danger" outlined :disabled="busy || hasPayments" @click="emit('reopen')" />
+        </div>
       </form>
     </div>
     <p v-else-if="payments.pending.length" class="p-4 text-sm text-ink-soft">Menunggu konfirmasi pembayaran.</p>
 
-    <ul v-if="visiblePayments.length" class="divide-y divide-line border-t border-line text-sm" aria-label="Pembayaran tercatat">
-      <li v-for="p in visiblePayments" :key="p.id" class="flex items-center gap-2 px-4 py-2">
-        <i :class="[KIND_ICON[p.methodKind] ?? 'pi pi-wallet', 'text-ink-soft']" aria-hidden="true" />
+    <ul v-if="visiblePayments.length" class="mt-4 divide-y divide-line border-t border-line text-sm" aria-label="Pembayaran tercatat">
+      <li v-for="p in visiblePayments" :key="p.id" class="flex items-center gap-2 py-2">
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <span class="font-medium">{{ p.methodName }}</span>
@@ -223,7 +204,6 @@ const hasPayments = computed(() => payments.payments.some((p) => p.status === 'P
           <div class="text-xs text-ink-soft">
             <template v-if="p.methodKind === 'CASH'">diterima {{ formatRupiah(p.amountReceived) }} · kembali {{ formatRupiah(p.changeAmount) }}</template>
             <template v-else-if="p.referenceNumber">ref {{ p.referenceNumber }}</template>
-            <template v-if="p.approvedByUsername"> · disetujui {{ p.approvedByUsername }}</template>
           </div>
         </div>
         <span class="tabular font-semibold" :class="p.status === 'CANCELLED' ? 'text-ink-faint line-through' : ''">{{ formatRupiah(p.amount) }}</span>
@@ -233,14 +213,7 @@ const hasPayments = computed(() => payments.payments.some((p) => p.status === 'P
           :aria-label="`Batalkan pembayaran ${p.methodName}`" :disabled="busy" @click="cancelTarget = p" />
       </li>
     </ul>
-
-    <footer class="grid grid-cols-2 gap-2 border-t border-line p-4">
-      <Button label="Struk sementara" icon="pi pi-print" severity="secondary" text class="col-span-2" @click="emit('receipt')" />
-      <Button label="Ubah keranjang" icon="pi pi-arrow-left" severity="secondary" outlined :disabled="busy || hasPayments"
-        @click="emit('reopen')" />
-      <Button label="Void" icon="pi pi-ban" severity="danger" outlined :disabled="busy || hasPayments" @click="emit('void')" />
-      <p v-if="hasPayments" class="col-span-2 text-xs text-ink-faint">Batalkan pembayaran yang ada untuk mengubah keranjang atau void.</p>
-    </footer>
+    <p v-if="hasPayments" class="mt-2 text-xs text-ink-faint">Batalkan pembayaran yang ada untuk kembali ke keranjang.</p>
 
     <QrPaymentDialog :payment-id="qrPaymentId" @close="qrPaymentId = null" />
     <ReasonDialog :visible="!!cancelTarget" :title="`Batalkan pembayaran ${cancelTarget?.methodName ?? ''}`"

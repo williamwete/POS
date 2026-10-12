@@ -1,42 +1,40 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import Button from 'primevue/button'
 import { useSaleStore } from '@/stores/sale'
 import { usePaymentStore } from '@/stores/payment'
+import { useSessionStore } from '@/stores/session'
 import { formatRupiah } from '@/utils/money'
 
-/** Transaksi lunas: kembalian besar & jelas untuk kasir, lalu cetak struk dan transaksi baru. */
+/** Figma "Payment Success": centang, total, metode/ref/kasir, See Receipt, New Transaction. */
 const emit = defineEmits<{ receipt: []; next: [] }>()
 const sales = useSaleStore()
 const payments = usePaymentStore()
+const session = useSessionStore()
 onMounted(() => {
   if (sales.sale && !payments.payments.length) void payments.load(sales.sale.id).catch(() => undefined)
 })
+const paid = computed(() => payments.payments.filter((p) => p.status === 'PAID'))
+const method = computed(() => paid.value.map((p) => (p.methodKind === 'CASH' ? 'Cash' : `Cashless · ${p.methodName}`)).join(' + '))
+const refNo = computed(() => paid.value.map((p) => p.referenceNumber).filter(Boolean).join(', '))
+const when = computed(() => new Date().toLocaleString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }))
 </script>
 
 <template>
-  <section v-if="sales.sale" class="overflow-hidden rounded-lg border-2 border-jade-600 bg-surface" aria-live="polite">
-    <div class="bg-jade-700 px-4 py-4 text-white">
-      <p class="text-xs font-semibold uppercase tracking-wide text-jade-100">Lunas</p>
-      <p class="tabular text-lg font-bold">{{ sales.sale.receiptNo }}</p>
+  <section v-if="sales.sale" class="px-2 pb-2 text-center" aria-live="polite">
+    <div class="mx-auto mt-2 grid h-28 w-28 place-items-center rounded-full border-4 border-jade-500 text-jade-500">
+      <i class="pi pi-check text-5xl" aria-hidden="true" />
     </div>
-    <div class="p-4">
-      <p class="text-sm text-ink-soft">Kembalian</p>
-      <p class="tabular text-5xl font-bold tracking-tight text-jade-700">{{ formatRupiah(sales.sale.changeAmount) }}</p>
-      <ul class="mt-4 space-y-1 text-sm">
-        <li v-for="p in payments.payments.filter((x) => x.status === 'PAID')" :key="p.id" class="flex justify-between">
-          <span>{{ p.methodName }}<template v-if="p.methodKind === 'CASH'"> (diterima {{ formatRupiah(p.amountReceived) }})</template></span>
-          <span class="tabular font-semibold">{{ formatRupiah(p.amount) }}</span>
-        </li>
-      </ul>
-      <p class="mt-4 text-xs text-ink-soft">
-        <i class="pi pi-cloud-upload mr-1" aria-hidden="true" />Pembayaran berhasil. Transaksi tersimpan dan akan
-        disinkronkan ke Openbravo secara otomatis.
-      </p>
-      <div class="mt-5 grid gap-2">
-        <Button label="Cetak struk" icon="pi pi-print" size="large" @click="emit('receipt')" />
-        <Button label="Transaksi baru (F2)" icon="pi pi-plus" severity="secondary" outlined @click="emit('next')" />
-      </div>
-    </div>
+    <h2 class="mt-4 text-xl font-semibold">Payment Success</h2>
+    <p class="tabular text-3xl font-bold">{{ formatRupiah(sales.sale.grandTotal) }}</p>
+    <p class="mt-2 text-xs text-ink-faint">No. {{ sales.sale.receiptNo?.split('-').pop() }}<br />{{ when }}</p>
+    <dl class="mt-4 space-y-1 rounded-lg border border-line p-3 text-left text-sm">
+      <div class="flex justify-between"><dt>Method</dt><dd class="font-semibold">{{ method }}</dd></div>
+      <div v-if="refNo" class="flex justify-between"><dt>Ref</dt><dd class="tabular">{{ refNo }}</dd></div>
+      <div v-if="sales.sale.changeAmount > 0" class="flex justify-between"><dt>Change</dt><dd class="tabular font-semibold">{{ formatRupiah(sales.sale.changeAmount) }}</dd></div>
+      <div class="flex justify-between"><dt>Cashier</dt><dd>{{ session.me?.user.displayName }}</dd></div>
+    </dl>
+    <Button label="See Receipt" severity="secondary" outlined class="mt-4 w-full" @click="emit('receipt')" />
+    <Button label="New Transaction" class="mt-3 w-full" @click="emit('next')" />
   </section>
 </template>

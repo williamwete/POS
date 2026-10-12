@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useAttendanceStore } from '@/stores/attendance'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import Menu from 'primevue/menu'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useToast } from 'primevue/usetoast'
@@ -28,6 +30,7 @@ const session = useSessionStore()
 const cashier = useCashierStore()
 const sales = useSaleStore()
 const payments = usePaymentStore()
+const attendance = useAttendanceStore()
 const router = useRouter()
 const toast = useToast()
 const prompt = useApprovalPrompt()
@@ -74,6 +77,12 @@ onMounted(async () => {
   try {
     await cashier.load()
     if (cashier.current) await sales.load()
+    else if (session.me?.employee) {
+      // Alur Figma: belum ada kasir terbuka → Clock in → Beginning cash balance → kembali ke sini.
+      await attendance.load()
+      await router.replace({ name: attendance.isWorking ? 'cashier-open' : 'my-attendance' })
+      return
+    }
   } catch (e) {
     notify(e)
   } finally {
@@ -362,7 +371,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
           <header class="px-5 pb-3 pt-4">
             <div class="flex items-start justify-between gap-2">
               <h1 id="cart-title" class="text-xl font-semibold">
-                Order No.<span class="tabular">{{ s?.receiptNo ?? '—' }}</span>
+                Order No.<span class="tabular">{{ s?.receiptNo?.split('-').pop() ?? '—' }}</span>
               </h1>
               <Button :label="`Ditahan (${sales.held.length})`" icon="pi pi-inbox" severity="secondary" size="small" text
                 :disabled="busy" @click="openHeld" />
@@ -442,7 +451,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
         </section>
 
         <!-- aksi keranjang -->
-        <div v-if="!sales.isCheckout && !sales.isPaid" class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           <Button label="Diskon" icon="pi pi-percentage" severity="secondary" outlined size="small"
             :disabled="busy || !sales.isDraft || items.length === 0 || !!sales.cartDiscount" @click="openCartDiscount" />
           <Button label="Tahan" icon="pi pi-pause" severity="secondary" outlined size="small"
@@ -455,12 +464,18 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
             size="large" class="col-span-3" :disabled="busy || !sales.isDraft || items.length === 0" :loading="busy" @click="checkout" />
         </div>
 
-        <!-- setelah checkout: pembayaran (Phase 5) -->
-        <PaymentPanel v-else-if="sales.isCheckout" :key="s?.id" @reopen="reopen" @void="voidSaleVisible = true"
-          @receipt="receiptVisible = true" />
-        <PaidPanel v-else @receipt="receiptVisible = true" @next="nextSale" />
-      </aside>
+        </aside>
     </div>
+
+    <!-- Figma: Pay membuka dialog Payment Method; lunas membuka Payment Success -->
+    <Dialog :visible="sales.isCheckout" modal :closable="false" :draggable="false" class="w-full max-w-md" :show-header="false"
+      :pt="{ content: { class: '!pt-6' } }">
+      <PaymentPanel v-if="sales.isCheckout" :key="s?.id" @reopen="reopen" @void="voidSaleVisible = true" @receipt="receiptVisible = true" />
+    </Dialog>
+    <Dialog :visible="sales.isPaid" modal :closable="false" :draggable="false" class="w-full max-w-md" :show-header="false"
+      :pt="{ content: { class: '!pt-6' } }">
+      <PaidPanel v-if="sales.isPaid" @receipt="receiptVisible = true" @next="nextSale" />
+    </Dialog>
 
     <Menu ref="lineMenu" :model="menuModel" popup />
     <ApprovalDialog />

@@ -2,27 +2,27 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import InputNumber from 'primevue/inputnumber'
 import Message from 'primevue/message'
-import Textarea from 'primevue/textarea'
 import ProgressSpinner from 'primevue/progressspinner'
-import { useConfirm } from 'primevue/useconfirm'
 import { useSessionStore } from '@/stores/session'
 import { useAttendanceStore } from '@/stores/attendance'
 import { toCountLines, useCashierStore } from '@/stores/cashier'
 import { useApiAction } from '@/composables/useApiAction'
-import { countTotal, formatRupiah } from '@/utils/money'
-import DenominationCounter from './DenominationCounter.vue'
+import { formatRupiah } from '@/utils/money'
 
+/**
+ * Figma "Beginning cash balance": satu kolom "Cash in the drawer". Server tetap menyimpan rincian
+ * per pecahan, jadi nominal dipecah otomatis dari pecahan terbesar (modal awal tidak berubah nilainya).
+ */
 const session = useSessionStore()
 const attendance = useAttendanceStore()
 const cashier = useCashierStore()
 const router = useRouter()
-const confirm = useConfirm()
 const { busy, run } = useApiAction()
 
 const loading = ref(true)
-const quantities = ref<Record<string, number | null>>({})
-const note = ref('')
+const amount = ref<number | null>(null)
 
 onMounted(async () => {
   try {
@@ -30,54 +30,37 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  if (!cashier.current && !(attendance.current?.status === 'WORKING')) await router.replace({ name: 'my-attendance' })
 })
 
-const values = computed(() => new Map(cashier.denominations.map((d) => [d.id, d.value])))
-const total = computed(() => countTotal(values.value, quantities.value))
 const att = computed(() => attendance.current)
-const attendanceReady = computed(
-  () => att.value?.status === 'WORKING' && att.value.outletId === session.outletId,
-)
 const canOpen = computed(() => session.can('cashier.open'))
 
-async function clockIn() {
-  if (session.outletId) await run((key) => attendance.clockIn(session.outletId!, key), 'Clock in tercatat')
+/** Pecah nominal menjadi jumlah per pecahan (greedy). null bila tidak bisa dipecah persis. */
+function split(total: number) {
+  const q: Record<string, number> = {}
+  let rest = total
+  for (const d of [...cashier.denominations].sort((x, y) => y.value - x.value)) {
+    const n = Math.floor(rest / d.value)
+    q[d.id] = n
+    rest -= n * d.value
+  }
+  return rest === 0 ? q : null
 }
+const parts = computed(() => (amount.value === null ? null : split(Math.round(amount.value))))
+const smallest = computed(() => Math.min(...cashier.denominations.map((d) => d.value)))
 
-function submit() {
+async function save() {
   const t = session.terminal
-  if (!t) return
-  confirm.require({
-    header: `Buka kasir di ${t.code}?`,
-    message:
-      total.value === 0
-        ? 'Modal awal Rp 0. Pastikan laci kas memang kosong. Modal awal tidak bisa diubah setelah kasir dibuka.'
-        : `Modal awal ${formatRupiah(total.value)}. Modal awal tidak bisa diubah setelah kasir dibuka.`,
-    acceptLabel: 'Buka kasir',
-    rejectLabel: 'Hitung ulang',
-    accept: async () => {
-      const opened = await run(
-        (key) => cashier.open(t.id, toCountLines(quantities.value), note.value.trim() || null, key),
-        'Kasir dibuka',
-      )
-      if (opened) await router.push({ name: 'home' })
-    },
-  })
+  if (!t || amount.value === null || !parts.value) return
+  const opened = await run((key) => cashier.open(t.id, toCountLines(parts.value!), null, key), 'Beginning cash tersimpan, kasir dibuka')
+  if (opened) await router.push({ name: 'pos' })
 }
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl">
-    <div class="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold">Buka kasir</h1>
-        <p class="mt-1 text-ink-soft">Hitung uang di laci kas per pecahan. Jumlah ini menjadi modal awal shift Anda.</p>
-      </div>
-      <div v-if="session.terminal" class="rounded-md bg-amber-500 px-3 py-1 text-jade-900">
-        <div class="text-xs font-medium">Terminal</div>
-        <div class="tabular text-lg font-bold">{{ session.terminal.code }}</div>
-      </div>
-    </div>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="text-xl">Beginning cash balance</h1>
 
     <div v-if="loading" class="mt-10 flex justify-center"><ProgressSpinner style="width: 2.5rem; height: 2.5rem" /></div>
 
@@ -86,30 +69,28 @@ function submit() {
         Role Anda tidak memiliki izin membuka kasir di outlet ini.
       </Message>
 
-      <div v-else-if="cashier.current" class="mt-6 rounded-2xl border border-line bg-surface p-5">
-        <p class="font-semibold">Anda sudah membuka kasir di {{ cashier.current.terminalCode }}.</p>
-        <p class="mt-1 text-sm text-ink-soft">Satu karyawan hanya boleh memegang satu laci kas pada satu waktu.</p>
-        <Button class="mt-4" label="Kembali ke beranda" severity="secondary" @click="router.push({ name: 'home' })" />
+      <div v-else-if="cashier.current" class="mt-6 rounded-xl border border-line bg-field p-5">
+        <p class="font-semibold">Kasir sudah dibuka di {{ cashier.current.terminalCode }}.</p>
+        <p class="mt-1 text-sm text-ink-soft">Modal awal tidak bisa diubah setelah kasir dibuka.</p>
+        <Button class="mt-4" label="Ke kasir" @click="router.push({ name: 'pos' })" />
       </div>
 
-      <div v-else-if="!attendanceReady" class="mt-6 rounded-lg border border-amber-500 bg-amber-100 p-5">
-        <p class="font-semibold">
-          <template v-if="!att">Clock in dulu sebelum membuka kasir.</template>
-          <template v-else-if="att.status === 'ON_BREAK'">Selesaikan istirahat dulu sebelum membuka kasir.</template>
-          <template v-else>Anda clock in di outlet {{ att.outletCode }}. Kasir hanya bisa dibuka di outlet tempat Anda clock in.</template>
-        </p>
-        <Button v-if="!att" class="mt-4" label="Clock in sekarang" icon="pi pi-sign-in" :loading="busy" @click="clockIn" />
+      <div v-else-if="att?.status !== 'WORKING'" class="mt-6 rounded-xl border border-amber-500 bg-amber-100 p-5">
+        <p class="font-semibold">Clock in dulu sebelum mengisi saldo awal.</p>
+        <Button class="mt-4" label="Ke Clock in" @click="router.push({ name: 'my-attendance' })" />
       </div>
 
-      <form v-else class="mt-6 space-y-6" @submit.prevent="submit">
-        <DenominationCounter v-model="quantities" :denominations="cashier.denominations" id-prefix="open" />
-        <div>
-          <label for="open-note" class="mb-1 block text-sm font-medium">Catatan (opsional)</label>
-          <Textarea id="open-note" v-model="note" rows="2" maxlength="500" class="w-full" placeholder="Mis. modal dari brankas shift pagi" />
-        </div>
-        <div class="flex flex-wrap justify-end gap-2">
-          <Button label="Batal" severity="secondary" text type="button" @click="router.push({ name: 'home' })" />
-          <Button :label="`Buka kasir · ${formatRupiah(total)}`" icon="pi pi-lock-open" type="submit" :loading="busy" />
+      <form v-else class="mt-6 rounded-xl border border-line bg-field p-6" @submit.prevent="save">
+        <label for="drawer" class="mb-1 block text-base">Cash in the drawer</label>
+        <InputNumber v-model="amount" input-id="drawer" prefix="Rp " locale="id-ID" :min="0" :max-fraction-digits="0"
+          class="w-full" input-class="w-full" placeholder="Rp" />
+        <small v-if="amount !== null && !parts" class="mt-1 block text-alert-600">
+          Nominal harus kelipatan {{ formatRupiah(smallest) }}.
+        </small>
+        <p class="mt-3 text-sm text-ink-soft">Modal awal tidak bisa diubah setelah disimpan.</p>
+        <div class="mt-6 grid grid-cols-2 gap-3">
+          <Button type="submit" label="Save" :loading="busy" :disabled="amount === null || !parts" />
+          <Button type="button" label="Cancel" severity="danger" outlined @click="router.push({ name: 'pos' })" />
         </div>
       </form>
     </template>
