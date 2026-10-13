@@ -28,11 +28,14 @@ import ProductCatalog from './ProductCatalog.vue'
 import CameraScanDialog from './CameraScanDialog.vue'
 import { createScanBuffer, looksLikeBarcode } from '@/utils/scanner'
 import { usePaymentStore } from '@/stores/payment'
+import { useOfflineStore } from '@/stores/offline'
+import OfflinePos from './OfflinePos.vue'
 
 const session = useSessionStore()
 const cashier = useCashierStore()
 const sales = useSaleStore()
 const payments = usePaymentStore()
+const offline = useOfflineStore()
 const attendance = useAttendanceStore()
 const router = useRouter()
 const toast = useToast()
@@ -370,7 +373,8 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1600px]">
+  <OfflinePos v-if="!offline.online" />
+  <div v-else class="mx-auto max-w-[1600px]">
     <div v-if="loading" class="flex justify-center p-10"><ProgressSpinner style="width: 2.5rem; height: 2.5rem" /></div>
 
     <!-- prasyarat: kasir dibuka di terminal ini -->

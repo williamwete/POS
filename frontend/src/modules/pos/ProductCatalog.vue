@@ -4,6 +4,7 @@ import InputText from 'primevue/inputtext'
 import ProgressSpinner from 'primevue/progressspinner'
 import { api } from '@/services'
 import { useSessionStore } from '@/stores/session'
+import { useOfflineStore } from '@/stores/offline'
 import type { Product, ProductCategory } from '@/types/api'
 import { formatRupiah } from '@/utils/money'
 
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 }>()
 
 const session = useSessionStore()
+const offline = useOfflineStore()
 const categories = ref<ProductCategory[]>([])
 const categoryId = ref<string | null>(null)
 const query = ref('')
@@ -60,6 +62,10 @@ async function loadProducts() {
       price: p.price === undefined || p.price === null ? undefined : Number(p.price),
       available: p.available === undefined || p.available === null ? null : Number(p.available),
     }))
+    // katalog lengkap terakhir disimpan untuk mode offline
+    if (!query.value.trim() && categoryId.value === null && session.outletId) {
+      void offline.cacheCatalog(session.outletId, products.value)
+    }
   } catch {
     if (mine === seq) failed.value = true
   } finally {

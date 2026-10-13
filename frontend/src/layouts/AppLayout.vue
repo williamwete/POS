@@ -14,6 +14,7 @@ import { useSaleStore } from '@/stores/sale'
 import { useIdleLock } from '@/composables/useIdleLock'
 import { useMenuStore } from '@/stores/menu'
 import TrialBanner from '@/components/TrialBanner.vue'
+import OfflineBanner from '@/components/OfflineBanner.vue'
 
 const session = useSessionStore()
 const brand = useBrandStore()
@@ -208,6 +209,7 @@ async function logout() {
             <i class="pi pi-bars" />
           </button>
           <TrialBanner />
+          <OfflineBanner />
           <RouterView />
         </main>
       </div>

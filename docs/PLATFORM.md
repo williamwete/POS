@@ -91,3 +91,18 @@ Transaksi yang sudah terjadi di toko tidak ditolak karena kebijakan. Hal-hal ber
 
 Belum dikerjakan (tahap berikutnya): cache katalog dan antrean di browser, pengiriman otomatis, tampilan
 peninjauan, dan stok yang tidak cukup (saat ini pengiriman gagal bila stok server tidak cukup).
+
+### Tahap 2: kasir offline di browser
+
+- Saat halaman kasir dimuat online, katalog lengkap disimpan di IndexedDB perangkat (hanya produk berharga
+  dan tanpa grup opsi; produk dengan opsi belum bisa dijual offline).
+- `OfflineBanner` memeriksa `/actuator/health` tiap 20 detik dan dari event browser online/offline. Server
+  tak terjangkau = halaman kasir berganti ke `OfflinePos`: cari/pindai barcode, keranjang, hanya tunai,
+  tanpa diskon/void/ubah harga.
+- Transaksi masuk antrean lokal (`stores/offline.ts`) dan dikirim berurutan ke `POST /api/sales/offline`
+  begitu server terjangkau. Jaringan putus, sesi habis, atau error 5xx: tetap antre. Ditolak server (mis.
+  stok kurang): ditandai gagal beserta pesannya, menunggu Coba lagi atau Buang oleh manusia.
+- Syarat: browser harus sudah memuat aplikasi sebelum internet mati (belum ada service worker; reload saat
+  offline belum didukung) dan sesi login masih berlaku.
+
+Menu Outlet, Sinkronisasi, dan Pemetaan Openbravo kini hanya untuk operator platform (`platform.manage`).
