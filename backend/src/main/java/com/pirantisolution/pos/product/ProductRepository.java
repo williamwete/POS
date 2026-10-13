@@ -16,7 +16,17 @@ public class ProductRepository {
                    pr.price, pr.version AS price_version, coalesce(t.rate, 0) AS tax_rate,
                    pos.available_to_sell(p.id, :outlet) AS available,
                    coalesce(p.allow_negative_stock, (pos.get_setting('allow_negative_stock', :outlet))::boolean, false)
-                       AS allow_negative_stock
+                       AS allow_negative_stock,
+                   p.track_stock,
+                   (SELECT coalesce(jsonb_agg(jsonb_build_object('id', g.id, 'name', g.name,
+                              'minSelect', g.min_select, 'maxSelect', g.max_select,
+                              'options', (SELECT coalesce(jsonb_agg(jsonb_build_object('id', o.id, 'name', o.name,
+                                              'priceDelta', o.price_delta) ORDER BY o.sort_order, o.name), '[]'::jsonb)
+                                          FROM pos.product_options o WHERE o.group_id = g.id AND o.active))
+                              ORDER BY l.sort_order, g.name), '[]'::jsonb)
+                    FROM pos.product_option_links l
+                    JOIN pos.product_option_groups g ON g.id = l.group_id AND g.active
+                    WHERE l.product_id = p.id)::text AS option_groups
             FROM pos.products p
             LEFT JOIN pos.product_categories c ON c.id = p.category_id
             LEFT JOIN pos.tax_rates t ON t.id = p.tax_rate_id AND t.active

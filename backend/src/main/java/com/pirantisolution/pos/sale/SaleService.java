@@ -144,11 +144,12 @@ public class SaleService {
         checkQuantity(product.allowDecimalQty(), req.quantity());
         checkStock(sale, product.id(), repo.quantityInCart(saleId, product.id()).add(req.quantity()));
 
-        Optional<UUID> merge = repo.findMergeableLine(saleId, product.id());
+        boolean hasOptions = req.optionIds() != null && !req.optionIds().isEmpty();
+        Optional<UUID> merge = hasOptions ? Optional.empty() : repo.findMergeableLine(saleId, product.id());
         if (merge.isPresent()) {
             repo.addQuantity(merge.get(), req.quantity());
         } else {
-            repo.insertItem(saleId, product.id(), req.barcode(), req.quantity(), cu.userId());
+            repo.insertItem(saleId, product.id(), req.barcode(), req.quantity(), cu.userId(), req.optionIds());
         }
         recalc(saleId);
         return repo.findById(saleId).orElseThrow();

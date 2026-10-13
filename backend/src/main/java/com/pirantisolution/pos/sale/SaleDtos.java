@@ -41,7 +41,9 @@ public final class SaleDtos {
             BigDecimal netAmount,
             BigDecimal taxAmount,
             String status,
-            String voidReason) {
+            String voidReason,
+            /** Snapshot opsi produk (JSON): [{group,name,delta}] */
+            @com.fasterxml.jackson.annotation.JsonRawValue String options) {
     }
 
     public record DiscountView(
@@ -151,7 +153,8 @@ public final class SaleDtos {
     public record AddItemRequest(
             UUID productId,
             @Pattern(regexp = "^[A-Za-z0-9._-]{1,64}$") String barcode,
-            @NotNull @DecimalMin("0.001") @DecimalMax("100000") BigDecimal quantity) {
+            @NotNull @DecimalMin("0.001") @DecimalMax("100000") BigDecimal quantity,
+            @jakarta.validation.constraints.Size(max = 20) List<UUID> optionIds) {
     }
 
     public record QuantityRequest(@NotNull @DecimalMin("0.001") @DecimalMax("100000") BigDecimal quantity) {

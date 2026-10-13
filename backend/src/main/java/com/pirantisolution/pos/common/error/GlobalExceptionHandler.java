@@ -50,6 +50,13 @@ public class GlobalExceptionHandler {
             Map.entry("users_employee_uk", "Karyawan sudah terhubung ke akun lain"),
             Map.entry("users_auth_user_uk", "Akun login sudah terhubung ke user lain"),
             Map.entry("roles_code_uk", "Kode role sudah dipakai"),
+            Map.entry("products_org_sku_uk", "SKU sudah dipakai produk lain"),
+            Map.entry("product_barcodes_org_barcode_uk", "Barcode sudah dipakai produk lain"),
+            Map.entry("product_categories_org_code_uk", "Kode kategori sudah dipakai"),
+            Map.entry("tax_rates_org_code_uk", "Kode pajak sudah dipakai"),
+            Map.entry("option_groups_org_name_uk", "Nama grup opsi sudah dipakai"),
+            Map.entry("product_options_group_name_uk", "Nama opsi sudah ada di grup ini"),
+            Map.entry("discount_presets_name_uk", "Nama diskon sudah dipakai"),
             Map.entry("user_roles_scope_uk", "Role sudah diberikan pada scope ini"),
             Map.entry("attendance_open_per_employee_uk", "Anda sudah clock in dan belum clock out"),
             Map.entry("attendance_breaks_open_uk", "Anda sedang istirahat"),
@@ -163,6 +170,10 @@ public class GlobalExceptionHandler {
                 ErrorCode mapped = mapDbCode(m.group(1));
                 if (mapped != null) {
                     String text = mapped.defaultMessage();
+                    if (mapped == ErrorCode.CATALOG_INVALID || mapped == ErrorCode.OPTION_SELECTION_INVALID) {
+                        // pesan buatan fungsi katalog aman ditampilkan apa adanya
+                        text = message.substring(message.indexOf(':') + 1).trim();
+                    }
                     if (mapped == ErrorCode.STOCK_UNAVAILABLE) {
                         // detail buatan trigger stok aman ditampilkan: SKU, tersedia, diminta
                         text = text + ": " + message.substring(message.indexOf(':') + 1).trim();
@@ -189,6 +200,10 @@ public class GlobalExceptionHandler {
             case "PIN_FORMAT_INVALID" -> ErrorCode.PIN_FORMAT_INVALID;
             case "MENU_ROLE_NOT_CONFIGURABLE" -> ErrorCode.MENU_ROLE_NOT_CONFIGURABLE;
             case "MENU_NOT_FOUND" -> ErrorCode.MENU_NOT_FOUND;
+            case "CATALOG_INVALID" -> ErrorCode.CATALOG_INVALID;
+            case "CATALOG_NOT_FOUND" -> ErrorCode.CATALOG_NOT_FOUND;
+            case "CATALOG_READ_ONLY" -> ErrorCode.CATALOG_READ_ONLY;
+            case "OPTION_SELECTION_INVALID" -> ErrorCode.OPTION_SELECTION_INVALID;
             case "ATTENDANCE_NOT_FOUND" -> ErrorCode.NOT_FOUND;
             case "APPEND_ONLY_VIOLATION" -> ErrorCode.USER_NOT_AUTHORIZED;
             case "BREAK_IN_PROGRESS" -> ErrorCode.BREAK_IN_PROGRESS;

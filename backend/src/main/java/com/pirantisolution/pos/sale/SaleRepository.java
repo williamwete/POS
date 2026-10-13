@@ -138,7 +138,7 @@ public class SaleRepository {
         return jdbc.sql("""
                 SELECT id, line_no, product_id, sku, product_name, barcode, uom, quantity, list_price, unit_price,
                        price_override_reason, tax_rate, gross_amount, item_discount_amount, cart_discount_amount,
-                       net_amount, tax_amount, status, void_reason
+                       net_amount, tax_amount, status, void_reason, options::text AS options
                 FROM pos.sale_items WHERE sale_id = :s ORDER BY line_no
                 """)
                 .param("s", saleId).query(SaleItemView.class).list();
@@ -169,15 +169,18 @@ public class SaleRepository {
                 .query(UUID.class).single();
     }
 
-    public UUID insertItem(UUID saleId, UUID productId, String barcode, BigDecimal qty, UUID userId) {
-        // harga, pajak & snapshot produk diisi trigger dari cache harga database
+    public UUID insertItem(UUID saleId, UUID productId, String barcode, BigDecimal qty, UUID userId,
+            java.util.List<UUID> optionIds) {
+        // harga, pajak, opsi & snapshot produk diisi trigger dari database
+        String opts = optionIds == null ? "" : optionIds.stream().map(UUID::toString).collect(java.util.stream.Collectors.joining(","));
         return jdbc.sql("""
                 INSERT INTO pos.sale_items (sale_id, product_id, sku, product_name, barcode, uom, quantity,
-                                            list_price, unit_price, created_by)
-                VALUES (:s, :p, '-', '-', :b, '-', :q, 0, 0, :u)
+                                            list_price, unit_price, created_by, option_ids)
+                VALUES (:s, :p, '-', '-', :b, '-', :q, 0, 0, :u, string_to_array(:opts, ',')::uuid[])
                 RETURNING id
                 """)
                 .param("s", saleId).param("p", productId).param("b", barcode).param("q", qty).param("u", userId)
+                .param("opts", opts)
                 .query(UUID.class).single();
     }
 
@@ -186,7 +189,7 @@ public class SaleRepository {
         return jdbc.sql("""
                 SELECT si.id FROM pos.sale_items si
                 WHERE si.sale_id = :s AND si.product_id = :p AND si.status = 'ACTIVE'
-                  AND si.unit_price = si.list_price
+                  AND si.unit_price = si.list_price AND si.option_ids = '{}'
                   AND NOT EXISTS (SELECT 1 FROM pos.sale_discounts d WHERE d.sale_item_id = si.id AND d.status = 'ACTIVE')
                 ORDER BY si.line_no DESC LIMIT 1
                 """)
@@ -365,8 +368,8 @@ public class SaleRepository {
     public Availability availability(UUID productId, UUID outletId) {
         return jdbc.sql("""
                 SELECT pos.available_to_sell(p.id, :o) AS available,
-                       coalesce(p.allow_negative_stock, (pos.get_setting('allow_negative_stock', :o))::boolean, false)
-                           AS allow_negative,
+                       (coalesce(p.allow_negative_stock, (pos.get_setting('allow_negative_stock', :o))::boolean, false)
+                           OR NOT p.track_stock) AS allow_negative,
                        p.sku
                 FROM pos.products p WHERE p.id = :p
                 """)

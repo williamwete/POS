@@ -1,5 +1,6 @@
 package com.pirantisolution.pos.product;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -21,5 +22,8 @@ public record ProductView(
         Integer priceVersion,
         BigDecimal taxRate,
         BigDecimal available,
-        boolean allowNegativeStock) {
+        boolean allowNegativeStock,
+        boolean trackStock,
+        /** Grup opsi (JSON): [{id,name,minSelect,maxSelect,options:[{id,name,priceDelta}]}] */
+        @JsonRawValue String optionGroups) {
 }

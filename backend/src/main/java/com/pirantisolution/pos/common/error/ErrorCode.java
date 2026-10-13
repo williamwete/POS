@@ -48,6 +48,10 @@ public enum ErrorCode {
     PHOTO_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Foto tidak valid (JPEG, maksimal 500 KB)"),
     MENU_ROLE_NOT_CONFIGURABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Role ini tidak dapat diatur dari layar menu"),
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "Menu tidak ditemukan"),
+    CATALOG_INVALID(HttpStatus.BAD_REQUEST, "Data katalog tidak valid"),
+    CATALOG_NOT_FOUND(HttpStatus.NOT_FOUND, "Data katalog tidak ditemukan"),
+    CATALOG_READ_ONLY(HttpStatus.CONFLICT, "Data ini berasal dari Openbravo dan tidak dapat diubah di POS"),
+    OPTION_SELECTION_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Pilihan opsi produk tidak valid"),
 
     // attendance (Phase 2)
     EMPLOYEE_NOT_LINKED(HttpStatus.UNPROCESSABLE_ENTITY, "Akun Anda belum terhubung ke data karyawan"),
