@@ -51,6 +51,7 @@ public enum ErrorCode {
     CATALOG_INVALID(HttpStatus.BAD_REQUEST, "Data katalog tidak valid"),
     CATALOG_NOT_FOUND(HttpStatus.NOT_FOUND, "Data katalog tidak ditemukan"),
     CATALOG_READ_ONLY(HttpStatus.CONFLICT, "Data ini berasal dari Openbravo dan tidak dapat diubah di POS"),
+    PAYOUT_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Pencairan tidak dapat diproses"),
     PLAN_LIMIT_EXCEEDED(HttpStatus.FORBIDDEN, "Batas paket tercapai"),
     OPTION_SELECTION_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Pilihan opsi produk tidak valid"),
 

@@ -23,7 +23,7 @@ SELECT pos_test.login('owner');
 SET LOCAL ROLE pos_app_user;
 SELECT pos_test.ok((SELECT NOT bool_or(code = 'pos') AND bool_or(code = 'manage-receipt') AND bool_or(code = 'dashboard')
                     FROM pos.my_menus(NULL)), 'default owner: tanpa menu transaksi, ada struk & dashboard');
-SELECT pos_test.ok((SELECT count(*) = 44 FROM pos.menu_matrix()), 'matriks: 11 menu x 4 peran');
+SELECT pos_test.ok((SELECT count(*) = 48 FROM pos.menu_matrix()), 'matriks: 12 menu x 4 peran');
 
 -- owner mengaktifkan menu kasir "manage-discount" -> penyimpangan tercatat; reset kembali ke default
 SELECT pos.set_menu_enabled('manage-discount', 'CASHIER', true);

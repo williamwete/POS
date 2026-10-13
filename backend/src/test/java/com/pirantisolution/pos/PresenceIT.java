@@ -89,7 +89,7 @@ class PresenceIT extends IntegrationTestBase {
         assertThat(codes).containsExactly("pos", "clock", "beginning-cash", "product-list", "history", "closing");
 
         assertThat(call(newCashier(OUTLET_JKT).token(), "GET", "/api/admin/menus", null).getResponse().getStatus()).isEqualTo(403);
-        assertThat(body(getAs("owner", "/api/admin/menus")).get("data").size()).isEqualTo(44);
+        assertThat(body(getAs("owner", "/api/admin/menus")).get("data").size()).isEqualTo(48);
 
         MvcResult set = putAs("owner", "/api/admin/menus", Map.of("menuCode", "history", "roleCode", "SUPERVISOR", "enabled", false));
         assertThat(set.getResponse().getStatus()).as(set.getResponse().getContentAsString()).isEqualTo(200);

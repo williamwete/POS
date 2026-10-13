@@ -922,3 +922,71 @@ export interface Branding {
   primaryColor?: string | null
   logo?: string | null
 }
+
+// ---- Keuangan merchant: saldo, rekening, pencairan
+export interface FinanceBalance {
+  total: number
+  available: number
+  pending: number
+  minPayout: number
+  feePercent: number
+  feeFlat: number
+  holdDays: number
+  bankStatus?: 'PENDING' | 'VERIFIED' | null
+}
+
+export interface LedgerEntry {
+  id: string
+  entryType: 'PAYMENT' | 'FEE' | 'PAYMENT_REVERSAL' | 'FEE_REVERSAL' | 'REFUND' | 'PAYOUT' | 'PAYOUT_REVERSAL' | 'ADJUSTMENT'
+  amount: number
+  availableAt: string
+  provider?: string | null
+  description?: string | null
+  createdAt: string
+}
+
+export interface BankAccount {
+  bankCode: string
+  accountNumber: string
+  accountName: string
+  status: 'PENDING' | 'VERIFIED'
+  updatedAt: string
+}
+
+export interface Payout {
+  id: string
+  amount: number
+  status: 'REQUESTED' | 'PROCESSING' | 'PAID' | 'REJECTED' | 'FAILED'
+  bankCode: string
+  accountNumber: string
+  accountName: string
+  requestedAt: string
+  processedAt?: string | null
+  providerRef?: string | null
+  note?: string | null
+}
+
+export interface PlatformPayout extends Payout {
+  organizationId: string
+  merchantCode: string
+  merchantName: string
+}
+
+export interface PlatformBankAccount extends BankAccount {
+  organizationId: string
+  merchantCode: string
+  merchantName: string
+}
+
+export interface MerchantBalance {
+  organizationId: string
+  merchantCode: string
+  merchantName: string
+  total: number
+  available: number
+  pendingPayout: number
+  feePercent: number
+  feeFlat: number
+  holdDays: number
+  minPayout: number
+}

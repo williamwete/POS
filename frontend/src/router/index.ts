@@ -133,6 +133,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'platform', name: 'platform', component: () => import('@/modules/platform/PlatformPage.vue'),
         meta: { title: 'Merchant', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
       },
+      {
+        path: 'finance', name: 'finance', component: () => import('@/modules/finance/FinancePage.vue'),
+        meta: { title: 'Saldo & pencairan', anyOf: [{ permission: 'finance.manage', scope: 'org' }] },
+      },
+      {
+        path: 'platform/payouts', name: 'platform-payouts', component: () => import('@/modules/platform/PayoutsPage.vue'),
+        meta: { title: 'Pencairan', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
+      },
       { path: 'forbidden', name: 'forbidden', component: () => import('@/modules/home/ForbiddenPage.vue'), meta: { title: 'Akses ditolak' } },
     ],
   },

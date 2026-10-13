@@ -33,6 +33,18 @@ warna utama, dan logo. Disimpan di `organization_branding`; `GET /api/branding` 
   Pada struk logo dicetak hitam-putih.
 - Kosong = tampilan bawaan. Belum ada: subdomain/halaman login bermerek per merchant.
 
+## Settlement & pencairan dana (V024)
+
+Model: semua pembayaran gateway masuk ke rekening platform, lalu dicairkan ke rekening bank merchant.
+
+- Hanya pembayaran dengan provider + external_transaction_id + konfirmasi GATEWAY masuk buku besar (`merchant_ledger`, append-only). Tunai dan QRIS statis manual tidak.
+- Biaya default 0,7%, tahan 1 hari, minimal pencairan Rp 50.000 (diatur per merchant lewat `platform_set_terms`).
+- Merchant (perm `finance.manage`, Owner/Super Admin): lihat saldo, simpan rekening bank (status PENDING sampai diverifikasi operator), ajukan pencairan.
+- Operator platform: verifikasi rekening, proses pencairan (PAID/REJECTED/FAILED; penolakan mengembalikan saldo), rekonsiliasi saldo per merchant.
+- Refund atas pembayaran gateway membuat entri REFUND; biaya tidak dikembalikan.
+
+Catatan regulasi: menampung dan menyalurkan dana merchant di Indonesia umumnya masuk ranah perizinan sistem pembayaran Bank Indonesia (mis. PJP/payment facilitator). Tanyakan ke gateway saat registrasi apakah mendukung sub-merchant / split settlement. Bukan nasihat hukum.
+
 ## Paket & batas
 Tabel `plans` (`NULL` = tanpa batas): TRIAL (1 outlet, 1 kasir, 3 user, 100 produk, 14 hari), STARTER, BUSINESS,
 ENTERPRISE. Trigger menolak penambahan melebihi batas dengan `PLAN_LIMIT_EXCEEDED` (HTTP 403, pesan jelas).
