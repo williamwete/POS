@@ -138,6 +138,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Pengaturan', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
       },
       {
+        path: 'offline-reviews', name: 'offline-reviews', component: () => import('@/modules/report/OfflineReviewsPage.vue'),
+        meta: { title: 'Transaksi offline', anyOf: [{ permission: 'report.view', scope: 'any' }] },
+      },
+      {
         path: 'dashboard', name: 'dashboard', component: () => import('@/modules/report/DashboardPage.vue'),
         meta: { title: 'Dashboard', anyOf: [{ permission: 'report.view', scope: 'any' }] },
       },

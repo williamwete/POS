@@ -106,3 +106,15 @@ peninjauan, dan stok yang tidak cukup (saat ini pengiriman gagal bila stok serve
   offline belum didukung) dan sesi login masih berlaku.
 
 Menu Outlet, Sinkronisasi, dan Pemetaan Openbravo kini hanya untuk operator platform (`platform.manage`).
+
+### Tahap 3: aplikasi bisa dibuka offline & peninjauan
+
+- `frontend/public/sw.js` (service worker, hanya build produksi) menyimpan aset dan halaman utama agar aplikasi
+  bisa dibuka lagi saat internet mati, selama perangkat pernah memuatnya online. `/api` dan `/actuator` tidak
+  pernah di-cache. Setelah rilis baru, versi lama diganti saat perangkat online berikutnya.
+- Pemeriksaan koneksi memakai `/actuator/health` (diteruskan nginx ke backend); jawaban HTML dari SPA tidak
+  dihitung sebagai server terjangkau.
+- Halaman **Transaksi offline** (`/offline-reviews`, butuh `report.view`, ada tautan dari Dashboard): daftar
+  selisih yang perlu ditinjau, ditutup dengan catatan minimal 5 karakter.
+- Batasan yang tersisa: stok server tidak cukup menolak transaksi offline (muncul sebagai "ditolak" di kasir),
+  produk dengan opsi belum bisa dijual offline, nomor struk resmi baru ada setelah terkirim.

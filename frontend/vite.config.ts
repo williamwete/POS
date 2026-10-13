@@ -11,7 +11,10 @@ export default defineConfig({
   server: {
     port: 5173,
     // Dev: proxy API ke backend lokal sehingga tidak perlu CORS
-    proxy: { '/api': { target: 'http://localhost:8080', changeOrigin: false } },
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: false },
+      '/actuator/health': { target: 'http://localhost:8080', changeOrigin: false },
+    },
   },
   test: {
     environment: 'jsdom',

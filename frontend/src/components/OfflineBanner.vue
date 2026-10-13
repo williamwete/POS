@@ -20,7 +20,8 @@ async function reachable(): Promise<boolean> {
     const t = window.setTimeout(() => ctl.abort(), 5000)
     const res = await fetch(`${base}/actuator/health`, { cache: 'no-store', signal: ctl.signal })
     window.clearTimeout(t)
-    return res.ok
+    // nginx/SPA mengembalikan HTML untuk path tak dikenal; hanya JSON dari backend yang dihitung terjangkau
+    return res.ok && (res.headers.get('content-type') ?? '').includes('json')
   } catch {
     return false
   }

@@ -1015,3 +1015,16 @@ export interface DashboardData {
   lowStock: { sku: string; name: string; available: number }[]
   attention: { syncProblems: number; openSessions: number }
 }
+
+export interface OfflineReview {
+  id: string
+  saleId: string
+  receiptNo?: string
+  offlineAt: string
+  submittedAt: string
+  clientTotal: number
+  serverTotal: number
+  reason?: string
+  status: 'CLEAN' | 'OPEN' | 'RESOLVED'
+  resolveNote?: string
+}

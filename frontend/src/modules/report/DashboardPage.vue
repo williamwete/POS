@@ -37,6 +37,15 @@ onMounted(load)
 function choose(p: typeof preset.value) { preset.value = p; void load() }
 
 const presets = [['today', 'Hari ini'], ['7', '7 hari'], ['30', '30 hari'], ['month', 'Bulan ini']] as const
+const offlineOpen = ref(0)
+onMounted(async () => {
+  if (!session.outletId) return
+  try {
+    offlineOpen.value = (await api().get<unknown[]>('/api/offline-reviews', { query: { outletId: session.outletId, status: 'OPEN' } })).data.length
+  } catch {
+    offlineOpen.value = 0
+  }
+})
 const maxDaily = computed(() => Math.max(1, ...(data.value?.daily ?? []).map((d) => d.total)))
 const maxHour = computed(() => Math.max(1, ...(data.value?.hourly ?? []).map((d) => d.total)))
 const payTotal = computed(() => Math.max(1, (data.value?.payments ?? []).reduce((a, p) => a + p.amount, 0)))
@@ -59,7 +68,8 @@ const net = computed(() => (data.value ? data.value.summary.netSales - data.valu
     <div v-if="loading && !data" class="mt-16 flex justify-center"><ProgressSpinner style="width: 2.5rem; height: 2.5rem" /></div>
 
     <template v-else-if="data">
-      <div v-if="data.attention.syncProblems || data.attention.openSessions || data.cash.sessionsWithDifference" class="mt-4 flex flex-wrap gap-2 text-sm">
+      <div v-if="offlineOpen || data.attention.syncProblems || data.attention.openSessions || data.cash.sessionsWithDifference" class="mt-4 flex flex-wrap gap-2 text-sm">
+        <RouterLink v-if="offlineOpen" :to="{ name: 'offline-reviews' }" class="rounded-full bg-alert-50 px-3 py-1 text-alert-600 underline">{{ offlineOpen }} transaksi offline perlu ditinjau</RouterLink>
         <span v-if="data.attention.openSessions" class="rounded-full bg-amber-100 px-3 py-1">{{ data.attention.openSessions }} kasir masih terbuka</span>
         <span v-if="data.attention.syncProblems" class="rounded-full bg-alert-50 px-3 py-1 text-alert-600">{{ data.attention.syncProblems }} transaksi gagal sinkron</span>
         <span v-if="data.cash.sessionsWithDifference" class="rounded-full bg-amber-100 px-3 py-1">{{ data.cash.sessionsWithDifference }} closing dengan selisih kas</span>

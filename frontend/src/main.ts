@@ -48,3 +48,10 @@ async function bootstrap() {
 }
 
 void bootstrap()
+
+// Service worker: aplikasi tetap bisa dibuka saat internet mati (hanya build produksi)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+  })
+}
