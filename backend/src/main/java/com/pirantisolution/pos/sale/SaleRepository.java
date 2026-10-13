@@ -393,7 +393,8 @@ public class SaleRepository {
     public Optional<ReceiptView> receipt(UUID saleId) {
         List<ReceiptLine> lines = jdbc.sql("""
                 SELECT product_name AS name, sku, quantity, uom, unit_price, list_price,
-                       item_discount_amount + cart_discount_amount AS discount, net_amount AS amount, tax_rate
+                       item_discount_amount + cart_discount_amount AS discount, net_amount AS amount, tax_rate,
+                       (SELECT string_agg(x ->> 'name', ', ') FROM jsonb_array_elements(options) x) AS options
                 FROM pos.sale_items WHERE sale_id = :s AND status = 'ACTIVE' ORDER BY line_no
                 """)
                 .param("s", saleId).query(ReceiptLine.class).list();
@@ -405,17 +406,23 @@ public class SaleRepository {
                 """)
                 .param("s", saleId).query(ReceiptPayment.class).list();
         return jdbc.sql("""
-                SELECT s.id AS sale_id, s.receipt_no, s.status, org.name AS organization_name, o.name AS outlet_name,
-                       o.address AS outlet_address, o.phone AS outlet_phone, t.code AS terminal_code,
+                SELECT s.id AS sale_id, s.receipt_no, s.status, coalesce(rp.business_name, org.name) AS organization_name,
+                       o.name AS outlet_name, coalesce(rp.address, o.address) AS outlet_address,
+                       coalesce(rp.phone, o.phone) AS outlet_phone, t.code AS terminal_code,
                        e.full_name AS cashier_name, s.business_date, r.issued_at, s.prices_include_tax,
                        s.item_count, s.subtotal, s.discount_total, s.tax_total, s.grand_total,
-                       s.paid_amount, s.change_amount, s.paid_at, coalesce(r.print_count, 0) AS print_count
+                       s.paid_amount, s.change_amount, s.paid_at, coalesce(r.print_count, 0) AS print_count,
+                       rp.header_text, rp.footer_text, rp.tax_id, coalesce(rp.show_tax_detail, true) AS show_tax_detail,
+                       coalesce(rp.show_cashier, true) AS show_cashier, coalesce(rp.paper_width_mm, 80) AS paper_width_mm
                 FROM pos.sales s
                 JOIN pos.organizations org ON org.id = s.organization_id
                 JOIN pos.outlets o ON o.id = s.outlet_id
                 JOIN pos.terminals t ON t.id = s.terminal_id
                 JOIN pos.employees e ON e.id = s.employee_id
                 LEFT JOIN pos.receipts r ON r.sale_id = s.id
+                LEFT JOIN LATERAL (SELECT x.* FROM pos.receipt_profiles x WHERE x.organization_id = s.organization_id
+                                   AND (x.outlet_id = s.outlet_id OR x.outlet_id IS NULL)
+                                   ORDER BY x.outlet_id NULLS LAST LIMIT 1) rp ON true
                 WHERE s.id = :s
                 """)
                 .param("s", saleId)
@@ -429,7 +436,9 @@ public class SaleRepository {
                         rs.getBigDecimal("discount_total"), rs.getBigDecimal("tax_total"),
                         rs.getBigDecimal("grand_total"), payments, rs.getBigDecimal("paid_amount"),
                         rs.getBigDecimal("change_amount"), rs.getObject("paid_at", OffsetDateTime.class),
-                        rs.getInt("print_count")))
+                        rs.getInt("print_count"), rs.getString("header_text"), rs.getString("footer_text"),
+                        rs.getString("tax_id"), rs.getBoolean("show_tax_detail"), rs.getBoolean("show_cashier"),
+                        rs.getInt("paper_width_mm")))
                 .optional();
     }
 

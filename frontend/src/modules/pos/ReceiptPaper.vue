@@ -13,22 +13,25 @@ const unpaid = () => props.receipt.status !== 'PAID' && props.receipt.status !==
 </script>
 
 <template>
-  <article class="receipt-paper mx-auto bg-white p-4 font-mono text-[12px] leading-snug text-black" aria-label="Struk">
+  <article class="receipt-paper mx-auto bg-white p-4 font-mono text-[12px] leading-snug text-black" aria-label="Struk" :style="{ '--paper': `${receipt.paperWidthMm ?? 80}mm` }">
     <header class="text-center">
       <div class="text-[14px] font-bold">{{ receipt.organizationName }}</div>
       <div class="font-semibold">{{ receipt.outletName }}</div>
       <div v-if="receipt.outletAddress">{{ receipt.outletAddress }}</div>
       <div v-if="receipt.outletPhone">Telp {{ receipt.outletPhone }}</div>
+      <div v-if="receipt.taxId">NPWP {{ receipt.taxId }}</div>
+      <div v-if="receipt.headerText" class="mt-1">{{ receipt.headerText }}</div>
     </header>
     <hr class="my-2 border-dashed border-black" />
     <div class="flex justify-between"><span>No</span><span>{{ receipt.receiptNo }}</span></div>
     <div class="flex justify-between"><span>Tanggal</span><span>{{ receipt.issuedAt ? time.format(new Date(receipt.issuedAt)) : '' }}</span></div>
     <div class="flex justify-between"><span>Business date</span><span>{{ formatBusinessDate(receipt.businessDate) }}</span></div>
     <div class="flex justify-between"><span>Terminal</span><span>{{ receipt.terminalCode }}</span></div>
-    <div class="flex justify-between"><span>Kasir</span><span>{{ receipt.cashierName }}</span></div>
+    <div v-if="receipt.showCashier !== false" class="flex justify-between"><span>Kasir</span><span>{{ receipt.cashierName }}</span></div>
     <hr class="my-2 border-dashed border-black" />
     <div v-for="(l, i) in receipt.lines" :key="i" class="mb-1">
       <div>{{ l.name }}</div>
+      <div v-if="l.options" class="pl-2">+ {{ l.options }}</div>
       <div class="flex justify-between">
         <span>{{ qty(l.quantity) }} {{ l.uom }} × {{ formatNumber(l.unitPrice) }}<template v-if="l.unitPrice !== l.listPrice"> (normal {{ formatNumber(l.listPrice) }})</template></span>
         <span>{{ formatNumber(l.amount + l.discount) }}</span>
@@ -38,7 +41,7 @@ const unpaid = () => props.receipt.status !== 'PAID' && props.receipt.status !==
     <hr class="my-2 border-dashed border-black" />
     <div class="flex justify-between"><span>Subtotal ({{ qty(receipt.itemCount) }} item)</span><span>{{ formatNumber(receipt.subtotal) }}</span></div>
     <div v-if="receipt.discountTotal > 0" class="flex justify-between"><span>Total diskon</span><span>-{{ formatNumber(receipt.discountTotal) }}</span></div>
-    <div class="flex justify-between"><span>PPN{{ receipt.pricesIncludeTax ? ' (termasuk)' : '' }}</span><span>{{ formatNumber(receipt.taxTotal) }}</span></div>
+    <div v-if="receipt.showTaxDetail !== false" class="flex justify-between"><span>Pajak{{ receipt.pricesIncludeTax ? ' (termasuk)' : '' }}</span><span>{{ formatNumber(receipt.taxTotal) }}</span></div>
     <div class="mt-1 flex justify-between text-[15px] font-bold"><span>TOTAL</span><span>{{ formatNumber(receipt.grandTotal) }}</span></div>
     <template v-if="!unpaid() && receipt.payments?.length">
       <hr class="my-2 border-dashed border-black" />
@@ -53,14 +56,14 @@ const unpaid = () => props.receipt.status !== 'PAID' && props.receipt.status !==
     </template>
     <hr class="my-2 border-dashed border-black" />
     <p v-if="unpaid()" class="text-center font-bold">*** BELUM DIBAYAR — BUKAN BUKTI PEMBAYARAN ***</p>
-    <p v-else class="text-center"><span class="font-bold">LUNAS</span> — Terima kasih</p>
+    <p v-else class="text-center"><span class="font-bold">LUNAS</span> — {{ receipt.footerText || 'Terima kasih' }}</p>
     <p v-if="receipt.printCount > 1" class="mt-1 text-center">CETAK ULANG #{{ receipt.printCount - 1 }}</p>
   </article>
 </template>
 
 <style scoped>
 .receipt-paper {
-  width: 80mm;
+  width: var(--paper, 80mm);
   max-width: 100%;
 }
 </style>

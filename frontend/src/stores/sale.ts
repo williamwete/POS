@@ -64,8 +64,8 @@ export const useSaleStore = defineStore('sale', () => {
 
   const base = () => `/api/sales/${sale.value!.id}`
 
-  async function addProduct(productId: string, quantity: number, key: string) {
-    return set((await api().post<Sale>(`${base()}/items`, { productId, quantity }, { idempotencyKey: key })).data)
+  async function addProduct(productId: string, quantity: number, key: string, optionIds?: string[]) {
+    return set((await api().post<Sale>(`${base()}/items`, { productId, quantity, optionIds }, { idempotencyKey: key })).data)
   }
 
   async function addBarcode(barcode: string, quantity: number, key: string) {

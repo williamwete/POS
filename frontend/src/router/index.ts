@@ -106,6 +106,22 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Audit log', anyOf: [{ permission: 'audit.view', scope: 'any' }] },
       },
       {
+        path: 'catalog/products', name: 'product-list', component: () => import('@/modules/catalog/ProductListPage.vue'),
+        meta: { title: 'Product List', anyOf: [{ permission: 'stock.view', scope: 'current' }, { permission: 'product.manage', scope: 'any' }] },
+      },
+      {
+        path: 'manage/categories', name: 'manage-categories', component: () => import('@/modules/catalog/CategoriesPage.vue'),
+        meta: { title: 'Manage Categories', anyOf: [{ permission: 'category.manage', scope: 'org' }] },
+      },
+      {
+        path: 'manage/discount', name: 'manage-discount', component: () => import('@/modules/catalog/DiscountsPage.vue'),
+        meta: { title: 'Manage Discount', anyOf: [{ permission: 'discount.manage', scope: 'any' }] },
+      },
+      {
+        path: 'manage/receipt', name: 'manage-receipt', component: () => import('@/modules/catalog/ReceiptSettingsPage.vue'),
+        meta: { title: 'Manage Receipt', anyOf: [{ permission: 'receipt.manage', scope: 'any' }] },
+      },
+      {
         path: 'manage/cashier', name: 'manage-cashier', component: () => import('@/modules/admin/EmployeesPage.vue'),
         meta: { title: 'Manage Cashier', anyOf: [{ permission: 'employee.view', scope: 'any' }, { permission: 'employee.manage', scope: 'any' }] },
       },

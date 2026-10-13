@@ -17,6 +17,7 @@ import type { ApprovalPayload, Product, SaleItem } from '@/types/api'
 import { useApprovalPrompt } from './approvalPrompt'
 import ApprovalDialog from './ApprovalDialog.vue'
 import DiscountDialog from './DiscountDialog.vue'
+import OptionPickerDialog from './OptionPickerDialog.vue'
 import PriceDialog from './PriceDialog.vue'
 import ReasonDialog from './ReasonDialog.vue'
 import HeldSalesDialog from './HeldSalesDialog.vue'
@@ -176,13 +177,25 @@ async function onEnter(text: string, results: Product[]) {
   else if (results.length === 1) await addProduct(results[0]!)
 }
 
-async function addProduct(p: Product) {
+const optionProduct = ref<Product | null>(null)
+const optionVisible = ref(false)
+
+async function addProduct(p: Product, optionIds?: string[]) {
+  // produk dengan pilihan (level pedas, topping) membuka dialog pilihan dulu
+  if (p.optionGroups?.length && !optionIds) {
+    optionProduct.value = p
+    optionVisible.value = true
+    return
+  }
   const ok = await act(async (key) => {
     if (sales.isPaid) nextSale()
     await ensureSale(key)
-    return sales.addProduct(p.id, 1, key)
+    return sales.addProduct(p.id, 1, key, optionIds)
   })
-  if (ok) catalog.value?.clearQuery()
+  if (ok) {
+    optionVisible.value = false
+    catalog.value?.clearQuery()
+  }
 }
 
 /** Tombol − di kartu katalog: kurangi baris terakhir produk itu; jumlah 1 → batalkan dengan alasan. */
@@ -394,6 +407,7 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
                 <span class="tabular mt-0.5 shrink-0 text-sm text-ink-soft">{{ qtyText(item.quantity) }}×</span>
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-base font-semibold">{{ item.productName }}</div>
+                  <div v-if="item.options?.length" class="text-xs text-ink-soft">{{ item.options.map((o) => o.name).join(', ') }}</div>
                   <div class="text-xs text-ink-soft">
                     <span class="tabular">{{ formatRupiah(item.unitPrice) }}</span>{{ unitLabel(item) }}
                     <s v-if="item.unitPrice !== item.listPrice" class="tabular text-ink-faint">{{ formatRupiah(item.listPrice) }}</s>
@@ -481,6 +495,8 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
     <ApprovalDialog />
     <DiscountDialog v-model:visible="discountVisible" :title="discountTarget ? `Diskon · ${discountTarget.productName}` : 'Diskon transaksi'"
       :base="discountBase" :busy="busy" @confirm="applyDiscount" />
+    <OptionPickerDialog v-model:visible="optionVisible" :product="optionProduct" :busy="busy"
+      @confirm="(ids) => optionProduct && addProduct(optionProduct, ids)" />
     <PriceDialog v-model:visible="priceVisible" :item="priceItem" :busy="busy" @confirm="applyPrice" />
     <ReasonDialog v-model:visible="voidItemVisible" :title="`Batalkan ${voidItemTarget?.productName ?? 'barang'}`"
       description="Barang dihapus dari keranjang dan tetap tercatat sebagai void beserta alasannya."

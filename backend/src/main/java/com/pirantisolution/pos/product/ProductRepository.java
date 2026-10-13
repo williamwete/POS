@@ -15,8 +15,8 @@ public class ProductRepository {
                     WHERE b.product_id = p.id AND b.active ORDER BY b.is_primary DESC, b.barcode LIMIT 1) AS barcode,
                    pr.price, pr.version AS price_version, coalesce(t.rate, 0) AS tax_rate,
                    pos.available_to_sell(p.id, :outlet) AS available,
-                   coalesce(p.allow_negative_stock, (pos.get_setting('allow_negative_stock', :outlet))::boolean, false)
-                       AS allow_negative_stock,
+                   (coalesce(p.allow_negative_stock, (pos.get_setting('allow_negative_stock', :outlet))::boolean, false)
+                       OR NOT p.track_stock) AS allow_negative_stock,
                    p.track_stock,
                    (SELECT coalesce(jsonb_agg(jsonb_build_object('id', g.id, 'name', g.name,
                               'minSelect', g.min_select, 'maxSelect', g.max_select,

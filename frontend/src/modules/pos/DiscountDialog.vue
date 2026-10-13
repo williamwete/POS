@@ -6,6 +6,9 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import { formatRupiah } from '@/utils/money'
+import { api } from '@/services'
+import { useSessionStore } from '@/stores/session'
+import type { DiscountPreset } from '@/types/api'
 
 /**
  * Diskon baris atau transaksi (§20). Pratinjau nominal hanya perkiraan; server menghitung nilai
@@ -23,11 +26,29 @@ const reason = ref('')
 const TYPES = [{ label: 'Persen', value: 'PERCENTAGE' }, { label: 'Rupiah', value: 'AMOUNT' }]
 const PRESETS = ['Promo member', 'Barang display', 'Kemasan rusak', 'Kompensasi pelanggan']
 
+const session = useSessionStore()
+const presets = ref<DiscountPreset[]>([])
+
+async function loadPresets() {
+  try {
+    presets.value = (await api().get<DiscountPreset[]>('/api/discount-presets', { query: { outletId: session.outletId ?? undefined } })).data
+  } catch {
+    presets.value = []
+  }
+}
+
+function usePreset(p: DiscountPreset) {
+  type.value = p.discountType
+  value.value = Number(p.discountValue)
+  reason.value = p.name
+}
+
 watch(() => props.visible, (v) => {
   if (v) {
     type.value = 'PERCENTAGE'
     value.value = null
     reason.value = ''
+    void loadPresets()
   }
 })
 
@@ -43,6 +64,12 @@ const valid = computed(() =>
 <template>
   <Dialog :visible="visible" modal :header="title" class="w-full max-w-md" @update:visible="(v) => emit('update:visible', v)">
     <form class="space-y-4" @submit.prevent="valid && emit('confirm', { type, value: value!, reason: reason.trim() })">
+      <div v-if="presets.length" class="flex flex-wrap gap-2" role="group" aria-label="Diskon siap pakai">
+        <button v-for="p in presets" :key="p.id" type="button"
+          class="rounded-full border border-jade-500 bg-white px-3 py-1 text-sm hover:bg-jade-50" @click="usePreset(p)">
+          {{ p.name }} · {{ p.discountType === 'PERCENTAGE' ? `${Number(p.discountValue)}%` : formatRupiah(p.discountValue) }}
+        </button>
+      </div>
       <SelectButton v-model="type" :options="TYPES" option-label="label" option-value="value" :allow-empty="false" aria-label="Jenis diskon" />
       <div>
         <label for="disc-value" class="mb-1 block text-sm font-medium">{{ type === 'PERCENTAGE' ? 'Persen' : 'Nominal (Rp)' }}</label>

@@ -141,7 +141,8 @@ defineExpose({ focus: () => (input.value?.$el as HTMLInputElement | undefined)?.
             <span v-else class="grid h-14 w-14 place-items-center rounded-full bg-jade-100 text-2xl font-bold text-jade-700">{{ p.name.charAt(0) }}</span>
           </div>
           <h3 class="mt-2 line-clamp-2 min-h-[2.5rem] text-base leading-5">{{ p.name }}</h3>
-          <p :class="['text-[10px]', soldOut(p) ? 'font-semibold text-alert-600' : '']">{{ stockLabel(p).replace('Stok', 'Stock:') }}</p>
+          <p v-if="p.trackStock !== false" :class="['text-[10px]', soldOut(p) ? 'font-semibold text-alert-600' : '']">{{ stockLabel(p).replace('Stok', 'Stock:') }}</p>
+          <p v-else-if="p.optionGroups?.length" class="text-[10px] text-ink-faint">Ada pilihan</p>
           <p class="tabular text-sm">{{ p.price !== undefined ? formatRupiah(p.price) : 'Tanpa harga' }}<span
             v-if="p.uom !== 'PCS'" class="text-xs text-ink-faint">/{{ p.uom.toLowerCase() }}</span></p>
           <button type="button" class="add-btn" :disabled="disabled || !sellable(p)" :aria-label="`Tambah ${p.name}`"

@@ -107,7 +107,7 @@ public final class SaleDtos {
     }
 
     public record ReceiptLine(String name, String sku, BigDecimal quantity, String uom, BigDecimal unitPrice,
-            BigDecimal listPrice, BigDecimal discount, BigDecimal amount, BigDecimal taxRate) {
+            BigDecimal listPrice, BigDecimal discount, BigDecimal amount, BigDecimal taxRate, String options) {
     }
 
     public record ReceiptPayment(String methodName, String methodKind, BigDecimal amount, BigDecimal amountReceived,
@@ -137,7 +137,13 @@ public final class SaleDtos {
             BigDecimal paidAmount,
             BigDecimal changeAmount,
             OffsetDateTime paidAt,
-            int printCount) {
+            int printCount,
+            String headerText,
+            String footerText,
+            String taxId,
+            boolean showTaxDetail,
+            boolean showCashier,
+            int paperWidthMm) {
     }
 
     public record PrintResult(int printCount, boolean reprint) {

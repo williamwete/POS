@@ -343,6 +343,29 @@ export interface Product {
   /** null/undefined = stok tidak diketahui */
   available?: number | null
   allowNegativeStock: boolean
+  /** false = tidak dilacak stoknya (makanan/minuman, jasa) */
+  trackStock?: boolean
+  optionGroups?: ProductOptionGroup[]
+}
+
+export interface ProductOption {
+  id: string
+  name: string
+  priceDelta: number
+}
+
+export interface ProductOptionGroup {
+  id: string
+  name: string
+  minSelect: number
+  maxSelect: number
+  options: ProductOption[]
+}
+
+export interface ItemOption {
+  group: string
+  name: string
+  delta: number
 }
 
 export interface ProductCategory {
@@ -375,6 +398,7 @@ export interface SaleItem {
   taxAmount: number
   status: 'ACTIVE' | 'VOID'
   voidReason?: string
+  options?: ItemOption[]
 }
 
 export interface SaleDiscount {
@@ -454,6 +478,7 @@ export interface ReceiptLine {
   discount: number
   amount: number
   taxRate: number
+  options?: string | null
 }
 
 export interface Receipt {
@@ -480,6 +505,12 @@ export interface Receipt {
   changeAmount: number
   paidAt?: string
   printCount: number
+  headerText?: string | null
+  footerText?: string | null
+  taxId?: string | null
+  showTaxDetail?: boolean
+  showCashier?: boolean
+  paperWidthMm?: number
 }
 
 export interface ReceiptPayment {
@@ -776,4 +807,78 @@ export interface MenuMatrixCell {
   enabled: boolean
   defaultEnabled: boolean
   sortOrder: number
+}
+
+
+// ---------------------------------------------------------------- katalog lokal
+export interface CatalogProduct {
+  id: string
+  sku: string
+  name: string
+  categoryId?: string | null
+  categoryName?: string | null
+  uom: string
+  allowDecimalQty: boolean
+  taxRateId?: string | null
+  taxName?: string | null
+  taxRate?: number | null
+  trackStock: boolean
+  active: boolean
+  source: 'OPENBRAVO' | 'SEED' | 'LOCAL'
+  imageUrl?: string | null
+  barcode?: string | null
+  price?: number | null
+  available?: number | null
+  optionGroupIds: string[]
+}
+
+export interface CatalogCategory {
+  id: string
+  code: string
+  name: string
+  active: boolean
+  source: 'OPENBRAVO' | 'SEED' | 'LOCAL'
+  productCount: number
+}
+
+export interface TaxRate {
+  id: string
+  code: string
+  name: string
+  rate: number
+  active: boolean
+  source: 'OPENBRAVO' | 'SEED' | 'LOCAL'
+}
+
+export interface OptionGroupAdmin {
+  id: string
+  name: string
+  minSelect: number
+  maxSelect: number
+  sortOrder: number
+  active: boolean
+  options: { id: string; name: string; priceDelta: number; sortOrder: number; active: boolean }[]
+}
+
+export interface DiscountPreset {
+  id: string
+  outletId?: string | null
+  name: string
+  discountType: 'PERCENTAGE' | 'AMOUNT'
+  discountValue: number
+  active: boolean
+}
+
+export interface ReceiptProfile {
+  id?: string | null
+  outletId?: string | null
+  businessName?: string | null
+  address?: string | null
+  phone?: string | null
+  headerText?: string | null
+  footerText?: string | null
+  taxId?: string | null
+  showTaxDetail: boolean
+  showCashier: boolean
+  paperWidthMm: number
 }
