@@ -22,6 +22,7 @@ const emit = defineEmits<{
   add: [product: Product]
   decrement: [product: Product]
   enter: [text: string, results: Product[]]
+  camera: []
 }>()
 
 const session = useSessionStore()
@@ -119,8 +120,8 @@ defineExpose({ focus: () => (input.value?.$el as HTMLInputElement | undefined)?.
           <InputText id="scan" ref="input" v-model="query" autocomplete="off" class="w-full !rounded-lg !border-jade-500 !py-2 !pl-9"
             placeholder="Search product" />
         </div>
-        <button type="submit" class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-jade-500 text-white"
-          aria-label="Scan barcode"><i class="pi pi-barcode" /></button>
+        <button type="button" class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-jade-500 text-white"
+          aria-label="Pindai barcode dengan kamera" title="Pindai dengan kamera" :disabled="disabled" @click="emit('camera')"><i class="pi pi-barcode" /></button>
       </form>
     </div>
 

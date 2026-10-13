@@ -25,6 +25,8 @@ import ReceiptDialog from './ReceiptDialog.vue'
 import PaymentPanel from './PaymentPanel.vue'
 import PaidPanel from './PaidPanel.vue'
 import ProductCatalog from './ProductCatalog.vue'
+import CameraScanDialog from './CameraScanDialog.vue'
+import { createScanBuffer, looksLikeBarcode } from '@/utils/scanner'
 import { usePaymentStore } from '@/stores/payment'
 
 const session = useSessionStore()
@@ -98,7 +100,21 @@ function focusScan() {
   void nextTick(() => catalog.value?.focus())
 }
 
+const scanBuffer = createScanBuffer()
+const cameraOpen = ref(false)
+
 function onKey(e: KeyboardEvent) {
+  // Pemindai USB/Bluetooth mengetik cepat + Enter. Tangkap walau fokus tidak di kolom pindai.
+  const t = e.target as HTMLElement | null
+  const typing = !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
+  if (!typing && !catalogDisabled.value && !document.querySelector('[role="dialog"]')) {
+    const code = scanBuffer.push(e.key, e.timeStamp)
+    if (code) {
+      e.preventDefault()
+      void onEnter(code, [])
+      return
+    }
+  }
   if (e.key === 'F2') {
     e.preventDefault()
     if (sales.isPaid) nextSale()
@@ -161,7 +177,7 @@ async function ensureSale(key: string) {
 /** Enter di kolom pindai: barcode → langsung masuk keranjang; selain itu tambah bila hasilnya tepat satu. */
 async function onEnter(text: string, results: Product[]) {
   if (!text || !session.outletId) return
-  if (/^[0-9]{6,14}$/.test(text)) {
+  if (looksLikeBarcode(text)) {
     const added = await act(async (key) => {
       if (sales.isPaid) nextSale()
       await ensureSale(key)
@@ -376,7 +392,8 @@ const qtyText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleStri
     <div v-else class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_25rem]">
       <!-- ============================ katalog (tengah) -->
       <ProductCatalog ref="catalog" :cart-qty="cartQty" :disabled="catalogDisabled" :refresh-key="catalogRefresh"
-        @add="addProduct" @decrement="decrementProduct" @enter="onEnter" />
+        @add="addProduct" @decrement="decrementProduct" @enter="onEnter" @camera="cameraOpen = true" />
+      <CameraScanDialog v-model:visible="cameraOpen" @scan="(code) => onEnter(code, [])" />
 
       <!-- ============================ pesanan (kanan) -->
       <aside class="flex flex-col gap-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">

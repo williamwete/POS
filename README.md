@@ -60,3 +60,5 @@ Detail: [docs/TESTING.md](docs/TESTING.md).
 - [docs/DATABASE.md](docs/DATABASE.md): role database, RLS, migration, backup
 - [docs/API.md](docs/API.md): daftar endpoint
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): deploy ke Supabase + server
+
+Pemindai barcode: pemindai USB/Bluetooth langsung bekerja di layar kasir (tidak perlu klik kolom pindai), dan tombol barcode membuka pemindai kamera. Produk contoh punya barcode EAN-13 (Alfamart `899100000xxxx`, Persita `899200000xxxx`); lihat di menu Produk.

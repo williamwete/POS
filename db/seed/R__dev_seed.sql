@@ -23,6 +23,7 @@ DECLARE
     t record;
     v_org uuid; v_outlet uuid; v_owner_auth uuid; v_cash_auth uuid; v_emp uuid; v_user uuid; v_prod uuid;
     p record;
+    n integer := 0; i integer; sm integer; v_code text;
 BEGIN
     FOR t IN SELECT * FROM (VALUES
         ('ALFAMART', 'Alfamart', 'RETAIL', 'ALF01', 'Alfamart Cabang Pusat', 'Budi Alfa', 'owner@alfamart.local', 'Sinta Kasir', 'kasir@alfamart.local'),
@@ -88,8 +89,16 @@ BEGIN
             ('PERSITA', 'MERCH', 'PRS-041', 'Stiker Pack', 15000, 200)
         ) AS y(org, cat, sku, name, price, qty) WHERE y.org = t.code
         LOOP
+            -- barcode EAN-13 contoh (awalan 899 + nomor urut + digit cek) agar bisa dicoba dengan pemindai
+            n := n + 1;
+            v_code := '899' || CASE WHEN t.code = 'ALFAMART' THEN '1' ELSE '2' END || lpad(n::text, 8, '0');
+            sm := 0;
+            FOR i IN 1..12 LOOP
+                sm := sm + substr(v_code, i, 1)::integer * CASE WHEN i % 2 = 1 THEN 1 ELSE 3 END;
+            END LOOP;
+            v_code := v_code || ((10 - sm % 10) % 10)::text;
             v_prod := pos.save_product(NULL, p.sku, p.name, (SELECT id FROM pos.product_categories WHERE organization_id = v_org AND code = p.cat),
-                                       'PCS', false, NULL, true, true, NULL, NULL, p.price);
+                                       'PCS', false, NULL, true, true, NULL, v_code, p.price);
             PERFORM pos.set_local_stock(v_prod, v_outlet, p.qty);
         END LOOP;
         PERFORM set_config('request.jwt.claims', '', false);
