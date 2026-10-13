@@ -170,7 +170,8 @@ public class GlobalExceptionHandler {
                 ErrorCode mapped = mapDbCode(m.group(1));
                 if (mapped != null) {
                     String text = mapped.defaultMessage();
-                    if (mapped == ErrorCode.CATALOG_INVALID || mapped == ErrorCode.OPTION_SELECTION_INVALID) {
+                    if (mapped == ErrorCode.CATALOG_INVALID || mapped == ErrorCode.OPTION_SELECTION_INVALID
+                            || mapped == ErrorCode.PLAN_LIMIT_EXCEEDED) {
                         // pesan buatan fungsi katalog aman ditampilkan apa adanya
                         text = message.substring(message.indexOf(':') + 1).trim();
                     }
@@ -204,6 +205,7 @@ public class GlobalExceptionHandler {
             case "CATALOG_NOT_FOUND" -> ErrorCode.CATALOG_NOT_FOUND;
             case "CATALOG_READ_ONLY" -> ErrorCode.CATALOG_READ_ONLY;
             case "OPTION_SELECTION_INVALID" -> ErrorCode.OPTION_SELECTION_INVALID;
+            case "PLAN_LIMIT_EXCEEDED" -> ErrorCode.PLAN_LIMIT_EXCEEDED;
             case "ATTENDANCE_NOT_FOUND" -> ErrorCode.NOT_FOUND;
             case "APPEND_ONLY_VIOLATION" -> ErrorCode.USER_NOT_AUTHORIZED;
             case "BREAK_IN_PROGRESS" -> ErrorCode.BREAK_IN_PROGRESS;

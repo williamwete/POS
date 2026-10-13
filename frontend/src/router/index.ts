@@ -129,6 +129,10 @@ export const routes: RouteRecordRaw[] = [
         path: 'admin/menu-access', name: 'menu-access', component: () => import('@/modules/admin/MenuAccessPage.vue'),
         meta: { title: 'Akses menu', anyOf: [{ permission: 'menu.configure', scope: 'org' }] },
       },
+      {
+        path: 'platform', name: 'platform', component: () => import('@/modules/platform/PlatformPage.vue'),
+        meta: { title: 'Merchant', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
+      },
       { path: 'forbidden', name: 'forbidden', component: () => import('@/modules/home/ForbiddenPage.vue'), meta: { title: 'Akses ditolak' } },
     ],
   },
@@ -143,6 +147,10 @@ export function guard(to: RouteLocationNormalized) {
   }
   if (!session.isAuthenticated) {
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} }
+  }
+  // Operator platform tidak punya outlet: beranda-nya adalah daftar merchant.
+  if (to.name === 'home' && session.can('platform.manage', 'org')) {
+    return { name: 'platform' }
   }
   if (to.meta.requiresContext && (!session.outletId || !session.terminal)) {
     return { name: 'context' }

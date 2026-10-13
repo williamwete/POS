@@ -102,10 +102,10 @@ ROLLBACK;
 BEGIN;
 SELECT pos_test.login('superadmin');
 SET LOCAL ROLE pos_app_user;
-SELECT pos_test.ok(pos_test.affected($$
+SELECT pos_test.throws($$
     INSERT INTO pos.role_permissions (role_id, permission_code)
-    SELECT id, 'report.view' FROM pos.roles WHERE code = 'CASHIER'$$) = 1,
-    'superadmin bisa menambah permission ke CASHIER');
+    SELECT id, 'report.view' FROM pos.roles WHERE code = 'CASHIER'$$,
+    'row-level security', 'role sistem dipakai semua merchant: superadmin merchant tidak bisa mengubah permission-nya');
 SELECT pos_test.ok(pos_test.affected($$
     DELETE FROM pos.role_permissions WHERE role_id = (SELECT id FROM pos.roles WHERE code = 'SUPER_ADMIN')$$) = 0,
     'permission SUPER_ADMIN tidak bisa dihapus (rank tidak di bawah)');

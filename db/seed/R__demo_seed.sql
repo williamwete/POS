@@ -74,7 +74,8 @@ FROM (VALUES
     ('00000000-0000-4000-8000-000000000605', 'cashier.jkt@demo.local'),
     ('00000000-0000-4000-8000-000000000606', 'cashier.bdg@demo.local'),
     ('00000000-0000-4000-8000-000000000607', 'auditor@demo.local'),
-    ('00000000-0000-4000-8000-000000000608', 'owner@demo.local')
+    ('00000000-0000-4000-8000-000000000608', 'owner@demo.local'),
+    ('00000000-0000-4000-8000-000000000609', 'platform@demo.local')
 ) AS v(id, email)
 ON CONFLICT (id) DO NOTHING;
 
@@ -89,6 +90,13 @@ INSERT INTO pos.users (id, auth_user_id, organization_id, employee_id, username,
     ('00000000-0000-4000-8000-000000000708', '00000000-0000-4000-8000-000000000608', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000508', 'owner',          'owner@demo.local',          'Hendra Wijaya')
 ON CONFLICT (id) DO NOTHING;
 
+-- Operator platform (organisasi PLATFORM dibuat migrasi V021)
+INSERT INTO pos.users (id, auth_user_id, organization_id, username, email, display_name)
+SELECT '00000000-0000-4000-8000-000000000709', '00000000-0000-4000-8000-000000000609', o.id,
+       'platform', 'platform@demo.local', 'Operator Platform'
+FROM pos.organizations o WHERE o.code = 'PLATFORM'
+ON CONFLICT (id) DO NOTHING;
+
 -- Role assignment
 INSERT INTO pos.user_roles (user_id, role_id, outlet_id)
 SELECT v.user_id::uuid, r.id, v.outlet_id::uuid
@@ -101,7 +109,8 @@ FROM (VALUES
     ('00000000-0000-4000-8000-000000000705', 'CASHIER',       '00000000-0000-4000-8000-000000000101'),
     ('00000000-0000-4000-8000-000000000706', 'CASHIER',       '00000000-0000-4000-8000-000000000102'),
     ('00000000-0000-4000-8000-000000000707', 'AUDITOR',       NULL),
-    ('00000000-0000-4000-8000-000000000708', 'OWNER',         NULL)
+    ('00000000-0000-4000-8000-000000000708', 'OWNER',         NULL),
+    ('00000000-0000-4000-8000-000000000709', 'PLATFORM_ADMIN', NULL)
 ) AS v(user_id, role_code, outlet_id)
 JOIN pos.roles r ON r.code = v.role_code
 ON CONFLICT DO NOTHING;

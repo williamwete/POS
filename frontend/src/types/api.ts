@@ -882,3 +882,36 @@ export interface ReceiptProfile {
   showCashier: boolean
   paperWidthMm: number
 }
+
+// ---- Konsol platform (operator SaaS)
+export interface PlatformPlan {
+  code: string
+  name: string
+  maxOutlets?: number | null
+  maxTerminals?: number | null
+  maxUsers?: number | null
+  maxProducts?: number | null
+  priceMonthly: number
+}
+
+export interface Merchant {
+  id: string
+  code: string
+  name: string
+  businessType: 'FNB' | 'RETAIL' | 'SERVICE' | 'GENERAL'
+  active: boolean
+  planCode?: string | null
+  subStatus?: string | null
+  trialEndsAt?: string | null
+  outlets: number
+  terminals: number
+  users: number
+  products: number
+  lastSaleAt?: string | null
+  createdAt: string
+}
+
+export interface CreatedMerchant {
+  merchant: Merchant
+  ownerUsername: string
+}

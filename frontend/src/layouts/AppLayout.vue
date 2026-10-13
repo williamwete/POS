@@ -169,7 +169,7 @@ async function logout() {
               {{ formatBusinessDate(outlet.businessDate) }}
             </span>
           </template>
-          <RouterLink v-else :to="{ name: 'context' }" class="text-sm font-semibold text-jade-700 underline underline-offset-4">
+          <RouterLink v-else-if="session.me?.outlets.length" :to="{ name: 'context' }" class="text-sm font-semibold text-jade-700 underline underline-offset-4">
             Pilih outlet & terminal
           </RouterLink>
         </div>

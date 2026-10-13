@@ -25,6 +25,7 @@ const demoAccounts = [
   ['supervisor.jkt@demo.local', 'Supervisor Jakarta'],
   ['manager@demo.local', 'Store manager JKT & BDG'],
   ['admin@demo.local', 'Admin sistem'],
+  ['platform@demo.local', 'Operator platform (konsol merchant)'],
   ['auditor@demo.local', 'Auditor (read-only)'],
 ]
 
@@ -40,7 +41,8 @@ async function submit() {
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
       ? route.query.redirect : null
     // Alur Figma: login langsung masuk ke kasir; outlet/terminal dipilih otomatis bila hanya satu pilihan.
-    const ready = await autoSelectContext()
+    // Operator platform tidak punya outlet/terminal: langsung ke konsol merchant.
+    const ready = session.can('platform.manage', 'org') || await autoSelectContext()
     await router.replace(redirect ?? (ready ? { name: 'home' } : { name: 'context' }))
   } catch (e) {
     form.password = ''

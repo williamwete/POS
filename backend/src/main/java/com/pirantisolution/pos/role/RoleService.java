@@ -72,6 +72,11 @@ public class RoleService {
         RoleRow role = jdbc.sql("SELECT id, code, name, description, is_system, rank FROM pos.roles WHERE id = :id")
                 .param("id", roleId).query(RoleRow.class).optional()
                 .orElseThrow(() -> ApiException.notFound("Role"));
+        if (role.isSystem() && !access.has("platform.manage", null)) {
+            // role sistem dipakai semua merchant: hanya operator platform yang boleh mengubah isinya
+            throw new ApiException(ErrorCode.ROLE_ASSIGNMENT_NOT_ALLOWED,
+                    "Role bawaan dipakai semua merchant dan hanya dapat diubah operator platform");
+        }
         int myRank = jdbc.sql("SELECT pos.current_max_rank()").query(Integer.class).single();
         if (role.rank() >= myRank) {
             throw new ApiException(ErrorCode.ROLE_ASSIGNMENT_NOT_ALLOWED,
