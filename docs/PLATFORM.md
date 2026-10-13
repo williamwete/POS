@@ -71,3 +71,23 @@ Merchant berpaket TRIAL yang `trial_ends_at`-nya lewat tidak bisa membuat penjua
 
 ## Dashboard (V030)
 Menu **Dashboard** (perm `report.view`; Owner, Admin, Store Manager, Auditor): omzet bersih (dikurangi retur), jumlah transaksi, rata-rata keranjang, void, tren harian, jam ramai, metode bayar, produk & kategori terlaris, ringkasan closing kasir (selisih), stok menipis, dan peringatan (kasir masih terbuka, gagal sinkron). Dihitung di database (`pos.dashboard`) dari penjualan lunas per business date; rentang maks 366 hari. Merchant satu outlet melihat seluruh datanya; peran per-outlet hanya outlet-nya.
+
+## Penjualan offline (Fase 10, tahap 1: sisi server)
+
+Transaksi tunai yang dibuat saat internet mati dikirim lewat `POST /api/sales/offline` (satu panggilan
+berisi seluruh keranjang, waktu transaksi, total versi kasir, dan uang diterima). Server membuat
+transaksi memakai alur biasa (harga, pajak, stok, nomor struk, pembayaran tunai dihitung ulang oleh
+database), jadi hasilnya sama seperti penjualan online. Kirim ulang dengan `clientTransactionId` yang
+sama mengembalikan transaksi yang sama (`duplicate: true`).
+
+Transaksi yang sudah terjadi di toko tidak ditolak karena kebijakan. Hal-hal berikut dicatat di
+`pos.offline_sales` dengan status `OPEN` untuk ditinjau pemilik/manajer (`GET /api/offline-reviews`,
+`POST /api/offline-reviews/{id}/resolve`, butuh `report.view`):
+
+- total di server berbeda dari total kasir offline;
+- `allow_offline_sale` mati untuk outlet itu;
+- nilai melebihi `max_offline_sale_amount`;
+- pengiriman lebih lambat dari `max_offline_duration_minutes`.
+
+Belum dikerjakan (tahap berikutnya): cache katalog dan antrean di browser, pengiriman otomatis, tampilan
+peninjauan, dan stok yang tidak cukup (saat ini pengiriman gagal bila stok server tidak cukup).

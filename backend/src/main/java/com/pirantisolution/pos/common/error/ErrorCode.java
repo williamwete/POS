@@ -90,6 +90,7 @@ public enum ErrorCode {
     SALE_NOT_EDITABLE(HttpStatus.CONFLICT, "Transaksi ini tidak bisa diubah lagi"),
     SALE_CLOSED(HttpStatus.CONFLICT, "Transaksi ini sudah dibatalkan"),
     SALE_EMPTY(HttpStatus.UNPROCESSABLE_ENTITY, "Keranjang masih kosong"),
+    OFFLINE_SALE_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Transaksi offline tidak valid"),
     SALE_NOT_EMPTY(HttpStatus.CONFLICT, "Keranjang berisi barang; gunakan void dengan alasan"),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "Produk tidak ditemukan"),
     PRODUCT_NOT_AVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY, "Produk tidak dapat dijual"),
