@@ -82,7 +82,11 @@ class SecurityIT extends IntegrationTestBase {
 
     @Test
     void adminCannotEscalateOrTouchSuperiors() throws Exception {
-        JsonNode roles = body(getAs("admin", "/api/roles")).get("data");
+        // Role khusus platform disembunyikan dari merchant; id-nya diambil lewat operator platform.
+        for (JsonNode role : body(getAs("admin", "/api/roles")).get("data")) {
+            assertThat(role.get("code").asText()).isNotIn("SUPER_ADMIN", "PLATFORM_ADMIN");
+        }
+        JsonNode roles = body(getAs("platform", "/api/roles")).get("data");
         String superAdminRoleId = null;
         for (JsonNode role : roles) {
             if ("SUPER_ADMIN".equals(role.get("code").asText())) {
