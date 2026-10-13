@@ -48,3 +48,6 @@ Harga termasuk pajak atau di luar pajak diatur per outlet lewat setting `prices_
 - Belum ada impor produk massal (CSV) dan unggah foto produk (gunakan URL gambar/`image_url`).
 - Harga khusus per outlet belum bisa diatur dari UI (tabel mendukungnya).
 - Hapus produk tidak ada; nonaktifkan saja agar riwayat penjualan tetap utuh.
+
+## Impor produk CSV (V029)
+Menu Produk → **Impor CSV**. Kolom: `sku, nama, harga` wajib; `kategori, satuan, barcode, stok` opsional (judul Indonesia atau Inggris, pemisah koma/titik koma). SKU yang sudah ada diperbarui (kolom kosong tidak menimpa), SKU baru dibuat; kategori yang belum ada dibuat otomatis; stok diisi untuk outlet terpilih. Maksimal 500 baris; satu galat membatalkan seluruh berkas dan menyebut nomor barisnya. Produk dari Openbravo tidak bisa diubah. Batas jumlah produk paket tetap berlaku.

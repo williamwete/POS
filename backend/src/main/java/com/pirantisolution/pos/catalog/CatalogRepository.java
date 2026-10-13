@@ -86,6 +86,11 @@ public class CatalogRepository {
                 .query(UUID.class).single();
     }
 
+    public String importProducts(String rowsJson, UUID outletId) {
+        return jdbc.sql("SELECT pos.import_products(CAST(:rows AS jsonb), CAST(:o AS uuid))::text")
+                .param("rows", rowsJson).param("o", outletId).query(String.class).single();
+    }
+
     public void setStock(UUID productId, UUID outletId, BigDecimal qty) {
         jdbc.sql("SELECT pos.set_local_stock(:p, :o, :q)").param("p", productId).param("o", outletId)
                 .param("q", qty).query().singleRow();

@@ -35,8 +35,11 @@ public class CatalogService {
     private final CatalogRepository repo;
     private final AccessService access;
     private final AuditService audit;
+    private final com.fasterxml.jackson.databind.ObjectMapper mapper;
 
-    public CatalogService(CatalogRepository repo, AccessService access, AuditService audit) {
+    public CatalogService(CatalogRepository repo, AccessService access, AuditService audit,
+            com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        this.mapper = mapper;
         this.repo = repo;
         this.access = access;
         this.audit = audit;
@@ -64,6 +67,18 @@ public class CatalogService {
         audit.record(AuditEvent.of(id == null ? "PRODUCT_CREATED" : "PRODUCT_UPDATED", "PRODUCT", savedId)
                 .change(before, after));
         return after;
+    }
+
+    /** Impor massal (semua-atau-tidak-sama-sekali). Validasi per baris dilakukan database. */
+    @Transactional
+    public CatalogDtos.ImportResult importProducts(CatalogDtos.ImportProductsRequest req) {
+        access.currentUser();
+        try {
+            String json = repo.importProducts(mapper.writeValueAsString(req.rows()), req.outletId());
+            return mapper.readValue(json, CatalogDtos.ImportResult.class);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("Impor produk gagal diproses", e);
+        }
     }
 
     @Transactional

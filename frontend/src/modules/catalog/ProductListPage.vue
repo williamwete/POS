@@ -15,6 +15,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import FormField from '@/components/FormField.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import OptionGroupsDialog from './OptionGroupsDialog.vue'
+import ImportProductsDialog from './ImportProductsDialog.vue'
 import { fileToProductPhoto } from '@/utils/brand'
 import { api } from '@/services'
 import { useApiAction } from '@/composables/useApiAction'
@@ -68,6 +69,7 @@ const editable = (p: CatalogProduct) => canManage.value && p.source !== 'OPENBRA
 // ---------------------------------------------------------------- form
 const open = ref(false)
 const optionsOpen = ref(false)
+const importOpen = ref(false)
 const editing = ref<CatalogProduct | null>(null)
 const form = reactive({
   sku: '', name: '', categoryId: null as string | null, uom: 'PCS', price: null as number | null, taxRateId: null as string | null,
@@ -134,6 +136,7 @@ async function save() {
     <PageHeader title="Product List" :description="canManage ? 'Daftar produk, harga, stok, dan pilihan (mis. level pedas). Produk dari Openbravo hanya bisa dilihat.' : 'Daftar produk dan stok outlet ini.'">
       <template #actions>
         <Button v-if="canManage" label="Opsi produk" icon="pi pi-sliders-h" severity="secondary" @click="optionsOpen = true" />
+        <Button v-if="canManage" label="Impor CSV" icon="pi pi-upload" severity="secondary" outlined @click="importOpen = true" />
         <Button v-if="canManage" label="Tambah produk" icon="pi pi-plus" @click="openDialog()" />
       </template>
     </PageHeader>
@@ -171,6 +174,7 @@ async function save() {
     </DataTable>
 
     <OptionGroupsDialog v-model:visible="optionsOpen" @changed="loadRefs" />
+    <ImportProductsDialog v-model:visible="importOpen" :outlet-id="stockOutletId" :outlet-name="stockOutletName" @imported="() => { void loadRefs(); void load() }" />
 
     <Dialog v-model:visible="open" :header="editing ? `Ubah ${editing.name}` : 'Tambah produk'" modal class="w-full max-w-2xl">
       <form class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">

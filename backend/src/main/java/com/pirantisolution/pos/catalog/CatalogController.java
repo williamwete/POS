@@ -57,6 +57,12 @@ public class CatalogController {
         return Responses.ok(service.saveProduct(id, req), "Produk disimpan");
     }
 
+    @PostMapping("/api/catalog/products/import")
+    public ResponseEntity<ApiResponse<CatalogDtos.ImportResult>> importProducts(
+            @Valid @RequestBody CatalogDtos.ImportProductsRequest req) {
+        return Responses.ok(service.importProducts(req), "Impor selesai");
+    }
+
     @PutMapping("/api/catalog/products/{id}/stock")
     public ResponseEntity<ApiResponse<ProductRow>> setStock(@PathVariable UUID id, @Valid @RequestBody StockRequest req) {
         return Responses.ok(service.setStock(id, req.outletId(), req.quantity()), "Stok disimpan");

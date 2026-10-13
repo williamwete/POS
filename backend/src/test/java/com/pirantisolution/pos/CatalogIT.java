@@ -126,4 +126,27 @@ class CatalogIT extends IntegrationTestBase {
         assertThat(putAs("admin", "/api/catalog/receipt-profiles", Map.of("paperWidthMm", 70)).getResponse().getStatus())
                 .isEqualTo(400);
     }
+
+    @Test
+    void bulkImportCreatesProductsAllOrNothing() throws Exception {
+        String a = unique("IMP").replace("-", "").substring(0, 12);
+        String b = unique("IMP").replace("-", "").substring(0, 12);
+        MvcResult ok = postAs("admin", "/api/catalog/products/import", Map.of("rows", List.of(
+                Map.of("sku", a, "name", "Impor A", "category", "Impor Test", "price", "5000"),
+                Map.of("sku", b, "name", "Impor B", "price", "7000"))));
+        assertThat(ok.getResponse().getStatus()).isEqualTo(200);
+        assertThat(body(ok).at("/data/created").asInt()).isEqualTo(2);
+
+        String c = unique("IMP").replace("-", "").substring(0, 12);
+        MvcResult bad = postAs("admin", "/api/catalog/products/import", Map.of("rows", List.of(
+                Map.of("sku", c, "name", "Baik", "price", "1000"),
+                Map.of("sku", "X" + c, "name", "Salah", "price", "-1"))));
+        assertThat(bad.getResponse().getStatus()).isEqualTo(400);
+        assertThat(body(bad).get("message").asText()).contains("baris 2");
+
+        // kasir tidak boleh impor
+        Cashier cashier = newCashier(OUTLET_JKT);
+        assertThat(call(cashier.token(), "POST", "/api/catalog/products/import",
+                Map.of("rows", List.of(Map.of("sku", c, "name", "x", "price", "1")))).getResponse().getStatus()).isEqualTo(403);
+    }
 }

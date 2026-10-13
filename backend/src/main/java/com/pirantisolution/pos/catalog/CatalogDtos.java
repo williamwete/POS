@@ -61,6 +61,20 @@ public final class CatalogDtos {
             @DecimalMin("0") @DecimalMax("1000000000") BigDecimal price) {
     }
 
+    public record ImportProductRow(
+            @Size(max = 40) String sku, @Size(max = 120) String name, @Size(max = 60) String category,
+            @Size(max = 12) String uom, @Size(max = 20) String price, @Size(max = 64) String barcode,
+            @Size(max = 20) String stock) {
+    }
+
+    public record ImportProductsRequest(
+            @jakarta.validation.constraints.NotEmpty @Size(max = 500) @jakarta.validation.Valid List<ImportProductRow> rows,
+            UUID outletId) {
+    }
+
+    public record ImportResult(int created, int updated, int categoriesCreated) {
+    }
+
     public record StockRequest(@NotNull UUID outletId, @NotNull @DecimalMin("0") @DecimalMax("100000000") BigDecimal quantity) {
     }
 
