@@ -49,4 +49,11 @@ public class SettingsService {
         }
         return result;
     }
+
+    /** Wajib clock in sebelum membuka kasir (pengaturan merchant). Butuh configuration.manage. */
+    @Transactional
+    public void setAttendanceRequired(boolean required) {
+        access.requireOrg("configuration.manage");
+        jdbc.sql("SELECT pos.set_attendance_required(:r)").param("r", required).query().singleRow();
+    }
 }

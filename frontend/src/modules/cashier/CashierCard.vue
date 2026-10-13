@@ -23,6 +23,7 @@ let timer: number | undefined
 onMounted(() => {
   timer = window.setInterval(() => (now.value = new Date()), 15_000)
   if (!cashier.loaded) void run(() => cashier.load())
+  if (!attendance.loaded) void attendance.load().catch(() => undefined)
 })
 onBeforeUnmount(() => window.clearInterval(timer))
 
@@ -133,7 +134,7 @@ async function submitCancel() {
       <Button :label="`Pindah ke ${s?.terminalCode}`" size="small" @click="useSessionTerminal" />
     </div>
 
-    <p v-if="!s && canOpen && attendance.current?.status !== 'WORKING'" class="mt-3 text-xs text-ink-faint">
+    <p v-if="!s && canOpen && attendance.required && attendance.current?.status !== 'WORKING'" class="mt-3 text-xs text-ink-faint">
       Clock in terlebih dahulu sebelum membuka kasir.
     </p>
     <p v-if="!s && !canOpen" class="mt-3 text-xs text-ink-faint">Role Anda tidak memiliki izin membuka kasir di outlet ini.</p>

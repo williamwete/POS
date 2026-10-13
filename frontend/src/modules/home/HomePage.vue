@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
+import { useAttendanceStore } from '@/stores/attendance'
 import { api } from '@/services'
 import type { Permission } from '@/types/api'
 import { formatBusinessDate } from '@/utils/format'
@@ -8,6 +9,7 @@ import AttendanceCard from '@/modules/attendance/AttendanceCard.vue'
 import CashierCard from '@/modules/cashier/CashierCard.vue'
 
 const session = useSessionStore()
+const attendance = useAttendanceStore()
 const now = ref(new Date())
 const catalog = ref<Permission[]>([])
 let timer: number | undefined
@@ -38,6 +40,7 @@ const grouped = computed(() => {
 })
 
 onMounted(async () => {
+  if (!attendance.loaded) void attendance.load().catch(() => undefined)
   timer = window.setInterval(() => (now.value = new Date()), 1000)
   try {
     catalog.value = (await api().get<Permission[]>('/api/permissions')).data
@@ -84,7 +87,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
     </dl>
 
     <div class="mt-6 grid gap-4 lg:grid-cols-2">
-      <AttendanceCard />
+      <AttendanceCard v-if="attendance.required" />
       <CashierCard />
     </div>
 

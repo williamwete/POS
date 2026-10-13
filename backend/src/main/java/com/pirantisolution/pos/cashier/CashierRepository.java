@@ -162,6 +162,14 @@ public class CashierRepository {
                 .param("c", countId).query(CountItemView.class).list();
     }
 
+    public void autoClockIn(UUID outletId) {
+        jdbc.sql("SELECT pos.auto_clock_in(:o)").param("o", outletId).query(UUID.class).single();
+    }
+
+    public void autoClockOut(UUID employeeId) {
+        jdbc.sql("SELECT pos.auto_clock_out(:e)").param("e", employeeId).query().singleRow();
+    }
+
     public UUID insertSession(UUID outletId, UUID terminalId, UUID employeeId, UUID attendanceId, UUID actor,
             String deviceId) {
         return jdbc.sql("""

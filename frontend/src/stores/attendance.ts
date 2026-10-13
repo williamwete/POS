@@ -10,6 +10,8 @@ import type { Attendance } from '@/types/api'
 export const useAttendanceStore = defineStore('attendance', () => {
   const current = ref<Attendance | null>(null)
   const loaded = ref(false)
+  /** Merchant dapat mematikan wajib clock in (pengaturan attendance_required). */
+  const required = ref(true)
 
   const isWorking = computed(() => current.value?.status === 'WORKING')
   const isOnBreak = computed(() => current.value?.status === 'ON_BREAK')
@@ -17,6 +19,12 @@ export const useAttendanceStore = defineStore('attendance', () => {
 
   async function load() {
     current.value = (await api().get<Attendance | null>('/api/attendance/current')).data ?? null
+    try {
+      const s = (await api().get<Record<string, unknown>>('/api/settings/effective')).data
+      required.value = s.attendance_required !== false
+    } catch {
+      required.value = true
+    }
     loaded.value = true
   }
 
@@ -51,7 +59,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
     loaded.value = false
   }
 
-  return { current, loaded, isWorking, isOnBreak, openBreak, load, verificationRequired, clockIn, startBreak, endBreak, clockOut, reset }
+  return { current, loaded, required, isWorking, isOnBreak, openBreak, load, verificationRequired, clockIn, startBreak, endBreak, clockOut, reset }
 })
 
 /** Detik kerja bersih: sekarang/clock out − clock in − total break (termasuk break berjalan). */

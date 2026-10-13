@@ -27,4 +27,14 @@ public class SettingsController {
     public ResponseEntity<ApiResponse<Map<String, JsonNode>>> effective(@RequestParam(required = false) UUID outletId) {
         return Responses.ok(service.effective(outletId));
     }
+
+    public record AttendanceRequiredRequest(@jakarta.validation.constraints.NotNull Boolean required) {
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/api/settings/attendance-required")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> attendanceRequired(
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody AttendanceRequiredRequest req) {
+        service.setAttendanceRequired(req.required());
+        return Responses.ok(Map.of("required", req.required()));
+    }
 }

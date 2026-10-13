@@ -30,7 +30,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-  if (!cashier.current && !(attendance.current?.status === 'WORKING')) await router.replace({ name: 'my-attendance' })
+  if (attendance.required && !cashier.current && !(attendance.current?.status === 'WORKING')) await router.replace({ name: 'my-attendance' })
 })
 
 const att = computed(() => attendance.current)
@@ -64,7 +64,7 @@ async function save() {
         <Button class="mt-4" label="Ke kasir" @click="router.push({ name: 'pos' })" />
       </div>
 
-      <div v-else-if="att?.status !== 'WORKING'" class="mt-6 rounded-xl border border-amber-500 bg-amber-100 p-5">
+      <div v-else-if="attendance.required && att?.status !== 'WORKING'" class="mt-6 rounded-xl border border-amber-500 bg-amber-100 p-5">
         <p class="font-semibold">Clock in dulu sebelum mengisi saldo awal.</p>
         <Button class="mt-4" label="Ke Clock in" @click="router.push({ name: 'my-attendance' })" />
       </div>

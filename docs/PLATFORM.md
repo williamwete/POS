@@ -62,3 +62,6 @@ seluruh akses merchant tertutup seketika (fail-closed). Login pengguna juga dibl
 - Role kustom masih global (belum per-organisasi): tidak ada UI untuk membuatnya; perlu `organization_id`
   pada `roles` sebelum fitur itu dibuka.
 - Pengujian: `db/tests/test_17_platform_tenancy.sql` (51 pernyataan) dan `PlatformIT`.
+
+## Clock in opsional (V027)
+Pengaturan merchant `attendance_required` (menu **Pengaturan**, perm `configuration.manage`; Owner dan Admin). Bawaan: wajib. Bila dimatikan, membuka kasir otomatis membuat kehadiran (`device_id = 'AUTO'`) dan menutup kasir menutupnya, sehingga aturan sesi kasir/penjualan/pembayaran tidak berubah. Perubahan tercatat di audit log.

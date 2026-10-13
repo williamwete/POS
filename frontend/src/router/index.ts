@@ -134,6 +134,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Merchant', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
       },
       {
+        path: 'settings', name: 'settings', component: () => import('@/modules/admin/SettingsPage.vue'),
+        meta: { title: 'Pengaturan', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
+      },
+      {
         path: 'finance', name: 'finance', component: () => import('@/modules/finance/FinancePage.vue'),
         meta: { title: 'Saldo & pencairan', anyOf: [{ permission: 'finance.manage', scope: 'org' }] },
       },

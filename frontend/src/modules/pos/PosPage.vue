@@ -81,7 +81,7 @@ onMounted(async () => {
     else if (session.me?.employee) {
       // Alur Figma: belum ada kasir terbuka → Clock in → Beginning cash balance → kembali ke sini.
       await attendance.load()
-      await router.replace({ name: attendance.isWorking ? 'cashier-open' : 'my-attendance' })
+      await router.replace({ name: attendance.isWorking || !attendance.required ? 'cashier-open' : 'my-attendance' })
       return
     }
   } catch (e) {

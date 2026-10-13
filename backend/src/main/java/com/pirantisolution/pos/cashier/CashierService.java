@@ -88,6 +88,10 @@ public class CashierService {
             throw new ApiException(mine.get().terminalId().equals(terminalId)
                     ? ErrorCode.CASHIER_SESSION_ALREADY_OPEN : ErrorCode.TERMINAL_MISMATCH);
         }
+        // Bila merchant tidak mewajibkan clock in, kehadiran dibuat otomatis saat kasir dibuka.
+        if (attendance.findOpenForEmployee(cu.employeeId()).isEmpty()) {
+            repo.autoClockIn(terminal.outletId());
+        }
         AttendanceView att = attendance.findOpenForEmployee(cu.employeeId())
                 .orElseThrow(() -> new ApiException(ErrorCode.ATTENDANCE_REQUIRED, "Clock in terlebih dahulu"));
         if (!"WORKING".equals(att.status())) {
@@ -365,6 +369,7 @@ public class CashierService {
         repo.finalizeCount(countId);
         // database menghitung ulang expected & selisih dan menegakkan semua aturan penutupan
         repo.close(sessionId, s.status(), cu.userId(), countId, reason, diffNote, usedApproval);
+        repo.autoClockOut(s.employeeId());   // hanya kehadiran otomatis (merchant tanpa wajib clock in)
 
         SessionView after = repo.findById(sessionId).orElseThrow();
         Map<String, Object> v = summary(after);

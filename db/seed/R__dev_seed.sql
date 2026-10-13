@@ -56,6 +56,7 @@ BEGIN
 
         -- Katalog contoh, dibuat sebagai owner merchant tersebut
         PERFORM set_config('request.jwt.claims', json_build_object('sub', v_owner_auth, 'role', 'authenticated')::text, false);
+        PERFORM pos.set_attendance_required(false);   -- contoh: tanpa wajib clock in (bisa diubah di menu Pengaturan)
         IF t.code = 'ALFAMART' THEN
             PERFORM pos.save_category(NULL, 'MAKANAN', 'Makanan', true);
             PERFORM pos.save_category(NULL, 'MINUMAN', 'Minuman', true);
