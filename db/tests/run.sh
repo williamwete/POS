@@ -31,7 +31,7 @@ apply() {
 echo "==> migrations"
 for f in "$ROOT"/db/local/V*.sql; do apply "$f"; done
 for f in $(ls "$ROOT"/db/migration/V*.sql | sort -V); do apply "$f"; done
-for f in "$ROOT"/db/seed/R__*.sql; do apply "$f"; done
+for f in "$ROOT"/db/testdata/R__*.sql; do apply "$f"; done
 
 echo "==> test helpers"
 "${PSQL_ADMIN[@]}" -c "ALTER ROLE pos_api LOGIN PASSWORD '${API_PASSWORD}'" >/dev/null

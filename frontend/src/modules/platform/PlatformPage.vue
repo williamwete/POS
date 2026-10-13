@@ -26,6 +26,7 @@ const plans = ref<PlatformPlan[]>([])
 const TYPES = [
   { label: 'F&B (kafe, resto, warung)', value: 'FNB' },
   { label: 'Retail (toko, minimarket)', value: 'RETAIL' },
+  { label: 'Fashion & merchandise (pakaian, sepatu, aksesoris)', value: 'FASHION' },
   { label: 'Jasa', value: 'SERVICE' },
   { label: 'Umum', value: 'GENERAL' },
 ]

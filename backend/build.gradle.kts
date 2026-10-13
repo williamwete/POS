@@ -34,7 +34,7 @@ dependencies {
 }
 
 // Migration SQL hanya punya satu sumber: folder /db di root repo.
-// Di classpath menjadi: db/migration, db/local (khusus profile local/test), db/seed.
+// Di classpath menjadi: db/migration, db/local (khusus profile local/test), db/seed (dev), db/testdata (test).
 tasks.named<ProcessResources>("processResources") {
     from("../db") {
         into("db")

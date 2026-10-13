@@ -7,7 +7,7 @@ spring:
     url: ${POS_TEST_DB_URL:jdbc:postgresql://localhost:5432/pos_it}
     user: ${POS_TEST_DB_OWNER:postgres}
     password: ${POS_TEST_DB_OWNER_PASSWORD:postgres}
-    locations: classpath:db/local,classpath:db/migration,classpath:db/seed
+    locations: classpath:db/local,classpath:db/migration,classpath:db/testdata
 
 pos:
   jwt:

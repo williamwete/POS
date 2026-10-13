@@ -21,8 +21,10 @@ const busy = ref(false)
 const isLocal = (import.meta.env.VITE_AUTH_MODE ?? 'local') === 'local'
 
 const demoAccounts = [
-  ['owner@demo.local', 'Pemilik merchant demo'],
-  ['cashier.jkt@demo.local', 'Kasir demo'],
+  ['owner@alfamart.local', 'Alfamart — owner'],
+  ['kasir@alfamart.local', 'Alfamart — kasir'],
+  ['owner@persita.local', 'Persita Store — owner'],
+  ['kasir@persita.local', 'Persita Store — kasir'],
   ['platform@demo.local', 'Operator platform (konsol merchant)'],
 ]
 

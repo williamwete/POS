@@ -898,7 +898,7 @@ export interface Merchant {
   id: string
   code: string
   name: string
-  businessType: 'FNB' | 'RETAIL' | 'SERVICE' | 'GENERAL'
+  businessType: 'FNB' | 'RETAIL' | 'FASHION' | 'SERVICE' | 'GENERAL'
   active: boolean
   planCode?: string | null
   subStatus?: string | null

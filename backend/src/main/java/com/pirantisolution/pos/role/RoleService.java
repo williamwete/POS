@@ -51,8 +51,12 @@ public class RoleService {
     @Transactional(readOnly = true)
     public List<PermissionView> permissions() {
         access.currentUser();
+        // Izin platform hanya relevan bagi operator platform; tenant tidak perlu melihatnya.
+        boolean platform = access.has("platform.manage", null);
         return jdbc.sql("SELECT code, module, description FROM pos.permissions ORDER BY module, code")
-                .query(PermissionView.class).list();
+                .query(PermissionView.class).list().stream()
+                .filter(p -> platform || !p.code().startsWith("platform."))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -61,8 +65,13 @@ public class RoleService {
         List<RoleRow> rows = jdbc.sql("""
                 SELECT id, code, name, description, is_system, rank FROM pos.roles ORDER BY rank DESC, code
                 """).query(RoleRow.class).list();
-        return rows.stream().map(r -> new RoleView(r.id(), r.code(), r.name(), r.description(), r.isSystem(),
-                r.rank(), permissionsOf(r.id()))).toList();
+        // Role khusus platform tidak ditampilkan ke tenant.
+        boolean platform = access.has("platform.manage", null);
+        return rows.stream()
+                .filter(r -> platform || !(r.code().equals("PLATFORM_ADMIN") || r.code().equals("SUPER_ADMIN")))
+                .map(r -> new RoleView(r.id(), r.code(), r.name(), r.description(), r.isSystem(),
+                        r.rank(), permissionsOf(r.id()).stream().filter(c -> platform || !c.startsWith("platform.")).toList()))
+                .toList();
     }
 
     @Transactional

@@ -29,7 +29,7 @@ public final class PlatformDtos {
     public record CreateMerchantRequest(
             @NotBlank @Pattern(regexp = "^[A-Za-z0-9_-]{2,24}$") String code,
             @NotBlank @Size(max = 120) String name,
-            @NotBlank @Pattern(regexp = "^(FNB|RETAIL|SERVICE|GENERAL)$") String businessType,
+            @NotBlank @Pattern(regexp = "^(FNB|RETAIL|FASHION|SERVICE|GENERAL)$") String businessType,
             @NotBlank @Pattern(regexp = "^[A-Z0-9_]{2,20}$") String plan,
             @NotBlank @Pattern(regexp = "^[A-Za-z0-9_-]{2,32}$") String outletCode,
             @NotBlank @Size(max = 120) String outletName,

@@ -1,5 +1,5 @@
--- LOCAL/DEMO SEED (repeatable, idempotent). Tidak dijalankan di staging/production.
--- Password semua akun demo: Demo#12345
+-- DATA UJI (fixture) untuk db/tests dan integration test. BUKAN seed lokal: seed lokal ada di db/seed/R__dev_seed.sql.
+-- Password semua akun: Demo#12345
 
 GRANT pos_local_auth TO pos_api;
 

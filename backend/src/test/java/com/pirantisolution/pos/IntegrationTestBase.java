@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @ActiveProfiles("test")
 public abstract class IntegrationTestBase {
 
-    // ID dari db/seed/R__demo_seed.sql
+    // ID dari db/testdata/R__test_fixture.sql
     public static final UUID ORG = UUID.fromString("00000000-0000-4000-8000-000000000001");
     public static final UUID OUTLET_JKT = UUID.fromString("00000000-0000-4000-8000-000000000101");
     public static final UUID OUTLET_BDG = UUID.fromString("00000000-0000-4000-8000-000000000102");

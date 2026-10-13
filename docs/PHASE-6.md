@@ -17,7 +17,7 @@ Tanggal: 2026-10-06 · Format §108. Tutup kasir dimajukan dari Phase 7 (B42); X
 - Tombol clock out saat kasir masih terbuka sekarang mengarahkan ke **Tutup kasir**.
 
 ## 2. Files created/changed
-- `db/migration/V015__cash_management_close.sql`, `db/seed/R__demo_seed.sql` (ambang kas keluar demo),
+- `db/migration/V015__cash_management_close.sql`, `db/testdata/R__test_fixture.sql` (ambang kas keluar demo),
   `db/tests/test_11_cash_management.sql`, `db/tests/_helpers.sql`, `test_08` (aturan Phase 3 diperbarui)
 - `backend/.../cashier/CashierService.java`, `CashierRepository.java`, `CashierController.java`, `CashierDtos.java`,
   `CashApprovalService.java` (baru), `common/error/ErrorCode.java`, `GlobalExceptionHandler.java`,

@@ -21,7 +21,7 @@ Tanggal: 2026-10-02 · Format mengikuti §108.
   karyawan, user & akses, role & permission, audit log.
 
 ## 2. Files created/changed
-- `db/migration/V001–V007`, `db/local/V000`, `db/seed/R__demo_seed.sql`, `db/tests/*`,
+- `db/migration/V001–V007`, `db/local/V000`, `db/testdata/R__test_fixture.sql`, `db/tests/*`,
   `db/bootstrap/bootstrap_super_admin.sql`
 - `backend/src/main/java/com/pirantisolution/pos/**` (common, db, security, audit, idempotency,
   auth, outlet, terminal, employee, user, role, settings), `backend/src/test/**`,

@@ -37,9 +37,13 @@ cp .env.example .env.local   # VITE_AUTH_MODE=local
 npm install && npm run dev   # http://localhost:5173
 ```
 
-Akun demo (password `Demo#12345`): `cashier.jkt@demo.local`, `supervisor.jkt@demo.local`,
-`manager@demo.local`, `admin@demo.local`, `superadmin@demo.local`, `auditor@demo.local`,
-`cashier.bdg@demo.local`.
+Data lokal (seed `db/seed/R__dev_seed.sql`), password `Demo#12345`, PIN karyawan `123456`:
+- Operator platform: `platform@demo.local`
+- Alfamart (makanan, minuman, snack): `owner@alfamart.local`, `kasir@alfamart.local`
+- Persita Store (merchandise, pakaian, sepatu, aksesoris): `owner@persita.local`, `kasir@persita.local`
+
+Untuk mengosongkan data lokal lama dan memuat seed ini: `docker compose down -v && docker compose up --build`.
+(Akun `*@demo.local` lama hanya ada di data uji `db/testdata`, dipakai test otomatis.)
 
 ## Test
 ```bash

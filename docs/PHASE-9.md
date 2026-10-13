@@ -19,7 +19,7 @@ Tanggal: 2026-10-06 · Format §108.
 - Konektor **HTTP** (Openbravo sungguhan, kredensial di server) dan **simulator** untuk lokal.
 
 ## 2. Files created/changed
-- `db/migration/V018__openbravo_sync.sql`, `db/seed/R__demo_seed.sql` (pemetaan demo), `db/tests/test_14_sync.sql`
+- `db/migration/V018__openbravo_sync.sql`, `db/testdata/R__test_fixture.sql` (pemetaan demo), `db/tests/test_14_sync.sql`
 - `backend/.../integration/*` (OpenbravoClient + HTTP/Simulator/Disabled, OpenbravoConfig, SyncWorker, SyncService,
   SyncRepository, SyncController, SyncDtos), `config/PosProperties`, `application.yml`, `ErrorCode`,
   `GlobalExceptionHandler`; test `SyncIT`, `application-test.yml`

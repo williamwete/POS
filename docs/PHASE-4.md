@@ -16,7 +16,7 @@ Tanggal: 2026-10-05 · Format §108.
 - Batal buka kasir kini ditolak bila session sudah memiliki penjualan (melengkapi B23).
 
 ## 2. Files created/changed
-- `db/migration/V011__products_prices_stock.sql`, `V012__sales.sql`, `db/seed/R__demo_seed.sql` (produk demo),
+- `db/migration/V011__products_prices_stock.sql`, `V012__sales.sql`, `db/testdata/R__test_fixture.sql` (produk demo),
   `db/tests/test_09_sales.sql`, `db/tests/_helpers.sql`
 - `backend/.../product/*`, `backend/.../sale/*` (CartCalculator, SaleService, SaleRepository, SaleController,
   ApprovalService, DTO), `auth/provider/*` (verifikasi password approver), `RateLimitFilter`, `ErrorCode`,
