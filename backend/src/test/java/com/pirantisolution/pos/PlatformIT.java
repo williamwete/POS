@@ -55,6 +55,9 @@ class PlatformIT extends IntegrationTestBase {
         MvcResult mine = call(owner, "GET", "/api/catalog/products", null);
         assertThat(mine.getResponse().getStatus()).isEqualTo(200);
         assertThat(body(mine).get("data")).isEmpty();
+        // preset F&B: kategori & opsi awal sudah ada
+        assertThat(body(call(owner, "GET", "/api/catalog/categories", null)).get("data")).hasSize(4);
+        assertThat(body(call(owner, "GET", "/api/catalog/option-groups", null)).get("data")).hasSize(4);
         String sku = "ISO" + code;
         MvcResult product = call(owner, "POST", "/api/catalog/products",
                 Map.of("sku", sku, "name", "Latte", "uom", "PCS", "trackStock", false, "price", 28000));

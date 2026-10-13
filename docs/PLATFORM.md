@@ -17,6 +17,13 @@ gagal), lalu `pos.platform_provision_merchant` membuat dalam satu transaksi: org
 gudang, terminal `<KODE>-K1`, karyawan `OWNER`, user `<kode>.owner` dengan role OWNER + ADMIN + STORE_MANAGER,
 pajak (PPN 11%, PB1 10% untuk F&B), profil struk, dan (lewat trigger organisasi) metode pembayaran & pecahan kas.
 
+## Preset jenis usaha
+`platform_apply_preset` (dipanggil otomatis saat membuat merchant; aman diulang) mengisi data awal menurut jenis usaha:
+- **F&B:** kategori Makanan/Minuman/Snack/Paket Hemat; opsi Level pedas, Suhu, Gula, Topping; diskon member 10% & Promo Rp 5.000.
+- **Retail:** 5 kategori umum, diskon member 5% & potongan Rp 5.000.
+- **Jasa / Umum:** kategori dasar dan satu diskon.
+Tanpa produk contoh (agar tidak memakan kuota paket). Semuanya dapat diubah pemilik.
+
 ## Paket & batas
 Tabel `plans` (`NULL` = tanpa batas): TRIAL (1 outlet, 1 kasir, 3 user, 100 produk, 14 hari), STARTER, BUSINESS,
 ENTERPRISE. Trigger menolak penambahan melebihi batas dengan `PLAN_LIMIT_EXCEEDED` (HTTP 403, pesan jelas).
@@ -33,4 +40,4 @@ seluruh akses merchant tertutup seketika (fail-closed). Login pengguna juga dibl
 - Tabel `plans` dan `organization_subscriptions` tertutup bagi pengguna merchant.
 - Role kustom masih global (belum per-organisasi): tidak ada UI untuk membuatnya; perlu `organization_id`
   pada `roles` sebelum fitur itu dibuka.
-- Pengujian: `db/tests/test_17_platform_tenancy.sql` (47 pernyataan) dan `PlatformIT`.
+- Pengujian: `db/tests/test_17_platform_tenancy.sql` (51 pernyataan) dan `PlatformIT`.

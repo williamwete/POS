@@ -26,6 +26,9 @@ SET LOCAL ROLE pos_app_user;
 SELECT pos_test.ok((SELECT count(*) = 4 FROM pos.platform_plans()), 'platform melihat 4 paket');
 INSERT INTO m (a) SELECT pos.platform_provision_merchant('ACME', 'Acme Kopi', 'FNB', 'STARTER', 'ACME01', 'Acme Pusat', 'Budi Acme', 'budi@acme.test', pos_test.make_auth_user('budi@acme.test'));
 INSERT INTO m (b) SELECT pos.platform_provision_merchant('BETA', 'Beta Mart', 'RETAIL', 'TRIAL', 'BETA01', 'Beta Pusat', 'Citra Beta', 'citra@beta.test', pos_test.make_auth_user('citra@beta.test'));
+SELECT pos.platform_apply_preset(a) FROM m WHERE a IS NOT NULL;
+SELECT pos.platform_apply_preset(b) FROM m WHERE b IS NOT NULL;
+SELECT pos.platform_apply_preset(a) FROM m WHERE a IS NOT NULL;
 SELECT pos_test.throws($$SELECT pos.platform_provision_merchant('ACME', 'Dup', 'FNB', 'TRIAL', 'D1', 'D1', 'x', 'dup@x.test', pos_test.make_auth_user('dup@x.test'))$$,
     'organizations_code_uk', 'kode merchant unik');
 SELECT pos_test.throws($$SELECT pos.platform_provision_merchant('PLATFORM', 'x', 'FNB', 'TRIAL', 'D1', 'D1', 'x', 'dup2@x.test', pos_test.make_auth_user('dup2@x.test'))$$,
@@ -53,6 +56,9 @@ SET LOCAL ROLE pos_app_user;
 SELECT pos_test.ok((SELECT count(*) = 1 FROM pos.organizations), 'pemilik hanya melihat organisasinya');
 SELECT pos_test.ok((SELECT count(*) = 2 FROM pos.tax_rates), 'pajak awal dibuat');
 SELECT pos_test.ok((SELECT count(*) >= 1 FROM pos.payment_methods), 'metode pembayaran awal dibuat');
+SELECT pos_test.ok((SELECT count(*) = 4 FROM pos.product_categories), 'preset F&B: 4 kategori (aman dipanggil ulang)');
+SELECT pos_test.ok((SELECT count(*) = 4 FROM pos.product_option_groups) AND (SELECT count(*) = 11 FROM pos.product_options), 'preset F&B: 4 grup opsi, 11 opsi');
+SELECT pos_test.ok((SELECT count(*) = 2 FROM pos.discount_presets), 'preset F&B: 2 diskon');
 SELECT pos_test.ok((SELECT count(*) >= 1 FROM pos.cash_denominations), 'pecahan kas awal dibuat');
 SELECT pos_test.ok((SELECT count(*) = 1 FROM pos.receipt_profiles WHERE business_name = 'Acme Kopi'), 'profil struk awal dibuat');
 SELECT pos_test.ok((SELECT count(*) = 1 FROM pos.terminals WHERE code = 'ACME-K1'), 'terminal ACME-K1');
@@ -98,6 +104,7 @@ RESET ROLE;
 -- ---- batas paket lain (BETA = TRIAL: 3 pengguna, 1 terminal, 100 produk)
 SELECT pos_test.login('beta.owner');
 SET LOCAL ROLE pos_app_user;
+SELECT pos_test.ok((SELECT count(*) = 5 FROM pos.product_categories) AND (SELECT count(*) = 0 FROM pos.product_option_groups), 'preset retail: 5 kategori, tanpa opsi');
 SELECT pos_test.throws($$INSERT INTO pos.terminals (outlet_id, code, name) SELECT id, 'BETA-K2', 'K2' FROM pos.outlets$$,
     'PLAN_LIMIT_EXCEEDED', 'TRIAL dibatasi 1 terminal');
 SELECT count(pos.save_product(NULL, 'P' || g, 'Produk ' || g, NULL, 'PCS', false, NULL, false, true, NULL, NULL, 1000)) FROM generate_series(1, 100) g;

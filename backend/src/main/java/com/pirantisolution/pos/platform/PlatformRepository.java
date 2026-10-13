@@ -46,6 +46,10 @@ public class PlatformRepository {
                 .query(UUID.class).single();
     }
 
+    void applyPreset(UUID org) {
+        jdbc.sql("SELECT pos.platform_apply_preset(:org)").param("org", org).query().singleRow();
+    }
+
     void setPlan(UUID org, String plan) {
         jdbc.sql("SELECT pos.platform_set_plan(:org, :plan)").param("org", org).param("plan", plan)
                 .query().singleRow();

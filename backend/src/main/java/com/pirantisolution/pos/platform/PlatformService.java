@@ -77,6 +77,7 @@ public class PlatformService {
         });
 
         UUID org = repo.provision(req, req.code().toUpperCase(), req.outletCode().toUpperCase(), email, authUserId);
+        repo.applyPreset(org);
         MerchantRow row = repo.merchant(org).orElseThrow();
         return new CreatedMerchant(row, req.code().toLowerCase() + ".owner");
     }
