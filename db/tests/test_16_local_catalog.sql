@@ -124,3 +124,19 @@ UPDATE pos.sales SET status = 'CHECKOUT';
 SELECT pos_test.ok((SELECT status = 'CHECKOUT' AND grand_total = 60000 FROM pos.sales), 'produk tanpa stok boleh checkout');
 RESET ROLE;
 ROLLBACK;
+
+-- Foto produk (V025)
+BEGIN;
+SELECT pos_test.login('owner');
+SET LOCAL ROLE pos_app_user;
+CREATE TEMP TABLE ph (id uuid);
+GRANT ALL ON ph TO PUBLIC;
+INSERT INTO ph SELECT pos.save_product(NULL, 'FOTO1', 'Produk Foto', NULL, 'PCS', false, NULL, true, true, 'data:image/png;base64,iVBORw0KGgo=', NULL, 5000);
+SELECT pos_test.ok((SELECT image_url LIKE 'data:image/png%' FROM pos.products WHERE id = (SELECT id FROM ph)), 'foto produk tersimpan');
+SELECT pos_test.throws($$SELECT pos.save_product((SELECT id FROM ph), 'FOTO1', 'Produk Foto', NULL, 'PCS', false, NULL, true, true, 'data:image/svg+xml;base64,PHN2Zz4=', NULL, NULL)$$, 'CATALOG_INVALID', 'foto SVG ditolak');
+SELECT pos.save_product((SELECT id FROM ph), 'FOTO1', 'Produk Foto Baru', NULL, 'PCS', false, NULL, true, true, NULL, NULL, NULL);
+SELECT pos_test.ok((SELECT image_url IS NOT NULL FROM pos.products WHERE id = (SELECT id FROM ph)), 'p_image NULL tidak menghapus foto');
+SELECT pos.save_product((SELECT id FROM ph), 'FOTO1', 'Produk Foto Baru', NULL, 'PCS', false, NULL, true, true, '', NULL, NULL);
+SELECT pos_test.ok((SELECT image_url IS NULL FROM pos.products WHERE id = (SELECT id FROM ph)), 'p_image kosong menghapus foto');
+RESET ROLE;
+ROLLBACK;

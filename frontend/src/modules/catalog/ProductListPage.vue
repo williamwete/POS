@@ -15,6 +15,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import FormField from '@/components/FormField.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import OptionGroupsDialog from './OptionGroupsDialog.vue'
+import { fileToProductPhoto } from '@/utils/brand'
 import { api } from '@/services'
 import { useApiAction } from '@/composables/useApiAction'
 import { useSessionStore } from '@/stores/session'
@@ -71,8 +72,23 @@ const editing = ref<CatalogProduct | null>(null)
 const form = reactive({
   sku: '', name: '', categoryId: null as string | null, uom: 'PCS', price: null as number | null, taxRateId: null as string | null,
   barcode: '', trackStock: true, allowDecimalQty: false, active: true, groupIds: [] as string[], stock: null as number | null,
+  photo: null as string | null, photoChanged: false,
 })
 const error = ref('')
+async function pickPhoto(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    form.photo = await fileToProductPhoto(file)
+    form.photoChanged = true
+    error.value = ''
+  } catch (err) {
+    error.value = (err as Error).message
+  }
+  input.value = ''
+}
+function removePhoto() { form.photo = null; form.photoChanged = true }
 
 function openDialog(p?: CatalogProduct) {
   editing.value = p ?? null
@@ -82,6 +98,7 @@ function openDialog(p?: CatalogProduct) {
     barcode: p?.barcode ?? '', trackStock: p?.trackStock ?? true, allowDecimalQty: p?.allowDecimalQty ?? false,
     active: p?.active ?? true, groupIds: p ? [...p.optionGroupIds] : [],
     stock: p?.available !== undefined && p?.available !== null ? Number(p.available) : null,
+    photo: p?.imageUrl ?? null, photoChanged: false,
   })
   error.value = ''
   open.value = true
@@ -95,6 +112,7 @@ async function save() {
     sku: form.sku.trim(), name: form.name.trim(), categoryId: form.categoryId, uom: form.uom.trim() || 'PCS',
     allowDecimalQty: form.allowDecimalQty, taxRateId: form.taxRateId, trackStock: form.trackStock, active: form.active,
     barcode: form.barcode.trim(), price: form.price,
+    imageUrl: form.photoChanged ? (form.photo ?? '') : null,
   }
   const saved = await run(async () => {
     const res = editing.value
@@ -134,8 +152,11 @@ async function save() {
       <template #empty>{{ canManage ? 'Belum ada produk. Klik “Tambah produk” untuk memulai.' : 'Tidak ada produk.' }}</template>
       <Column header="Produk">
         <template #body="{ data }">
-          <div class="font-semibold">{{ data.name }}</div>
-          <div class="tabular text-xs text-ink-soft">{{ data.sku }}<template v-if="data.barcode"> · {{ data.barcode }}</template></div>
+          <div class="flex items-center gap-2">
+            <img v-if="data.imageUrl" :src="data.imageUrl" :alt="data.name" class="h-9 w-9 rounded object-contain" />
+            <div><div class="font-semibold">{{ data.name }}</div>
+          <div class="tabular text-xs text-ink-soft">{{ data.sku }}<template v-if="data.barcode"> · {{ data.barcode }}</template></div></div>
+          </div>
         </template>
       </Column>
       <Column header="Kategori"><template #body="{ data }">{{ data.categoryName ?? '—' }}</template></Column>
@@ -154,6 +175,18 @@ async function save() {
     <Dialog v-model:visible="open" :header="editing ? `Ubah ${editing.name}` : 'Tambah produk'" modal class="w-full max-w-2xl">
       <form class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
         <FormField label="Nama produk" for="p-name" required class="sm:col-span-2"><InputText id="p-name" v-model="form.name" class="w-full" maxlength="120" /></FormField>
+        <div class="flex items-center gap-3 sm:col-span-2">
+          <img v-if="form.photo" :src="form.photo" alt="Foto produk" class="h-20 w-20 rounded border border-line object-contain" />
+          <div v-else class="grid h-20 w-20 place-items-center rounded border border-dashed border-line text-xs text-ink-faint">Tanpa foto</div>
+          <div class="flex flex-col gap-1">
+            <label class="cursor-pointer text-sm font-medium text-jade-700 underline">
+              {{ form.photo ? 'Ganti foto' : 'Unggah foto' }}
+              <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" @change="pickPhoto" />
+            </label>
+            <button v-if="form.photo" type="button" class="text-left text-sm text-alert-600 underline" @click="removePhoto">Hapus foto</button>
+            <span class="text-xs text-ink-faint">Otomatis dikecilkan. Muncul di layar kasir.</span>
+          </div>
+        </div>
         <FormField label="SKU" for="p-sku" required><InputText id="p-sku" v-model="form.sku" class="w-full uppercase" maxlength="40" /></FormField>
         <FormField label="Barcode" for="p-bc" hint="Kosongkan bila tidak ada"><InputText id="p-bc" v-model="form.barcode" class="w-full" maxlength="64" /></FormField>
         <FormField label="Kategori" for="p-cat">

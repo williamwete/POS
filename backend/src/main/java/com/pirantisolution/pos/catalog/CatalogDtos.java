@@ -54,7 +54,7 @@ public final class CatalogDtos {
             UUID taxRateId,
             Boolean trackStock,
             Boolean active,
-            @Size(max = 500) String imageUrl,
+            @Size(max = 60000) String imageUrl,
             /** null = tidak diubah, "" = hapus barcode utama */
             @Size(max = 64) String barcode,
             /** null = tidak diubah (wajib untuk produk baru) */

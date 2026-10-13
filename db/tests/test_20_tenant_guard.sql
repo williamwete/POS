@@ -33,6 +33,8 @@ SELECT pos_test.login('guarda.owner');
 SET LOCAL ROLE pos_app_user;
 SELECT pos_test.ok((SELECT count(*) > 0 FROM pos.product_categories), 'pemilik A melihat data sendiri');
 SELECT pos_test.ok(pos_test.foreign_rows((SELECT a FROM m WHERE a IS NOT NULL)) = 0, 'pemilik A tidak melihat baris org lain di tabel mana pun');
+SELECT pos_test.ok((SELECT count(*) = 0 FROM pos.products), 'merchant baru mulai dengan katalog produk kosong (tidak ada produk merchant lain)');
+SELECT pos_test.ok((SELECT count(*) = 0 FROM pos.users WHERE username NOT LIKE 'guarda.%'), 'merchant baru hanya melihat user miliknya');
 RESET ROLE;
 
 SELECT pos_test.login('guardb.owner');

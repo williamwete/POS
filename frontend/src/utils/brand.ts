@@ -62,17 +62,21 @@ export function applyBrandColor(hex: string | null, root: HTMLElement = document
 const MAX_LOGO_CHARS = 90000
 
 /** Mengecilkan gambar ke maks 256 px dan mengubahnya jadi data URL kecil (PNG, lalu WebP/JPEG bila perlu). */
-export async function fileToLogo(file: File): Promise<string> {
+export async function fileToImage(file: File, maxChars: number, maxPx = 256): Promise<string> {
   if (!/^image\/(png|jpeg|webp)$/.test(file.type)) throw new Error('Gunakan gambar PNG, JPEG, atau WebP')
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, 256 / Math.max(bitmap.width, bitmap.height))
+  const scale = Math.min(1, maxPx / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(bitmap.width * scale))
   canvas.height = Math.max(1, Math.round(bitmap.height * scale))
   canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   for (const [type, quality] of [['image/png'], ['image/webp', 0.85], ['image/webp', 0.6], ['image/jpeg', 0.7]] as [string, number?][]) {
     const url = canvas.toDataURL(type, quality)
-    if (url.startsWith(`data:${type}`) && url.length <= MAX_LOGO_CHARS) return url
+    if (url.startsWith(`data:${type}`) && url.length <= maxChars) return url
   }
-  throw new Error('Logo terlalu besar, gunakan gambar yang lebih sederhana')
+  throw new Error('Gambar terlalu besar, gunakan gambar yang lebih sederhana')
 }
+
+export const fileToLogo = (file: File) => fileToImage(file, MAX_LOGO_CHARS)
+/** Foto produk: maks 320 px, ≤ 45.000 karakter (batas server 60.000). */
+export const fileToProductPhoto = (file: File) => fileToImage(file, 45000, 320)

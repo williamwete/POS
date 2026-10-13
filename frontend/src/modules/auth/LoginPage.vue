@@ -21,12 +21,9 @@ const busy = ref(false)
 const isLocal = (import.meta.env.VITE_AUTH_MODE ?? 'local') === 'local'
 
 const demoAccounts = [
-  ['cashier.jkt@demo.local', 'Kasir Jakarta'],
-  ['supervisor.jkt@demo.local', 'Supervisor Jakarta'],
-  ['manager@demo.local', 'Store manager JKT & BDG'],
-  ['admin@demo.local', 'Admin sistem'],
+  ['owner@demo.local', 'Pemilik merchant demo'],
+  ['cashier.jkt@demo.local', 'Kasir demo'],
   ['platform@demo.local', 'Operator platform (konsol merchant)'],
-  ['auditor@demo.local', 'Auditor (read-only)'],
 ]
 
 async function submit() {
