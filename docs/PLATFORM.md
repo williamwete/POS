@@ -68,3 +68,6 @@ Pengaturan merchant `attendance_required` (menu **Pengaturan**, perm `configurat
 
 ## Masa percobaan berakhir (V028)
 Merchant berpaket TRIAL yang `trial_ends_at`-nya lewat tidak bisa membuat penjualan baru atau membuka kasir (`TRIAL_EXPIRED`, HTTP 403); data tetap bisa dilihat. Banner muncul 7 hari sebelum berakhir. Operator memperpanjang lewat **Ganti paket** (memilih TRIAL lagi = 14 hari baru) atau memindahkan ke paket berbayar.
+
+## Dashboard (V030)
+Menu **Dashboard** (perm `report.view`; Owner, Admin, Store Manager, Auditor): omzet bersih (dikurangi retur), jumlah transaksi, rata-rata keranjang, void, tren harian, jam ramai, metode bayar, produk & kategori terlaris, ringkasan closing kasir (selisih), stok menipis, dan peringatan (kasir masih terbuka, gagal sinkron). Dihitung di database (`pos.dashboard`) dari penjualan lunas per business date; rentang maks 366 hari. Merchant satu outlet melihat seluruh datanya; peran per-outlet hanya outlet-nya.

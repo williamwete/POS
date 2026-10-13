@@ -998,3 +998,20 @@ export interface Subscription {
   trialEndsAt?: string | null
   expired: boolean
 }
+
+export interface DashboardData {
+  from: string
+  to: string
+  summary: {
+    salesCount: number; grossSales: number; discounts: number; tax: number; netSales: number; avgBasket: number
+    itemsSold: number; returnsTotal: number; returnsCount: number; voidCount: number; voidTotal: number
+  }
+  daily: { date: string; count: number; total: number }[]
+  hourly: { hour: number; count: number; total: number }[]
+  payments: { method: string; kind: string; count: number; amount: number }[]
+  topProducts: { sku: string; name: string; quantity: number; revenue: number }[]
+  categories: { name: string; revenue: number }[]
+  cash: { closedSessions: number; sessionsWithDifference: number; shortTotal: number; overTotal: number }
+  lowStock: { sku: string; name: string; available: number }[]
+  attention: { syncProblems: number; openSessions: number }
+}
