@@ -2,6 +2,9 @@
 import type { Receipt } from '@/types/api'
 import { formatNumber } from '@/utils/money'
 import { formatBusinessDate } from '@/utils/format'
+import { useBrandStore } from '@/stores/brand'
+
+const brand = useBrandStore()
 
 /** Struk 80 mm (§30). Dipakai untuk pratinjau dan cetak (thermal via dialog print browser). */
 const props = defineProps<{ receipt: Receipt }>()
@@ -15,6 +18,7 @@ const unpaid = () => props.receipt.status !== 'PAID' && props.receipt.status !==
 <template>
   <article class="receipt-paper mx-auto bg-white p-4 font-mono text-[12px] leading-snug text-black" aria-label="Struk" :style="{ '--paper': `${receipt.paperWidthMm ?? 80}mm` }">
     <header class="text-center">
+      <img v-if="brand.logo" :src="brand.logo" alt="" class="mx-auto mb-1 max-h-14 max-w-[40mm] object-contain grayscale" />
       <div class="text-[14px] font-bold">{{ receipt.organizationName }}</div>
       <div class="font-semibold">{{ receipt.outletName }}</div>
       <div v-if="receipt.outletAddress">{{ receipt.outletAddress }}</div>

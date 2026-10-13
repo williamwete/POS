@@ -9,6 +9,7 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import PageHeader from '@/components/PageHeader.vue'
 import FormField from '@/components/FormField.vue'
 import ReceiptPaper from '@/modules/pos/ReceiptPaper.vue'
+import BrandSettings from './BrandSettings.vue'
 import { api } from '@/services'
 import { useApiAction } from '@/composables/useApiAction'
 import { useSessionStore } from '@/stores/session'
@@ -72,7 +73,9 @@ const sample = computed<Receipt>(() => ({
   <div>
     <PageHeader title="Manage Receipt" description="Atur nama usaha, alamat, dan catatan di struk. Pengaturan outlet menimpa pengaturan bawaan semua outlet." />
     <p v-if="!canManage" class="rounded-xl border border-dashed border-line p-8 text-center text-sm text-ink-soft">Anda tidak punya izin mengatur struk.</p>
-    <div v-else class="grid gap-8 lg:grid-cols-[1fr_auto]">
+    <template v-else>
+    <BrandSettings v-if="session.can('receipt.manage', 'org')" />
+    <div class="grid gap-8 lg:grid-cols-[1fr_auto]">
       <form class="grid max-w-2xl gap-4 sm:grid-cols-2" @submit.prevent="save">
         <FormField label="Berlaku untuk" for="r-scope" class="sm:col-span-2"><Select v-model="scope" input-id="r-scope" :options="scopeOptions" option-label="label" option-value="value" class="w-full" /></FormField>
         <FormField label="Nama usaha di struk" for="r-name" class="sm:col-span-2"><InputText id="r-name" v-model="form.businessName" class="w-full" maxlength="80" placeholder="Kosong = nama organisasi" /></FormField>
@@ -90,5 +93,6 @@ const sample = computed<Receipt>(() => ({
       </form>
       <aside aria-label="Contoh struk" class="rounded-2xl border border-line bg-field p-4"><ReceiptPaper :receipt="sample" /></aside>
     </div>
+    </template>
   </div>
 </template>

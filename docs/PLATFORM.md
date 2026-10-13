@@ -24,6 +24,15 @@ pajak (PPN 11%, PB1 10% untuk F&B), profil struk, dan (lewat trigger organisasi)
 - **Jasa / Umum:** kategori dasar dan satu diskon.
 Tanpa produk contoh (agar tidak memakan kuota paket). Semuanya dapat diubah pemilik.
 
+## Branding per merchant
+Halaman **Manage Receipt** memuat kartu *Merek & tampilan* (izin `receipt.manage` tingkat organisasi): nama tampilan,
+warna utama, dan logo. Disimpan di `organization_branding`; `GET /api/branding` dibaca semua pengguna, `PUT` hanya pengelola.
+- Warna: `#RRGGBB` dengan kontras ≥ 2,5 terhadap putih (tombol berteks putih harus terbaca); palet 50–950 dibuat otomatis
+  di frontend (`utils/brand.ts`) dan menimpa variabel CSS Tailwind (`--brand-*`) dan PrimeVue (`--p-primary-*`).
+- Logo: data URL PNG/JPEG/WebP ≤ ~70 KB (frontend mengecilkan ke 256 px). SVG ditolak karena dapat memuat skrip.
+  Pada struk logo dicetak hitam-putih.
+- Kosong = tampilan bawaan. Belum ada: subdomain/halaman login bermerek per merchant.
+
 ## Paket & batas
 Tabel `plans` (`NULL` = tanpa batas): TRIAL (1 outlet, 1 kasir, 3 user, 100 produk, 14 hari), STARTER, BUSINESS,
 ENTERPRISE. Trigger menolak penambahan melebihi batas dengan `PLAN_LIMIT_EXCEEDED` (HTTP 403, pesan jelas).

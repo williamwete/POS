@@ -29,7 +29,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #78A0CF;
+  outline: 2px solid rgb(var(--brand-500));
   outline-offset: 2px;
 }
 
@@ -64,4 +64,14 @@ body {
     background: #fff !important;
     padding: 0 !important;
   }
+}
+
+/* Warna utama bawaan (saluran RGB); ditimpa per merchant lewat utils/brand.ts */
+:root {
+  --brand-50: 234 242 250;
+  --brand-100: 214 230 242;
+  --brand-500: 120 160 207;
+  --brand-600: 94 139 192;
+  --brand-700: 63 106 158;
+  --brand-900: 31 59 94;
 }

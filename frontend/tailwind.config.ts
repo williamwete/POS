@@ -9,7 +9,12 @@ export default {
         field: '#F7FAFC',
         surface: '#FFFFFF',
         ink: { DEFAULT: '#111111', soft: '#4B5563', faint: '#9CA3AF' },
-        jade: { 50: '#EAF2FA', 100: '#D6E6F2', 500: '#78A0CF', 600: '#5E8BC0', 700: '#3F6A9E', 900: '#1F3B5E' },
+        // warna utama merchant: nilai bawaan ada di styles.css, ditimpa saat branding diterapkan (utils/brand.ts)
+        jade: {
+          50: 'rgb(var(--brand-50) / <alpha-value>)', 100: 'rgb(var(--brand-100) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)', 600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)', 900: 'rgb(var(--brand-900) / <alpha-value>)',
+        },
         amber: { 100: '#FBEBCF', 500: '#E8A33D', 700: '#9A6414' },
         alert: { 50: '#FDECEC', 600: '#E5392D' },
         teal: { 100: '#DDF0EE', 500: '#338C84', 700: '#0F7A6B' },

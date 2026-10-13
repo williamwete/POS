@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import { useSessionStore } from '@/stores/session'
+import { useBrandStore } from '@/stores/brand'
 import { formatBusinessDate } from '@/utils/format'
 import { routes, type PermissionRequirement } from '@/router'
 import { useAttendanceStore } from '@/stores/attendance'
@@ -14,6 +15,7 @@ import { useIdleLock } from '@/composables/useIdleLock'
 import { useMenuStore } from '@/stores/menu'
 
 const session = useSessionStore()
+const brand = useBrandStore()
 const router = useRouter()
 const route = useRoute()
 const navOpen = ref(false)
@@ -101,9 +103,10 @@ async function logout() {
       aria-label="Navigasi utama"
     >
       <RouterLink :to="{ name: 'home' }" class="flex items-center gap-3 px-6 py-5">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-jade-500 text-base font-bold text-white">C</span>
+        <img v-if="brand.logo" :src="brand.logo" alt="" class="h-9 w-9 rounded-xl object-contain" />
+        <span v-else class="grid h-9 w-9 place-items-center rounded-xl bg-jade-500 text-base font-bold text-white">{{ brand.name.charAt(0).toUpperCase() }}</span>
         <span class="min-w-0 leading-tight">
-          <span class="block truncate text-sm font-bold">{{ session.me?.organization.name }}</span>
+          <span class="block truncate text-sm font-bold">{{ brand.name }}</span>
           <span class="block text-xs text-ink-faint">CuanRena POS</span>
         </span>
       </RouterLink>
@@ -147,7 +150,10 @@ async function logout() {
     <div class="flex min-h-screen min-w-0 flex-col">
       <!-- bar konteks: selalu menunjukkan DI MANA dan KAPAN (business date) user bekerja -->
       <header class="sticky top-0 z-20 flex h-16 items-center gap-3 bg-jade-100 px-4 sm:px-6">
-        <span class="text-2xl font-bold tracking-tight">CuanRena</span>
+        <span class="flex items-center gap-2 text-2xl font-bold tracking-tight">
+          <img v-if="brand.logo" :src="brand.logo" alt="" class="h-8 w-8 rounded-lg object-contain" />
+          <span class="max-w-[14rem] truncate">{{ brand.name }}</span>
+        </span>
 
         <div class="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
           <template v-if="outlet">

@@ -915,3 +915,10 @@ export interface CreatedMerchant {
   merchant: Merchant
   ownerUsername: string
 }
+
+export interface Branding {
+  organizationName: string
+  displayName?: string | null
+  primaryColor?: string | null
+  logo?: string | null
+}
