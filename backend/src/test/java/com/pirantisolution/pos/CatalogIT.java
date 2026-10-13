@@ -129,15 +129,15 @@ class CatalogIT extends IntegrationTestBase {
 
     @Test
     void bulkImportCreatesProductsAllOrNothing() throws Exception {
-        String a = unique("IMP").replace("-", "").substring(0, 12);
-        String b = unique("IMP").replace("-", "").substring(0, 12);
+        String a = unique("IMP").replace("-", "");
+        String b = unique("IMP").replace("-", "");
         MvcResult ok = postAs("admin", "/api/catalog/products/import", Map.of("rows", List.of(
                 Map.of("sku", a, "name", "Impor A", "category", "Impor Test", "price", "5000"),
                 Map.of("sku", b, "name", "Impor B", "price", "7000"))));
         assertThat(ok.getResponse().getStatus()).isEqualTo(200);
         assertThat(body(ok).at("/data/created").asInt()).isEqualTo(2);
 
-        String c = unique("IMP").replace("-", "").substring(0, 12);
+        String c = unique("IMP").replace("-", "");
         MvcResult bad = postAs("admin", "/api/catalog/products/import", Map.of("rows", List.of(
                 Map.of("sku", c, "name", "Baik", "price", "1000"),
                 Map.of("sku", "X" + c, "name", "Salah", "price", "-1"))));
