@@ -91,16 +91,16 @@ class PresenceIT extends IntegrationTestBase {
         assertThat(call(newCashier(OUTLET_JKT).token(), "GET", "/api/admin/menus", null).getResponse().getStatus()).isEqualTo(403);
         assertThat(body(getAs("owner", "/api/admin/menus")).get("data").size()).isEqualTo(44);
 
-        MvcResult set = putAs("owner", "/api/admin/menus", Map.of("menuCode", "manage-receipt", "roleCode", "SUPERVISOR", "enabled", true));
+        MvcResult set = putAs("owner", "/api/admin/menus", Map.of("menuCode", "history", "roleCode", "SUPERVISOR", "enabled", false));
         assertThat(set.getResponse().getStatus()).as(set.getResponse().getContentAsString()).isEqualTo(200);
         java.util.List<String> sup = new java.util.ArrayList<>();
         body(getAs("supervisor.jkt", "/api/menus/me?outletId=" + OUTLET_JKT)).get("data").forEach(m -> sup.add(m.get("code").asText()));
-        assertThat(sup).contains("manage-receipt");
+        assertThat(sup).doesNotContain("history");
         // reset ke default
-        putAs("owner", "/api/admin/menus", java.util.Map.of("menuCode", "manage-receipt", "roleCode", "SUPERVISOR"));
+        putAs("owner", "/api/admin/menus", java.util.Map.of("menuCode", "history", "roleCode", "SUPERVISOR"));
         sup.clear();
         body(getAs("supervisor.jkt", "/api/menus/me?outletId=" + OUTLET_JKT)).get("data").forEach(m -> sup.add(m.get("code").asText()));
-        assertThat(sup).doesNotContain("manage-receipt");
+        assertThat(sup).contains("history");
         assertThat(code(putAs("owner", "/api/admin/menus", Map.of("menuCode", "pos", "roleCode", "SUPER_ADMIN", "enabled", true))))
                 .isEqualTo("MENU_ROLE_NOT_CONFIGURABLE");
     }
