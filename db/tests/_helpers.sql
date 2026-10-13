@@ -323,3 +323,20 @@ AS $$
     RETURNING id
 $$;
 GRANT EXECUTE ON FUNCTION pos_test.new_return(uuid, text, text, text), pos_test.return_line(uuid, uuid, text, numeric) TO PUBLIC;
+
+-- Hitung baris org lain yang terlihat oleh role saat ini (test_20).
+CREATE OR REPLACE FUNCTION pos_test.foreign_rows(p_org uuid) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE r record; n bigint; total bigint := 0;
+BEGIN
+    FOR r IN SELECT cl.relname AS table_name FROM pg_class cl JOIN pg_namespace ns ON ns.oid = cl.relnamespace
+             WHERE ns.nspname = 'pos' AND cl.relkind = 'r'
+               AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = cl.oid AND a.attname = 'organization_id' AND NOT a.attisdropped)
+               AND has_table_privilege(current_user, cl.oid, 'SELECT')
+    LOOP
+        EXECUTE format('SELECT count(*) FROM pos.%I WHERE organization_id <> $1', r.table_name) INTO n USING p_org;
+        total := total + n;
+    END LOOP;
+    RETURN total;
+END $$;
+GRANT EXECUTE ON FUNCTION pos_test.foreign_rows(uuid) TO PUBLIC;
