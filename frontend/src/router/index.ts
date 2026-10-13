@@ -62,7 +62,7 @@ export const routes: RouteRecordRaw[] = [
       { path: 'context', name: 'context', component: () => import('@/modules/auth/SelectContextPage.vue'), meta: { title: 'Pilih outlet & terminal' } },
       {
         path: 'admin/outlets', name: 'outlets', component: () => import('@/modules/admin/OutletsPage.vue'),
-        meta: { title: 'Outlet', anyOf: [{ permission: 'outlet.manage', scope: 'org' }] },
+        meta: { title: 'Outlet', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
       },
       {
         path: 'admin/terminals', name: 'terminals', component: () => import('@/modules/admin/TerminalsPage.vue'),
@@ -95,11 +95,11 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: 'admin/sync', name: 'sync', component: () => import('@/modules/admin/SyncPage.vue'),
-        meta: { title: 'Sinkronisasi Openbravo', anyOf: [{ permission: 'sync.view', scope: 'any' }, { permission: 'sync.manage', scope: 'org' }] },
+        meta: { title: 'Sinkronisasi Openbravo', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
       },
       {
         path: 'admin/openbravo-mappings', name: 'openbravo-mappings', component: () => import('@/modules/admin/OpenbravoMappingsPage.vue'),
-        meta: { title: 'Pemetaan Openbravo', anyOf: [{ permission: 'configuration.manage', scope: 'org' }] },
+        meta: { title: 'Pemetaan Openbravo', anyOf: [{ permission: 'platform.manage', scope: 'org' }] },
       },
       {
         path: 'admin/audit', name: 'audit', component: () => import('@/modules/admin/AuditLogPage.vue'),
