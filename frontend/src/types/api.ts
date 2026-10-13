@@ -990,3 +990,11 @@ export interface MerchantBalance {
   holdDays: number
   minPayout: number
 }
+
+export interface Subscription {
+  planCode: string
+  planName: string
+  status: 'TRIAL' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED'
+  trialEndsAt?: string | null
+  expired: boolean
+}

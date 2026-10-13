@@ -13,6 +13,7 @@ import { useCashierStore } from '@/stores/cashier'
 import { useSaleStore } from '@/stores/sale'
 import { useIdleLock } from '@/composables/useIdleLock'
 import { useMenuStore } from '@/stores/menu'
+import TrialBanner from '@/components/TrialBanner.vue'
 
 const session = useSessionStore()
 const brand = useBrandStore()
@@ -206,6 +207,7 @@ async function logout() {
           <button class="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-jade-100 sm:hidden" aria-label="Buka menu" @click="navOpen = !navOpen">
             <i class="pi pi-bars" />
           </button>
+          <TrialBanner />
           <RouterView />
         </main>
       </div>

@@ -65,3 +65,6 @@ seluruh akses merchant tertutup seketika (fail-closed). Login pengguna juga dibl
 
 ## Clock in opsional (V027)
 Pengaturan merchant `attendance_required` (menu **Pengaturan**, perm `configuration.manage`; Owner dan Admin). Bawaan: wajib. Bila dimatikan, membuka kasir otomatis membuat kehadiran (`device_id = 'AUTO'`) dan menutup kasir menutupnya, sehingga aturan sesi kasir/penjualan/pembayaran tidak berubah. Perubahan tercatat di audit log.
+
+## Masa percobaan berakhir (V028)
+Merchant berpaket TRIAL yang `trial_ends_at`-nya lewat tidak bisa membuat penjualan baru atau membuka kasir (`TRIAL_EXPIRED`, HTTP 403); data tetap bisa dilihat. Banner muncul 7 hari sebelum berakhir. Operator memperpanjang lewat **Ganti paket** (memilih TRIAL lagi = 14 hari baru) atau memindahkan ke paket berbayar.

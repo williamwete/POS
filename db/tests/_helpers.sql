@@ -340,3 +340,10 @@ BEGIN
     RETURN total;
 END $$;
 GRANT EXECUTE ON FUNCTION pos_test.foreign_rows(uuid) TO PUBLIC;
+
+-- Memajukan masa percobaan merchant ke masa lalu (test_22).
+CREATE OR REPLACE FUNCTION pos_test.expire_trial(p_org uuid) RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, pos AS $$
+    UPDATE pos.organization_subscriptions SET trial_ends_at = now() - interval '1 day' WHERE organization_id = p_org
+$$;
+GRANT EXECUTE ON FUNCTION pos_test.expire_trial(uuid) TO PUBLIC;

@@ -53,6 +53,7 @@ public enum ErrorCode {
     CATALOG_READ_ONLY(HttpStatus.CONFLICT, "Data ini berasal dari Openbravo dan tidak dapat diubah di POS"),
     PAYOUT_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Pencairan tidak dapat diproses"),
     PLAN_LIMIT_EXCEEDED(HttpStatus.FORBIDDEN, "Batas paket tercapai"),
+    TRIAL_EXPIRED(HttpStatus.FORBIDDEN, "Masa percobaan berakhir, hubungi penyedia layanan untuk berlangganan"),
     OPTION_SELECTION_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Pilihan opsi produk tidak valid"),
 
     // attendance (Phase 2)
