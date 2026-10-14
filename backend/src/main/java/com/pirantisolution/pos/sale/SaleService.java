@@ -125,6 +125,12 @@ public class SaleService {
 
     @Transactional
     public SaleView addItem(UUID saleId, AddItemRequest req) {
+        return addItem(saleId, req, false);
+    }
+
+    /** {@code ignoreStock}: hanya untuk transaksi offline yang sudah terjadi di toko (stok ditinjau, tidak ditolak). */
+    @Transactional
+    public SaleView addItem(UUID saleId, AddItemRequest req, boolean ignoreStock) {
         CurrentUser cu = requireEmployee();
         SaleView sale = editable(cu, saleId);
         ProductView product;
@@ -142,7 +148,9 @@ public class SaleService {
             throw new ApiException(ErrorCode.PRICE_NOT_FOUND);
         }
         checkQuantity(product.allowDecimalQty(), req.quantity());
-        checkStock(sale, product.id(), repo.quantityInCart(saleId, product.id()).add(req.quantity()));
+        if (!ignoreStock) {
+            checkStock(sale, product.id(), repo.quantityInCart(saleId, product.id()).add(req.quantity()));
+        }
 
         boolean hasOptions = req.optionIds() != null && !req.optionIds().isEmpty();
         Optional<UUID> merge = hasOptions ? Optional.empty() : repo.findMergeableLine(saleId, product.id());

@@ -72,8 +72,11 @@ public class OfflineSaleService {
             // transaksi dibuat di outlet/merchant lain: batalkan seluruhnya (transaksi database ikut dibatalkan)
             throw new ApiException(ErrorCode.OFFLINE_SALE_INVALID, "Transaksi offline ini milik outlet lain");
         }
+        // Barang sudah keluar & uang sudah diterima: stok tidak boleh menolak transaksi ini. Kekurangannya dicatat.
+        List<String> stockReasons = stockShortfalls(req, sale.outletId());
+        jdbc.sql("SELECT pos.offline_stock_waiver(:o)").param("o", sale.outletId()).query().singleRow();
         for (Line l : req.lines()) {
-            sale = sales.addItem(sale.id(), new AddItemRequest(l.productId(), l.barcode(), l.quantity(), null));
+            sale = sales.addItem(sale.id(), new AddItemRequest(l.productId(), l.barcode(), l.quantity(), null), true);
         }
         sale = sales.checkout(sale.id());
         BigDecimal serverTotal = sale.grandTotal();
@@ -84,6 +87,7 @@ public class OfflineSaleService {
         sale = saleRepo.findById(sale.id()).orElseThrow();
 
         List<String> reasons = reasons(req, serverTotal, sale.outletId());
+        reasons.addAll(stockReasons);
         jdbc.sql("SELECT pos.record_offline_sale(:s, :t, :c, :r)")
                 .param("s", sale.id())
                 .param("t", java.sql.Timestamp.from(req.offlineAt()))
@@ -91,6 +95,28 @@ public class OfflineSaleService {
                 .param("r", reasons.isEmpty() ? null : String.join("; ", reasons))
                 .query().singleRow();
         return new OfflineSaleResult(sale, false, reasons);
+    }
+
+    private List<String> stockShortfalls(OfflineSaleRequest req, UUID outletId) {
+        java.util.Map<UUID, BigDecimal> wanted = new java.util.LinkedHashMap<>();
+        for (Line l : req.lines()) {
+            if (l.productId() != null) {
+                wanted.merge(l.productId(), l.quantity(), BigDecimal::add);
+            }
+        }
+        List<String> out = new ArrayList<>();
+        for (var e : wanted.entrySet()) {
+            SaleRepository.Availability a = saleRepo.availability(e.getKey(), outletId);
+            if (a.allowNegative()) {
+                continue;
+            }
+            if (a.available() == null || a.available().compareTo(e.getValue()) < 0) {
+                out.add("Stok " + a.sku() + " tidak mencukupi di server (tersedia "
+                        + (a.available() == null ? "tidak diketahui" : a.available().stripTrailingZeros().toPlainString())
+                        + ", terjual " + e.getValue().stripTrailingZeros().toPlainString() + "); cocokkan stok");
+            }
+        }
+        return out;
     }
 
     private List<String> reasons(OfflineSaleRequest req, BigDecimal serverTotal, UUID outletId) {

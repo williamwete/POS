@@ -89,8 +89,8 @@ Transaksi yang sudah terjadi di toko tidak ditolak karena kebijakan. Hal-hal ber
 - nilai melebihi `max_offline_sale_amount`;
 - pengiriman lebih lambat dari `max_offline_duration_minutes`.
 
-Belum dikerjakan (tahap berikutnya): cache katalog dan antrean di browser, pengiriman otomatis, tampilan
-peninjauan, dan stok yang tidak cukup (saat ini pengiriman gagal bila stok server tidak cukup).
+Stok tidak cukup di server tidak menolak transaksi offline (barang sudah keluar): stok dicatat minus dan
+kekurangannya masuk peninjauan agar stok dicocokkan (`pos.offline_stock_waiver`, hanya berlaku dalam satu transaksi database).
 
 ### Tahap 2: kasir offline di browser
 
@@ -116,8 +116,7 @@ Menu Outlet, Sinkronisasi, dan Pemetaan Openbravo kini hanya untuk operator plat
   dihitung sebagai server terjangkau.
 - Halaman **Transaksi offline** (`/offline-reviews`, butuh `report.view`, ada tautan dari Dashboard): daftar
   selisih yang perlu ditinjau, ditutup dengan catatan minimal 5 karakter.
-- Batasan yang tersisa: stok server tidak cukup menolak transaksi offline (muncul sebagai "ditolak" di kasir),
-  produk dengan opsi belum bisa dijual offline, nomor struk resmi baru ada setelah terkirim.
+- Batasan yang tersisa: produk dengan opsi belum bisa dijual offline, nomor struk resmi baru ada setelah terkirim.
 
 Isolasi di perangkat bersama: antrean offline disimpan per akun (`ownerId`). Akun lain, termasuk dari merchant
 lain, tidak melihat dan tidak mengirimnya; entri lama tanpa pemilik hanya terlihat bila outlet-nya dapat diakses

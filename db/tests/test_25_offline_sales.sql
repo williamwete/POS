@@ -26,6 +26,14 @@ SELECT pos_test.ok(pos.record_offline_sale((SELECT id FROM a), now() - interval 
 SELECT pos_test.throws($$SELECT pos.record_offline_sale('00000000-0000-4000-8000-0000000fffff', now(), 1, NULL)$$, 'CATALOG_INVALID', 'transaksi tidak dikenal ditolak');
 SELECT pos_test.throws($$SELECT pos.record_offline_sale((SELECT id FROM a), now() + interval '1 day', 1, NULL)$$, 'CATALOG_INVALID', 'waktu di masa depan ditolak');
 SELECT pos_test.throws($$SELECT pos.offline_reviews('00000000-0000-4000-8000-000000000101', 'OPEN')$$, 'USER_NOT_AUTHORIZED', 'kasir tidak bisa melihat daftar peninjauan');
+-- stok: transaksi offline tidak boleh ditolak karena stok, transaksi biasa tetap ditolak
+CREATE TEMP TABLE d AS SELECT pos_test.new_sale() AS id;
+GRANT SELECT ON d TO PUBLIC;
+SELECT pos_test.add_item((SELECT id FROM d), 'SKU-0012', 90000);
+SELECT pos_test.throws($$UPDATE pos.sales SET status = 'CHECKOUT' WHERE id = (SELECT id FROM d)$$, 'STOCK_UNAVAILABLE', 'transaksi biasa tetap ditolak bila stok kurang');
+SELECT pos.offline_stock_waiver(:JKT);
+UPDATE pos.sales SET status = 'CHECKOUT' WHERE id = (SELECT id FROM d);
+SELECT pos_test.ok((SELECT status = 'CHECKOUT' FROM pos.sales WHERE id = (SELECT id FROM d)), 'transaksi offline tidak ditolak karena stok');
 RESET ROLE;
 
 SELECT pos_test.login('manager');
