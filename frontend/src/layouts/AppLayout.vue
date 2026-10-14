@@ -60,16 +60,16 @@ interface NavItem {
   icon: string
 }
 
+// Outlet, Sinkronisasi dan Pemetaan Openbravo sengaja tidak ada di sini: halamannya mengelola data organisasi
+// pengguna yang login, jadi tidak berguna bagi operator platform dan disembunyikan dari pemilik toko.
+// Rutenya tetap terkunci (platform.manage) sampai ada tampilan kelola per merchant di konsol platform.
 const ADMIN_NAV: NavItem[] = [
   { name: 'menu-access', label: 'Akses menu', icon: 'pi pi-sliders-h' },
-  { name: 'outlets', label: 'Outlet', icon: 'pi pi-building' },
   { name: 'terminals', label: 'Terminal & device', icon: 'pi pi-desktop' },
   { name: 'employees', label: 'Karyawan', icon: 'pi pi-id-card' },
   { name: 'users', label: 'User & akses', icon: 'pi pi-users' },
   { name: 'roles', label: 'Role & permission', icon: 'pi pi-shield' },
   { name: 'payment-methods', label: 'Metode pembayaran', icon: 'pi pi-wallet' },
-  { name: 'sync', label: 'Sinkronisasi', icon: 'pi pi-sync' },
-  { name: 'openbravo-mappings', label: 'Pemetaan Openbravo', icon: 'pi pi-link' },
   { name: 'audit', label: 'Audit log', icon: 'pi pi-history' },
 ]
 
