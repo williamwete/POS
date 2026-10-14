@@ -15,6 +15,12 @@ export class ApiError extends Error {
   }
 }
 
+/** Memberi tahu aplikasi bahwa server tidak terjangkau (dipakai mode offline untuk bereaksi seketika). */
+export const NETWORK_FAILURE_EVENT = 'pos:network-failure'
+function notifyNetworkFailure() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(NETWORK_FAILURE_EVENT))
+}
+
 export interface ApiClientDeps {
   baseUrl: string
   getToken: () => Promise<string | null>
@@ -71,6 +77,7 @@ export function createApiClient(deps: ApiClientDeps) {
         body: body === undefined ? undefined : JSON.stringify(body),
       })
     } catch {
+      notifyNetworkFailure()
       throw new ApiError('NETWORK_ERROR', messageFor('NETWORK_ERROR'), 0)
     }
 
@@ -84,6 +91,7 @@ export function createApiClient(deps: ApiClientDeps) {
       }
     }
 
+    if (!res.ok && !envelope && res.status >= 500) notifyNetworkFailure()
     if (!res.ok || !envelope || envelope.success === false) {
       const code = envelope?.errorCode ?? (res.status === 401 ? 'UNAUTHENTICATED' : 'INTERNAL_ERROR')
       if (res.status === 401 && !opts.skipAuthRedirect) deps.onUnauthenticated()

@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useOfflineStore } from '@/stores/offline'
 import { useSessionStore } from '@/stores/session'
+import { NETWORK_FAILURE_EVENT } from '@/services/apiClient'
 import { formatRupiah } from '@/utils/money'
 
 /**
@@ -35,17 +36,20 @@ async function check() {
 
 const goOffline = () => offline.setOnline(false)
 const goOnline = () => void check()
+const onFailure = () => void check()
 
 onMounted(async () => {
   await offline.refresh()
   window.addEventListener('offline', goOffline)
   window.addEventListener('online', goOnline)
-  timer = window.setInterval(() => void check(), 20_000)
+  window.addEventListener(NETWORK_FAILURE_EVENT, onFailure)
+  timer = window.setInterval(() => void check(), 10_000)
   void check()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('offline', goOffline)
   window.removeEventListener('online', goOnline)
+  window.removeEventListener(NETWORK_FAILURE_EVENT, onFailure)
   window.clearInterval(timer)
 })
 </script>

@@ -1,9 +1,29 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api, auth } from '@/services'
+import { ApiError } from '@/services/apiClient'
 import type { MeResponse, OutletAccess, Terminal } from '@/types/api'
 
 const CONTEXT_KEY = 'pos.context'
+const ME_KEY = 'pos.me'
+
+/** Salinan profil login di sessionStorage agar halaman bisa dibuka ulang saat server tidak terjangkau. */
+function cacheMe(m: MeResponse | null) {
+  try {
+    if (m) sessionStorage.setItem(ME_KEY, JSON.stringify(m))
+    else sessionStorage.removeItem(ME_KEY)
+  } catch {
+    // penyimpanan penuh/dinonaktifkan: tanpa salinan, buka ulang saat offline memerlukan login
+  }
+}
+function cachedMe(): MeResponse | null {
+  try {
+    const raw = sessionStorage.getItem(ME_KEY)
+    return raw ? (JSON.parse(raw) as MeResponse) : null
+  } catch {
+    return null
+  }
+}
 
 interface StoredContext {
   outletId: string | null
@@ -86,6 +106,7 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const res = await api().post<MeResponse>('/api/auth/session', {}, { skipAuthRedirect: true })
       me.value = res.data
+      cacheMe(res.data)
     } catch (e) {
       await auth().signOut()
       throw e
@@ -102,11 +123,21 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const res = await api().get<MeResponse>('/api/auth/me', { skipAuthRedirect: true })
       me.value = res.data
+      cacheMe(res.data)
       restoreContext()
       return true
-    } catch {
+    } catch (e) {
+      // Server tidak terjangkau: pakai profil tersimpan agar kasir offline tetap bisa bekerja.
+      const unreachable = e instanceof ApiError && (e.status === 0 || (e.status >= 500 && !e.requestId))
+      const saved = unreachable ? cachedMe() : null
+      if (saved) {
+        me.value = saved
+        restoreContext()
+        return true
+      }
       await auth().signOut()
       me.value = null
+      cacheMe(null)
       return false
     }
   }
@@ -124,6 +155,7 @@ export const useSessionStore = defineStore('session', () => {
   async function refresh() {
     const res = await api().get<MeResponse>('/api/auth/me')
     me.value = res.data
+    cacheMe(res.data)
   }
 
   async function logout() {
@@ -134,6 +166,7 @@ export const useSessionStore = defineStore('session', () => {
     }
     await auth().signOut()
     me.value = null
+    cacheMe(null)
     clearContext()
   }
 
@@ -141,6 +174,7 @@ export const useSessionStore = defineStore('session', () => {
   async function expire() {
     await auth().signOut()
     me.value = null
+    cacheMe(null)
     clearContext()
   }
 

@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { ApiError } from '@/services/apiClient'
 import { newIdempotencyKey } from '@/utils/device'
+import { useOfflineStore } from '@/stores/offline'
 
 /**
  * Menjalankan aksi API dengan status loading, toast error, dan idempotency key yang
@@ -47,6 +48,8 @@ export function useApiAction() {
 
   function notifyError(e: unknown) {
     if (e instanceof ApiError) {
+      // server tidak terjangkau: banner offline sudah menjelaskan, jangan menumpuk toast
+      if ((e.status === 0 || (e.status >= 500 && !e.requestId)) && !useOfflineStore().online) return
       for (const d of e.details) {
         if (d.field) fieldErrors.value[d.field] = d.message
       }
