@@ -74,6 +74,8 @@ Menu **Dashboard** (perm `report.view`; Owner, Admin, Store Manager, Auditor): o
 
 Menu **Laporan penjualan** (perm `report.view`): rincian penjualan lunas per produk, kategori, kasir, hari, atau metode bayar untuk rentang tanggal (hari ini, 7/30 hari, bulan ini), dengan total dan unduhan CSV (sel yang diawali `=`, `+`, `-`, `@` dinetralkan agar tidak dibaca Excel sebagai rumus). Dihitung di database (`pos.sales_report`, V035) dengan definisi yang sama dengan Dashboard, jadi angkanya identik; void tidak dihitung dan retur tetap di Dashboard. API: `GET /api/reports/sales?from&to&group&outletId`.
 
+Menu **Rekap harian** (perm `report.view`): ringkasan satu tanggal untuk penutupan hari: transaksi, penjualan kotor/diskon/pajak/bersih, retur, omzet setelah retur, void (tidak dihitung), metode pembayaran, daftar sesi kasir (modal, kas tutup, selisih) dan lima produk terlaris. Memakai `/api/dashboard` untuk satu hari dan daftar sesi kasir, jadi angkanya sama dengan Dashboard; tombol Cetak menghasilkan A4.
+
 ## Penjualan offline (Fase 10, tahap 1: sisi server)
 
 Transaksi tunai yang dibuat saat internet mati dikirim lewat `POST /api/sales/offline` (satu panggilan

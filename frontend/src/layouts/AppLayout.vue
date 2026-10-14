@@ -129,6 +129,9 @@ async function logout() {
           <li v-if="allowed('cashier-sessions')">
             <RouterLink :to="{ name: 'cashier-sessions' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-inbox" /> Sesi kasir</RouterLink>
           </li>
+          <li v-if="allowed('daily-recap')">
+            <RouterLink :to="{ name: 'daily-recap' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-calendar-clock" /> Rekap harian</RouterLink>
+          </li>
           <li v-if="allowed('sales-report')">
             <RouterLink :to="{ name: 'sales-report' }" class="nav-link" active-class="nav-link-active"><i class="pi pi-file-export" /> Laporan penjualan</RouterLink>
           </li>
