@@ -16,7 +16,7 @@ Bukan nasihat hukum; konfirmasikan dengan konsultan hukum.
 - **Peran:** merchant = pengendali data; platform = prosesor data. Siapkan perjanjian pemrosesan data (DPA) dan syarat layanan untuk merchant.
 - **Data pribadi yang disimpan:** karyawan (nama, email, foto absensi, PIN ter-hash), pelanggan (nama/kontak bila diisi), akun user, log audit, rekening bank merchant.
 - **Hak subjek data:** akses/salinan → ekspor per merchant (di atas), disaring ke subjek; koreksi → lewat aplikasi; penghapusan → nonaktifkan user/pelanggan; data transaksi dipertahankan untuk kewajiban akuntansi/pajak (periode retensi ditetapkan merchant & hukum).
-- **Retensi:** tetapkan kebijakan (mis. foto absensi 90 hari, log audit 1 tahun, transaksi sesuai ketentuan pajak) — belum ada penghapusan otomatis.
+- **Retensi:** foto absensi dihapus otomatis setelah masa simpan merchant (bagian 5); log audit dan transaksi tetap disimpan sesuai kewajiban akuntansi/pajak, periodenya ditetapkan merchant dan hukum.
 - **Keamanan:** RLS per org, secret hanya di env, foto/logo bukan URL publik. Enkripsi at-rest dan TLS dari penyedia hosting.
 - **Insiden:** siapkan prosedur pemberitahuan kebocoran ke subjek data/otoritas (batas 3x24 jam menurut UU PDP).
 
@@ -31,4 +31,5 @@ Bukan nasihat hukum; konfirmasikan dengan konsultan hukum.
 - **Header keamanan frontend** (`frontend/security-headers.inc`, di-include di setiap `location` nginx): CSP ketat (`script-src 'self'`, tanpa skrip inline; `connect-src` hanya same-origin dan `*.supabase.co`), `X-Frame-Options`/`frame-ancestors` DENY, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (kamera hanya untuk situs sendiri). Sebelumnya header hanya terpasang di level server sehingga tidak ikut terkirim pada halaman SPA (`add_header` di dalam `location` menimpa warisan). Bila memakai domain kustom Supabase, tambahkan ke `connect-src`. HSTS dipasang di terminator TLS (load balancer/CDN), bukan di container ini.
 - **Dependensi:** Dependabot mingguan (npm, Gradle) dan bulanan (GitHub Actions, Docker); CI menjalankan `npm audit --omit=dev --audit-level=high` dan gagal bila ada celah high/critical di dependensi produksi frontend.
 - Sudah ada sebelumnya: rate limit API (`RateLimitFilter`), RLS dan penjaga isolasi tenant (tes 20), audit append-only, token JWT divalidasi issuer/audience/role.
-- **Belum:** pemindaian dependensi backend di CI (Gradle), endpoint metrik, retensi otomatis foto absensi/log audit, uji restore terjadwal, pemindaian image container.
+- **Retensi foto absensi** (V036, `RetentionJob`): job harian 03.30 WIB menghapus foto clock in/out yang lebih tua dari `attendance_photo_retention_days` per merchant (bawaan 90 hari, 0 = simpan selamanya), dicatat sebagai audit `RETENTION_PURGE`. Foto tetap append-only untuk aplikasi; hanya fungsi retensi yang boleh menghapus dan hanya yang sudah lewat masa simpan. Catatan absensi tidak ikut terhapus. Jadwal dapat diubah dengan `pos.retention.cron`.
+- **Belum:** pemindaian dependensi backend di CI (Gradle), endpoint metrik, retensi log audit (sengaja tidak dihapus otomatis: kebijakan perlu keputusan hukum), uji restore terjadwal, pemindaian image container.

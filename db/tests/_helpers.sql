@@ -347,3 +347,43 @@ LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog, pos AS $$
     UPDATE pos.organization_subscriptions SET trial_ends_at = now() - interval '1 day' WHERE organization_id = p_org
 $$;
 GRANT EXECUTE ON FUNCTION pos_test.expire_trial(uuid) TO PUBLIC;
+
+-- Khusus tes retensi foto: memundurkan umur foto, memasang masa simpan, dan menghitung (dijalankan sebagai admin).
+CREATE OR REPLACE FUNCTION pos_test.backdate_photo(p_attendance uuid, p_age interval)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, pos
+AS $$
+BEGIN
+    ALTER TABLE pos.attendance_photos DISABLE TRIGGER attendance_photos_append_only;
+    UPDATE pos.attendance_photos SET created_at = now() - p_age WHERE attendance_id = p_attendance;
+    ALTER TABLE pos.attendance_photos ENABLE TRIGGER attendance_photos_append_only;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION pos_test.set_photo_retention(p_attendance uuid, p_days integer)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, pos
+AS $$
+    INSERT INTO pos.settings (organization_id, outlet_id, key, value)
+    SELECT a.organization_id, NULL, 'attendance_photo_retention_days', to_jsonb(p_days)
+    FROM pos.attendance a WHERE a.id = p_attendance
+    ON CONFLICT (organization_id, outlet_id, key) DO UPDATE SET value = EXCLUDED.value
+$$;
+
+CREATE OR REPLACE FUNCTION pos_test.photo_count(p_attendance uuid)
+RETURNS bigint
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, pos
+AS $$ SELECT count(*) FROM pos.attendance_photos WHERE attendance_id = p_attendance $$;
+
+CREATE OR REPLACE FUNCTION pos_test.purge_audit_count()
+RETURNS bigint
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, pos
+AS $$ SELECT count(*) FROM pos.audit_logs WHERE action = 'RETENTION_PURGE' AND actor_type = 'SYSTEM' $$;
