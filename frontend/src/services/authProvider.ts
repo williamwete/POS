@@ -47,6 +47,9 @@ export function createLocalAuthProvider(baseUrl: string): AuthProvider {
         throw new ApiError('NETWORK_ERROR', messageFor('NETWORK_ERROR'), 0)
       }
       const body = await res.json().catch(() => null)
+      if (!body && res.status >= 500) {
+        throw new ApiError('NETWORK_ERROR', messageFor('NETWORK_ERROR'), 0)
+      }
       if (!res.ok || !body?.success) {
         const code = body?.errorCode ?? 'INVALID_CREDENTIALS'
         throw new ApiError(code, messageFor(code, body?.message), res.status, body?.details ?? [])

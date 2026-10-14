@@ -128,7 +128,9 @@ export const useSessionStore = defineStore('session', () => {
       return true
     } catch (e) {
       // Server tidak terjangkau: pakai profil tersimpan agar kasir offline tetap bisa bekerja.
-      const unreachable = e instanceof ApiError && (e.status === 0 || (e.status >= 500 && !e.requestId))
+      // hanya penolakan eksplisit server (401/403) yang mengakhiri sesi; gangguan lain memakai salinan
+      const rejected = e instanceof ApiError && (e.status === 401 || e.status === 403)
+      const unreachable = !rejected
       const saved = unreachable ? cachedMe() : null
       if (saved) {
         me.value = saved
