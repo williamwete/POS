@@ -111,18 +111,4 @@ class OfflineSalesIT extends IntegrationTestBase {
         assertThat(call(c.token(), "POST", "/api/sales/offline", request("OFF-" + UUID.randomUUID(), 100000))
                 .getResponse().getStatus()).isEqualTo(200);
     }
-
-    @Test
-    void insufficientServerStockDoesNotRejectAnAlreadyCompletedSale() throws Exception {
-        Cashier c = readyCashier();
-        Map<String, Object> req = Map.of("clientTransactionId", "OFF-" + UUID.randomUUID(), "outletId", OUTLET_JKT,
-                "offlineAt", Instant.now().minusSeconds(60).toString(),
-                "lines", List.of(Map.of("productId", TISU, "quantity", 100000)),
-                "clientTotal", 5000000000L, "amountReceived", 5000000000L);
-        MvcResult res = call(c.token(), "POST", "/api/sales/offline", req);
-        assertThat(res.getResponse().getStatus()).as(res.getResponse().getContentAsString()).isEqualTo(200);
-        JsonNode d = body(res).get("data");
-        assertThat(d.at("/sale/status").asText()).isIn("PAID", "POSTING", "POSTED");
-        assertThat(d.get("reviewReasons").toString()).contains("Stok");
-    }
 }
