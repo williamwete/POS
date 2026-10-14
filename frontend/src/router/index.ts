@@ -86,7 +86,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'admin/roles', name: 'roles', component: () => import('@/modules/admin/RolesPage.vue'),
         meta: {
           title: 'Role & permission',
-          anyOf: [{ permission: 'role.manage', scope: 'org' }, { permission: 'user.view', scope: 'any' }, { permission: 'user.manage', scope: 'org' }],
+          anyOf: [{ permission: 'platform.manage', scope: 'org' }],
         },
       },
       {
