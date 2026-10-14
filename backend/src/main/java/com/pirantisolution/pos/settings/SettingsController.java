@@ -37,4 +37,19 @@ public class SettingsController {
         service.setAttendanceRequired(req.required());
         return Responses.ok(Map.of("required", req.required()));
     }
+
+    public record OfflineSettingsRequest(
+            @jakarta.validation.constraints.NotNull Boolean allow,
+            @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.DecimalMin("0")
+            @jakarta.validation.constraints.DecimalMax("100000000") java.math.BigDecimal maxAmount,
+            @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Min(0)
+            @jakarta.validation.constraints.Max(10080) Integer maxMinutes) {
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/api/settings/offline")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> offline(
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody OfflineSettingsRequest req) {
+        service.setOfflineSettings(req.allow(), req.maxAmount(), req.maxMinutes());
+        return Responses.ok(Map.of("allow", req.allow()));
+    }
 }

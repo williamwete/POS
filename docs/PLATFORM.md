@@ -121,3 +121,7 @@ Menu Outlet, Sinkronisasi, dan Pemetaan Openbravo kini hanya untuk operator plat
 Isolasi di perangkat bersama: antrean offline disimpan per akun (`ownerId`). Akun lain, termasuk dari merchant
 lain, tidak melihat dan tidak mengirimnya; entri lama tanpa pemilik hanya terlihat bila outlet-nya dapat diakses
 akun yang login. Server juga menolak transaksi offline yang `outletId`-nya berbeda dari outlet kasir yang mengirim.
+
+Pengaturan offline ada di halaman **Pengaturan** (owner/admin, `configuration.manage`): izinkan penjualan
+offline, batas nilai per transaksi, dan batas keterlambatan kirim (0 = tanpa batas). Berlaku untuk seluruh outlet
+merchant; perubahan tercatat di audit log (`PUT /api/settings/offline`).

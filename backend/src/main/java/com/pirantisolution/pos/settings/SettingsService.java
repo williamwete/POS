@@ -56,4 +56,12 @@ public class SettingsService {
         access.requireOrg("configuration.manage");
         jdbc.sql("SELECT pos.set_attendance_required(:r)").param("r", required).query().singleRow();
     }
+
+    /** Mode offline per merchant (0 pada batas = tanpa batas). Butuh configuration.manage. */
+    @Transactional
+    public void setOfflineSettings(boolean allow, java.math.BigDecimal maxAmount, int maxMinutes) {
+        access.requireOrg("configuration.manage");
+        jdbc.sql("SELECT pos.set_offline_settings(:a, :m, :d)")
+                .param("a", allow).param("m", maxAmount).param("d", maxMinutes).query().singleRow();
+    }
 }

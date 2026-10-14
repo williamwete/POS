@@ -111,4 +111,22 @@ class OfflineSalesIT extends IntegrationTestBase {
         assertThat(call(c.token(), "POST", "/api/sales/offline", request("OFF-" + UUID.randomUUID(), 100000))
                 .getResponse().getStatus()).isEqualTo(200);
     }
+
+    @Test
+    void ownerSetsOfflineLimitsAndCashierCannot() throws Exception {
+        Map<String, Object> on = Map.of("allow", true, "maxAmount", 500000, "maxMinutes", 120);
+        MvcResult ok = putAs("owner", "/api/settings/offline", on);
+        assertThat(ok.getResponse().getStatus()).as(ok.getResponse().getContentAsString()).isEqualTo(200);
+        JsonNode s = body(getAs("owner", "/api/settings/effective")).get("data");
+        assertThat(s.get("allow_offline_sale").asBoolean()).isTrue();
+        assertThat(s.get("max_offline_sale_amount").decimalValue()).isEqualByComparingTo("500000");
+        assertThat(s.get("max_offline_duration_minutes").asInt()).isEqualTo(120);
+
+        assertThat(putAs("cashier.jkt", "/api/settings/offline", on).getResponse().getStatus()).isEqualTo(403);
+        assertThat(putAs("owner", "/api/settings/offline",
+                Map.of("allow", true, "maxAmount", -5, "maxMinutes", 10)).getResponse().getStatus()).isEqualTo(400);
+        // kembalikan bawaan agar tes lain tidak terpengaruh
+        assertThat(putAs("owner", "/api/settings/offline", Map.of("allow", false, "maxAmount", 0, "maxMinutes", 0))
+                .getResponse().getStatus()).isEqualTo(200);
+    }
 }
