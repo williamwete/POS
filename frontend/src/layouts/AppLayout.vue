@@ -15,6 +15,7 @@ import { useIdleLock } from '@/composables/useIdleLock'
 import { useMenuStore } from '@/stores/menu'
 import TrialBanner from '@/components/TrialBanner.vue'
 import OfflineBanner from '@/components/OfflineBanner.vue'
+import { useOfflineStore } from '@/stores/offline'
 
 const session = useSessionStore()
 const brand = useBrandStore()
@@ -22,6 +23,7 @@ const router = useRouter()
 const route = useRoute()
 const navOpen = ref(false)
 const attendance = useAttendanceStore()
+const offline = useOfflineStore()
 const cashier = useCashierStore()
 const saleStore = useSaleStore()
 const menus = useMenuStore()
@@ -85,6 +87,7 @@ const initials = computed(() =>
 
 async function logout() {
   attendance.reset()
+  offline.reset()
   menus.reset()
   cashier.reset()
   saleStore.reset()

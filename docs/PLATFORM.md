@@ -118,3 +118,7 @@ Menu Outlet, Sinkronisasi, dan Pemetaan Openbravo kini hanya untuk operator plat
   selisih yang perlu ditinjau, ditutup dengan catatan minimal 5 karakter.
 - Batasan yang tersisa: stok server tidak cukup menolak transaksi offline (muncul sebagai "ditolak" di kasir),
   produk dengan opsi belum bisa dijual offline, nomor struk resmi baru ada setelah terkirim.
+
+Isolasi di perangkat bersama: antrean offline disimpan per akun (`ownerId`). Akun lain, termasuk dari merchant
+lain, tidak melihat dan tidak mengirimnya; entri lama tanpa pemilik hanya terlihat bila outlet-nya dapat diakses
+akun yang login. Server juga menolak transaksi offline yang `outletId`-nya berbeda dari outlet kasir yang mengirim.

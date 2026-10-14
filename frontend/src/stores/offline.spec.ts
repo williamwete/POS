@@ -7,6 +7,12 @@ const post = vi.fn()
 vi.mock('@/services', () => ({ api: () => ({ post }) }))
 
 import { useOfflineStore } from './offline'
+import { useSessionStore } from './session'
+
+function loginAs(id: string, outlets: string[] = []) {
+  const session = useSessionStore()
+  session.me = { user: { id }, outlets: outlets.map((o) => ({ id: o })) } as never
+}
 
 const line = { productId: 'p1', sku: 'A', name: 'Aqua', quantity: 2, unitPrice: 5000 }
 const draft = { id: 'OFF-0001-abcdef', outletId: 'o', terminalId: 't', lines: [line], amountReceived: 20000 }
@@ -15,6 +21,7 @@ describe('offline store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     post.mockReset()
+    loginAs('u-alfamart', ['o'])
   })
 
   it('totals lines in whole rupiah', () => {
@@ -73,5 +80,33 @@ describe('offline store', () => {
       { ...base, id: '3', name: 'C', price: 500, optionGroups: [{ id: 'g' } as never] },
     ])
     expect((await s.loadCatalog('o')).map((p) => p.id)).toEqual(['1'])
+  })
+  it('never shows or sends another account\'s queued sales', async () => {
+    const mem = createMemoryStore()
+    const s = useOfflineStore(); s.useStore(mem)
+    await s.enqueue(draft)
+    expect(s.queue).toHaveLength(1)
+
+    loginAs('u-persita', ['p-outlet'])
+    await s.refresh()
+    expect(s.queue).toHaveLength(0)
+    expect(await s.syncAll()).toBe(0)
+    expect(post).not.toHaveBeenCalled()
+
+    loginAs('u-alfamart', ['o'])
+    await s.refresh()
+    expect(s.queue).toHaveLength(1)
+  })
+
+  it('hides legacy entries without owner unless the outlet is accessible', async () => {
+    const mem = createMemoryStore()
+    await mem.set('queue:LEG-0001-xxxxxxxx', { ...draft, id: 'LEG-0001-xxxxxxxx', offlineAt: 'x', clientTotal: 1, status: 'PENDING', attempts: 0 })
+    const s = useOfflineStore(); s.useStore(mem)
+    loginAs('u-persita', ['p-outlet'])
+    await s.refresh()
+    expect(s.queue).toHaveLength(0)
+    loginAs('u-alfamart', ['o'])
+    await s.refresh()
+    expect(s.queue).toHaveLength(1)
   })
 })

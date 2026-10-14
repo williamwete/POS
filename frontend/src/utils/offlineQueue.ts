@@ -15,6 +15,8 @@ export interface OfflineSale {
   /** = clientTransactionId, kunci idempotensi di server */
   id: string
   outletId: string
+  /** akun pembuat; antrean hanya dilihat & dikirim oleh akun yang sama */
+  ownerId?: string
   terminalId: string
   offlineAt: string
   lines: OfflineLine[]

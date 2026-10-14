@@ -29,7 +29,7 @@ public class OfflineSaleService {
     public record Line(UUID productId, String barcode, BigDecimal quantity) {
     }
 
-    public record OfflineSaleRequest(String clientTransactionId, Instant offlineAt, String note,
+    public record OfflineSaleRequest(String clientTransactionId, UUID outletId, Instant offlineAt, String note,
                                      List<Line> lines, BigDecimal clientTotal, BigDecimal amountReceived) {
     }
 
@@ -68,6 +68,10 @@ public class OfflineSaleService {
             }
         });
         SaleView sale = sales.create(req.clientTransactionId(), req.note());
+        if (req.outletId() != null && !req.outletId().equals(sale.outletId())) {
+            // transaksi dibuat di outlet/merchant lain: batalkan seluruhnya (transaksi database ikut dibatalkan)
+            throw new ApiException(ErrorCode.OFFLINE_SALE_INVALID, "Transaksi offline ini milik outlet lain");
+        }
         for (Line l : req.lines()) {
             sale = sales.addItem(sale.id(), new AddItemRequest(l.productId(), l.barcode(), l.quantity(), null));
         }

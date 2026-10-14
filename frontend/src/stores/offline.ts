@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { api } from '@/services'
 import { ApiError } from '@/services/apiClient'
 import type { Product } from '@/types/api'
+import { useSessionStore } from '@/stores/session'
 import {
   createQueue, defaultStore, offlineTotal, plain, type KeyValueStore, type OfflineLine, type OfflineSale,
 } from '@/utils/offlineQueue'
@@ -21,6 +22,7 @@ const CATALOG = 'catalog:'
  */
 export const useOfflineStore = defineStore('offline', () => {
   let store: KeyValueStore = defaultStore()
+  /** seluruh isi penyimpanan perangkat (dipakai internal); UI hanya memakai `queue` milik akun aktif */
   const queue = ref<OfflineSale[]>([])
   const online = ref(typeof navigator === 'undefined' ? true : navigator.onLine)
   const syncing = ref(false)
@@ -34,8 +36,25 @@ export const useOfflineStore = defineStore('offline', () => {
   }
   const q = () => createQueue(store)
 
+  /**
+   * Perangkat bisa dipakai bergantian beberapa akun/merchant. Antrean hanya milik akun yang sedang login;
+   * data lama tanpa pemilik hanya terlihat bila outlet-nya dapat diakses akun ini.
+   */
+  function mine(s: OfflineSale): boolean {
+    const session = useSessionStore()
+    const uid = session.me?.user.id
+    if (!uid) return false
+    if (s.ownerId) return s.ownerId === uid
+    return session.outlets.some((o) => o.id === s.outletId)
+  }
+
   async function refresh() {
-    queue.value = await q().list()
+    queue.value = (await q().list()).filter(mine)
+  }
+
+  /** Saat keluar: kosongkan tampilan; isi penyimpanan tetap ada untuk pemiliknya. */
+  function reset() {
+    queue.value = []
   }
 
   function setOnline(v: boolean) {
@@ -61,8 +80,10 @@ export const useOfflineStore = defineStore('offline', () => {
     const total = offlineTotal(input.lines)
     if (input.lines.length === 0) throw new Error('Keranjang kosong')
     if (input.amountReceived < total) throw new Error('Uang diterima kurang dari total')
+    const uid = useSessionStore().me?.user.id
+    if (!uid) throw new Error('Belum login')
     const sale: OfflineSale = {
-      ...input, offlineAt: new Date().toISOString(), clientTotal: total, status: 'PENDING', attempts: 0,
+      ...input, ownerId: uid, offlineAt: new Date().toISOString(), clientTotal: total, status: 'PENDING', attempts: 0,
     }
     await q().add(sale)
     await refresh()
@@ -74,6 +95,7 @@ export const useOfflineStore = defineStore('offline', () => {
     try {
       const res = await api().post<OfflineResult>('/api/sales/offline', {
         clientTransactionId: sale.id,
+        outletId: sale.outletId,
         offlineAt: sale.offlineAt,
         note: sale.note,
         lines: sale.lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
@@ -132,6 +154,6 @@ export const useOfflineStore = defineStore('offline', () => {
 
   return {
     queue, online, syncing, cached, pending, failed,
-    useStore, refresh, setOnline, cacheCatalog, loadCatalog, enqueue, submit, syncAll, retry, discard,
+    useStore, refresh, reset, setOnline, cacheCatalog, loadCatalog, enqueue, submit, syncAll, retry, discard,
   }
 })

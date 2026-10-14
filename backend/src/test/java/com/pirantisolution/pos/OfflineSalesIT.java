@@ -99,4 +99,16 @@ class OfflineSalesIT extends IntegrationTestBase {
         assertThat(held).hasSize(1);
         assertThat(held.get(0).get("id").asText()).isEqualTo(draft);
     }
+
+    @Test
+    void saleFromAnotherOutletIsRejectedAndLeavesNothingBehind() throws Exception {
+        Cashier c = readyCashier();
+        Map<String, Object> req = new java.util.HashMap<>(request("OFF-" + UUID.randomUUID(), 100000));
+        req.put("outletId", UUID.randomUUID());
+        MvcResult res = call(c.token(), "POST", "/api/sales/offline", req);
+        assertThat(res.getResponse().getStatus()).isEqualTo(422);
+        // rollback penuh: tidak ada keranjang tersisa sehingga transaksi sah berikutnya tetap bisa dikirim
+        assertThat(call(c.token(), "POST", "/api/sales/offline", request("OFF-" + UUID.randomUUID(), 100000))
+                .getResponse().getStatus()).isEqualTo(200);
+    }
 }
