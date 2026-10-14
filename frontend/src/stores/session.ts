@@ -121,7 +121,11 @@ export const useSessionStore = defineStore('session', () => {
     const token = await auth().getAccessToken()
     if (!token) return false
     try {
-      const res = await api().get<MeResponse>('/api/auth/me', { skipAuthRedirect: true })
+      // jangan biarkan server yang menggantung menahan aplikasi tampil (layar kosong): batas 4 detik
+      const res = await Promise.race([
+        api().get<MeResponse>('/api/auth/me', { skipAuthRedirect: true }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new ApiError('NETWORK_ERROR', 'Server tidak merespons', 0)), 4000)),
+      ])
       me.value = res.data
       cacheMe(res.data)
       restoreContext()
