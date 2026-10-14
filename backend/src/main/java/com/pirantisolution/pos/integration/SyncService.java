@@ -98,6 +98,11 @@ public class SyncService {
         List<UUID> ids = tx.user(() -> {
             access.requireOrg("sync.manage");
             List<UUID> out = new ArrayList<>();
+            if (types != null && !types.isEmpty() && !repo.openbravoEnabled()) {
+                // merchant katalog lokal: jangan impor master data Openbravo (katalog jadi dobel)
+                throw new ApiException(ErrorCode.OPENBRAVO_UNAVAILABLE,
+                        "Merchant ini memakai katalog lokal; sinkron Openbravo belum diaktifkan oleh penyedia layanan");
+            }
             for (String t : types == null ? List.<String>of() : types) {
                 if (!MASTER_TYPES.contains(t)) {
                     throw ApiException.validation("Jenis sinkron tidak dikenal");

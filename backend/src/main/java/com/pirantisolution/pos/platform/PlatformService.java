@@ -89,6 +89,13 @@ public class PlatformService {
         return repo.merchant(org).orElseThrow(() -> ApiException.notFound("Merchant"));
     }
 
+    @Transactional
+    public MerchantRow setOpenbravo(UUID org, boolean enabled) {
+        access.requireOrg(PERM);
+        repo.setOpenbravo(org, enabled);
+        return repo.merchant(org).orElseThrow(() -> ApiException.notFound("Merchant"));
+    }
+
     /** Menangguhkan menutup akses via RLS (organisasi nonaktif); login juga diblokir di penyedia auth. */
     @Transactional
     public MerchantRow setActive(UUID org, boolean active, String reason) {

@@ -133,6 +133,7 @@ ON CONFLICT (employee_id) DO NOTHING;
 INSERT INTO pos.settings (organization_id, outlet_id, key, value)
 SELECT '00000000-0000-4000-8000-000000000001'::uuid, NULL, v.key, v.value::jsonb
 FROM (VALUES
+    ('openbravo_enabled', 'true'),
     ('max_cashier_discount', '5'),
     ('max_supervisor_discount', '15'),
     ('max_manager_discount', '30'),

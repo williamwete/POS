@@ -77,6 +77,11 @@ public class SyncRepository {
     public record UpsertResult(int processed, int success, int failed, String errors) {
     }
 
+    public boolean openbravoEnabled() {
+        Boolean v = jdbc.sql("SELECT (pos.get_setting('openbravo_enabled', NULL))::boolean").query(Boolean.class).single();
+        return Boolean.TRUE.equals(v);
+    }
+
     public UpsertResult upsert(String jobType, UUID organizationId, String itemsJson) {
         String fn = switch (jobType) {
             case "MASTER_PRODUCT" -> "pos.sync_upsert_products";

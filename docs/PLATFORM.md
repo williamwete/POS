@@ -125,3 +125,10 @@ akun yang login. Server juga menolak transaksi offline yang `outletId`-nya berbe
 Pengaturan offline ada di halaman **Pengaturan** (owner/admin, `configuration.manage`): izinkan penjualan
 offline, batas nilai per transaksi, dan batas keterlambatan kirim (0 = tanpa batas). Berlaku untuk seluruh outlet
 merchant; perubahan tercatat di audit log (`PUT /api/settings/offline`).
+
+## Openbravo opt-in
+
+Sinkron master data Openbravo (produk, harga, stok, pelanggan) hanya berjalan untuk merchant dengan setting
+`openbravo_enabled = true`, yang hanya dapat diubah operator platform (`PUT /api/platform/merchants/{id}/openbravo`).
+Merchant katalog lokal (bawaan) menerima penolakan "memakai katalog lokal" sehingga katalognya tidak bercampur dengan
+produk simulator `SKU-…`. Merchant DEMO pada fixture tes diaktifkan.

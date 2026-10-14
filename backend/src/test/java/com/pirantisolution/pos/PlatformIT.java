@@ -101,4 +101,25 @@ class PlatformIT extends IntegrationTestBase {
                 Map.of("permissionCodes", java.util.List.of("report.view")));
         assertThat(res.getResponse().getStatus()).isEqualTo(403);
     }
+
+    @Test
+    void openbravoSyncIsOptInPerMerchant() throws Exception {
+        String code = newCode();
+        String email = code.toLowerCase() + "@merchant.test";
+        JsonNode data = body(postAs("platform", "/api/platform/merchants", merchantBody(code, email, "STARTER"))).get("data");
+        String org = data.at("/merchant/id").asText();
+        String owner = signIn(email, PASSWORD);
+
+        // katalog lokal: sinkron master data ditolak dan tidak mengimpor apa pun
+        MvcResult blocked = call(owner, "POST", "/api/sync/run", Map.of("types", java.util.List.of("MASTER_PRODUCT")));
+        assertThat(blocked.getResponse().getStatus()).isGreaterThanOrEqualTo(400);
+        assertThat(body(blocked).get("message").asText()).contains("katalog lokal");
+        assertThat(body(call(owner, "GET", "/api/catalog/products", null)).get("data")).isEmpty();
+
+        // hanya operator platform yang dapat mengaktifkan
+        assertThat(putAs("admin", "/api/platform/merchants/" + org + "/openbravo", Map.of("enabled", true))
+                .getResponse().getStatus()).isEqualTo(403);
+        assertThat(putAs("platform", "/api/platform/merchants/" + org + "/openbravo", Map.of("enabled", true))
+                .getResponse().getStatus()).isEqualTo(200);
+    }
 }

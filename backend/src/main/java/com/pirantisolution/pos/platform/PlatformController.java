@@ -58,4 +58,14 @@ public class PlatformController {
     public ResponseEntity<ApiResponse<MerchantRow>> active(@PathVariable UUID id, @Valid @RequestBody ActiveRequest req) {
         return Responses.ok(service.setActive(id, req.active(), req.reason()));
     }
+
+    public record OpenbravoRequest(@jakarta.validation.constraints.NotNull Boolean enabled) {
+    }
+
+    /** Aktifkan/nonaktifkan integrasi Openbravo merchant (tanpa ini sinkron master data ditolak). */
+    @PutMapping("/api/platform/merchants/{id}/openbravo")
+    public ResponseEntity<ApiResponse<MerchantRow>> openbravo(@PathVariable UUID id,
+                                                              @Valid @RequestBody OpenbravoRequest req) {
+        return Responses.ok(service.setOpenbravo(id, req.enabled()));
+    }
 }

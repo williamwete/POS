@@ -55,6 +55,11 @@ public class PlatformRepository {
                 .query().singleRow();
     }
 
+    void setOpenbravo(UUID org, boolean enabled) {
+        jdbc.sql("SELECT pos.platform_set_openbravo(:org, :e)").param("org", org).param("e", enabled)
+                .query().singleRow();
+    }
+
     void setActive(UUID org, boolean active, String reason) {
         jdbc.sql("SELECT pos.platform_set_active(:org, :active, :reason)").param("org", org)
                 .param("active", active).param("reason", reason).query().singleRow();

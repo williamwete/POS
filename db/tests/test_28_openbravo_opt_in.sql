@@ -1,0 +1,23 @@
+-- Openbravo opt-in per merchant (V034)
+BEGIN;
+SELECT pos_test.login('platform');
+SET LOCAL ROLE pos_app_user;
+CREATE TEMP TABLE m AS SELECT pos.platform_provision_merchant('OBOPT', 'Ob Opt', 'RETAIL', 'STARTER', 'OB1', 'OB Pusat', 'Ola', 'ola@ob.test', pos_test.make_auth_user('ola@ob.test')) AS id;
+GRANT SELECT ON m TO PUBLIC;
+SELECT pos.platform_set_openbravo((SELECT id FROM m), true);
+RESET ROLE;
+SELECT pos_test.login('obopt.owner');
+SET LOCAL ROLE pos_app_user;
+SELECT pos_test.throws($$SELECT pos.platform_set_openbravo((SELECT id FROM m), false)$$, 'USER_NOT_AUTHORIZED', 'owner merchant tidak dapat mengubahnya sendiri');
+SELECT pos_test.ok((SELECT (pos.get_setting('openbravo_enabled', NULL))::boolean), 'owner melihat nilai merchant sendiri');
+RESET ROLE;
+SELECT pos_test.login('owner');
+SET LOCAL ROLE pos_app_user;
+SELECT pos_test.ok((SELECT (pos.get_setting('openbravo_enabled', NULL))::boolean), 'merchant DEMO fixture memakai Openbravo');
+RESET ROLE;
+SELECT pos_test.login('platform');
+SET LOCAL ROLE pos_app_user;
+SELECT pos.platform_set_openbravo((SELECT id FROM m), false);
+SELECT pos_test.throws($$SELECT pos.platform_set_openbravo('00000000-0000-4000-8000-0000000fffff', true)$$, 'CATALOG_INVALID', 'merchant tidak dikenal ditolak');
+RESET ROLE;
+ROLLBACK;
