@@ -98,3 +98,6 @@ jobs:
           npm run type-check
           npm run test
           npm run build
+      - name: Audit dependensi produksi (high/critical)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high

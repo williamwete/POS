@@ -26,3 +26,9 @@ Bukan nasihat hukum; konfirmasikan dengan konsultan hukum.
 - Log terstruktur ECS (profile `prod`); alarm pada lonjakan 5xx, `PLAN_LIMIT_EXCEEDED` massal, kegagalan login, dan antrean `sync_jobs` yang menumpuk/gagal.
 - Keuangan: pantau pencairan berstatus REQUESTED > 2 hari dan saldo ledger negatif.
 - Belum dibuat: endpoint metrik Prometheus (butuh auth scraper) dan dasbor alarm.
+
+## 5. Hardening (Fase 12, bagian 1)
+- **Header keamanan frontend** (`frontend/security-headers.inc`, di-include di setiap `location` nginx): CSP ketat (`script-src 'self'`, tanpa skrip inline; `connect-src` hanya same-origin dan `*.supabase.co`), `X-Frame-Options`/`frame-ancestors` DENY, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (kamera hanya untuk situs sendiri). Sebelumnya header hanya terpasang di level server sehingga tidak ikut terkirim pada halaman SPA (`add_header` di dalam `location` menimpa warisan). Bila memakai domain kustom Supabase, tambahkan ke `connect-src`. HSTS dipasang di terminator TLS (load balancer/CDN), bukan di container ini.
+- **Dependensi:** Dependabot mingguan (npm, Gradle) dan bulanan (GitHub Actions, Docker); CI menjalankan `npm audit --omit=dev --audit-level=high` dan gagal bila ada celah high/critical di dependensi produksi frontend.
+- Sudah ada sebelumnya: rate limit API (`RateLimitFilter`), RLS dan penjaga isolasi tenant (tes 20), audit append-only, token JWT divalidasi issuer/audience/role.
+- **Belum:** pemindaian dependensi backend di CI (Gradle), endpoint metrik, retensi otomatis foto absensi/log audit, uji restore terjadwal, pemindaian image container.
