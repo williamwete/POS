@@ -72,6 +72,8 @@ Merchant berpaket TRIAL yang `trial_ends_at`-nya lewat tidak bisa membuat penjua
 ## Dashboard (V030)
 Menu **Dashboard** (perm `report.view`; Owner, Admin, Store Manager, Auditor): omzet bersih (dikurangi retur), jumlah transaksi, rata-rata keranjang, void, tren harian, jam ramai, metode bayar, produk & kategori terlaris, ringkasan closing kasir (selisih), stok menipis, dan peringatan (kasir masih terbuka, gagal sinkron). Dihitung di database (`pos.dashboard`) dari penjualan lunas per business date; rentang maks 366 hari. Merchant satu outlet melihat seluruh datanya; peran per-outlet hanya outlet-nya.
 
+Menu **Laporan penjualan** (perm `report.view`): rincian penjualan lunas per produk, kategori, kasir, hari, atau metode bayar untuk rentang tanggal (hari ini, 7/30 hari, bulan ini), dengan total dan unduhan CSV (sel yang diawali `=`, `+`, `-`, `@` dinetralkan agar tidak dibaca Excel sebagai rumus). Dihitung di database (`pos.sales_report`, V035) dengan definisi yang sama dengan Dashboard, jadi angkanya identik; void tidak dihitung dan retur tetap di Dashboard. API: `GET /api/reports/sales?from&to&group&outletId`.
+
 ## Penjualan offline (Fase 10, tahap 1: sisi server)
 
 Transaksi tunai yang dibuat saat internet mati dikirim lewat `POST /api/sales/offline` (satu panggilan

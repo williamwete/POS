@@ -142,6 +142,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: 'Transaksi offline', anyOf: [{ permission: 'report.view', scope: 'any' }] },
       },
       {
+        path: 'reports/sales', name: 'sales-report', component: () => import('@/modules/report/SalesReportPage.vue'),
+        meta: { title: 'Laporan penjualan', anyOf: [{ permission: 'report.view', scope: 'any' }] },
+      },
+      {
         path: 'dashboard', name: 'dashboard', component: () => import('@/modules/report/DashboardPage.vue'),
         meta: { title: 'Dashboard', anyOf: [{ permission: 'report.view', scope: 'any' }] },
       },

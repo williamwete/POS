@@ -81,3 +81,17 @@ export function validateRows(rows: ImportRow[]): string[] {
 }
 
 export const IMPORT_TEMPLATE = 'sku,nama,kategori,satuan,harga,barcode,stok\nBRG-001,Contoh Produk,Makanan,PCS,15000,8991234567890,20\n'
+
+/**
+ * Penulis CSV untuk ekspor laporan. Sel teks yang diawali = + - @ diberi tanda petik agar tidak dibaca sebagai rumus
+ * oleh Excel; angka ditulis apa adanya. BOM ditambahkan supaya Excel membaca UTF-8 dengan benar.
+ */
+export function toCsv(header: string[], rows: (string | number | null | undefined)[][]): string {
+  const cell = (v: string | number | null | undefined): string => {
+    if (v === null || v === undefined) return ''
+    if (typeof v === 'number') return String(v)
+    const s = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+    return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  return '﻿' + [header, ...rows].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n'
+}

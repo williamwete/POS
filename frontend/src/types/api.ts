@@ -1028,3 +1028,15 @@ export interface OfflineReview {
   status: 'CLEAN' | 'OPEN' | 'RESOLVED'
   resolveNote?: string
 }
+
+export type SalesReportGroup = 'PRODUCT' | 'CATEGORY' | 'CASHIER' | 'DAY' | 'PAYMENT'
+export interface SalesReportRow {
+  key: string
+  label: string
+  transactions: number
+  quantity: number | null
+  gross: number | null
+  discount: number | null
+  net: number
+}
+export interface SalesReport { from: string; to: string; group: SalesReportGroup; rows: SalesReportRow[] }
