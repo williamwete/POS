@@ -79,4 +79,24 @@ class OfflineSalesIT extends IntegrationTestBase {
                 "lines", List.of(), "clientTotal", 1, "amountReceived", 1);
         assertThat(call(c.token(), "POST", "/api/sales/offline", bad).getResponse().getStatus()).isEqualTo(422);
     }
+
+    @Test
+    void existingOnlineDraftDoesNotBlockOfflineSubmit() throws Exception {
+        Cashier c = readyCashier();
+        // layar kasir online membuat keranjang kosong; satu lagi berisi barang ditahan setelahnya
+        MvcResult empty = call(c.token(), "POST", "/api/sales", Map.of("clientTransactionId", "IT-" + UUID.randomUUID()));
+        assertThat(empty.getResponse().getStatus()).isEqualTo(201);
+        MvcResult first = call(c.token(), "POST", "/api/sales/offline", request("OFF-" + UUID.randomUUID(), 100000));
+        assertThat(first.getResponse().getStatus()).as(first.getResponse().getContentAsString()).isEqualTo(200);
+
+        String draft = body(call(c.token(), "POST", "/api/sales", Map.of("clientTransactionId", "IT-" + UUID.randomUUID())))
+                .at("/data/id").asText();
+        assertThat(call(c.token(), "POST", "/api/sales/" + draft + "/items", Map.of("productId", TISU, "quantity", 1))
+                .getResponse().getStatus()).isEqualTo(200);
+        MvcResult second = call(c.token(), "POST", "/api/sales/offline", request("OFF-" + UUID.randomUUID(), 100000));
+        assertThat(second.getResponse().getStatus()).as(second.getResponse().getContentAsString()).isEqualTo(200);
+        JsonNode held = body(call(c.token(), "GET", "/api/sales/held", null)).get("data");
+        assertThat(held).hasSize(1);
+        assertThat(held.get(0).get("id").asText()).isEqualTo(draft);
+    }
 }

@@ -59,6 +59,14 @@ public class OfflineSaleService {
             sales.create(req.clientTransactionId(), req.note()); // memastikan pemiliknya sama
             return new OfflineSaleResult(existing.get(), true, List.of());
         }
+        // Satu keranjang aktif per kasir: keranjang kosong dari layar online dibatalkan, yang berisi ditahan.
+        sales.current().filter((d) -> "DRAFT".equals(d.status())).ifPresent((d) -> {
+            if (d.lineCount() == 0) {
+                sales.cancel(d.id());
+            } else {
+                sales.hold(d.id());
+            }
+        });
         SaleView sale = sales.create(req.clientTransactionId(), req.note());
         for (Line l : req.lines()) {
             sale = sales.addItem(sale.id(), new AddItemRequest(l.productId(), l.barcode(), l.quantity(), null));
